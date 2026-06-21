@@ -590,12 +590,13 @@
         const firebaseConfig = typeof __firebase_config !== 'undefined' 
             ? JSON.parse(__firebase_config) 
             : {
-                apiKey: "",
-                authDomain: "mock-project.firebaseapp.com",
-                projectId: "mock-project",
-                storageBucket: "mock-project.appspot.com",
-                messagingSenderId: "123456",
-                appId: "1:123456:web:123"
+                apiKey: "AIzaSyAC49-AkUHvwQA1TJnP0A3SpiDuL-PwFrs",
+                authDomain: "tap-noi.firebaseapp.com",
+                projectId: "tap-noi",
+                storageBucket: "tap-noi.firebasestorage.app",
+                messagingSenderId: "143026448899",
+                appId: "1:143026448899:web:3a24d195f63aba9bf87c36",
+                measurementId: "G-08ML1LTL94"
               };
 
         // Khởi tạo các phân hệ
@@ -1020,6 +1021,7 @@
             }
         }
 
+        // ================= CONVERTER CHẤT LƯỢNG CAO =================
         function createWavHeader(pcmBuffer, sampleRate) {
             const numChannels = 1;
             const bitsPerSample = 16;
@@ -2127,6 +2129,59 @@
                 `;
                 tbody.appendChild(tr);
             });
+        }
+
+        // ================= TRÌNH XỬ LÝ KHÁC =================
+        window.toggleLoginTab = function(role) {
+            const btnParent = document.getElementById('btn-tab-parent');
+            const btnAdmin = document.getElementById('btn-tab-admin');
+            const formParent = document.getElementById('form-parent');
+            const formAdmin = document.getElementById('form-admin');
+
+            if (role === 'parent') {
+                btnParent.className = "flex-1 py-2.5 text-sm font-bold rounded-xl bg-white text-babyPink shadow-sm transition-all";
+                btnAdmin.className = "flex-1 py-2.5 text-sm font-bold rounded-xl text-gray-500 transition-all";
+                formParent.classList.remove('hidden');
+                formAdmin.classList.add('hidden');
+            } else {
+                btnAdmin.className = "flex-1 py-2.5 text-sm font-bold rounded-xl bg-white text-babyPink shadow-sm transition-all";
+                btnParent.className = "flex-1 py-2.5 text-sm font-bold rounded-xl text-gray-500 transition-all";
+                formAdmin.classList.remove('hidden');
+                formParent.classList.add('hidden');
+            }
+        }
+
+        window.handleParentLogin = function() {
+            const inputVal = document.getElementById('parent-code-input').value.trim().toUpperCase();
+            if (!inputVal) {
+                showToast("Vui lòng nhập mã học tập của bé!", "error");
+                return;
+            }
+
+            // Kiểm tra tính hợp lệ của tài khoản con
+            const foundAcc = subAccountsList.find(acc => acc.code === inputVal);
+            if (foundAcc) {
+                loggedInRole = 'parent';
+                loggedInChildCode = inputVal;
+                sessionStorage.setItem('loggedInRole', 'parent');
+                sessionStorage.setItem('loggedInChildCode', inputVal);
+                showToast(`Đăng nhập thành công bé: ${inputVal}! 🎉`, "success");
+                enterChildDashboard();
+            } else {
+                showToast("Mã bé không đúng hoặc chưa được cấp! Ba mẹ hãy liên hệ Admin hoặc vào bằng tài khoản Khách.", "error");
+            }
+        }
+
+        window.handleAdminLogin = function() {
+            const inputVal = document.getElementById('admin-key-input').value.trim();
+            if (inputVal === "admin123") {
+                loggedInRole = 'admin';
+                sessionStorage.setItem('loggedInRole', 'admin');
+                showToast("Xin chào Quản trị viên! Đang chuyển hướng Dashboard...", "success");
+                enterAdminDashboard();
+            } else {
+                showToast("Mã Quản Trị Hệ Thống không hợp lệ!", "error");
+            }
         }
 
         // ================= KÍCH HOẠT BAN ĐẦU (INITIALIZE) =================
