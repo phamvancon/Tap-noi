@@ -1004,17 +1004,28 @@
         }
 
         // ================= TRÌNH KIẾT XUẤT ĐỌC AI ONLINE (PCM16 SANG WAV CONVERTER) =================
-        async function fetchWithRetry(url, options, retries = 5, delay = 1000) {
+        async function fetchWithRetry(url, options, retriesLeft = 5, attempt = 0) {
+            const BACKOFF_DELAYS = [1000, 2000, 4000, 8000, 16000];
             try {
                 const response = await fetch(url, options);
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    // Nếu là lỗi Client (400 - 499) ngoại trừ Rate Limit (429), ném lỗi ngay lập tức để chuyển dự phòng
+                    if (response.status >= 400 && response.status < 500 && response.status !== 429) {
+                        throw new Error(`Client error: status ${response.status}`);
+                    }
+                    throw new Error(`Server or Rate Limit error: status ${response.status}`);
                 }
                 return await response.json();
             } catch (error) {
-                if (retries > 1) {
+                // Nếu gặp lỗi Client từ chối (như sai API Key), ngắt quãng việc thử lại ngay lập tức
+                if (error.message.includes("Client error")) {
+                    throw error;
+                }
+                // Thử lại nếu có lỗi mạng hoặc lỗi Server tạm thời
+                if (retriesLeft > 1) {
+                    const delay = BACKOFF_DELAYS[attempt] || 1000;
                     await new Promise(resolve => setTimeout(resolve, delay));
-                    return fetchWithRetry(url, options, retries - 1, delay * 2);
+                    return fetchWithRetry(url, options, retriesLeft - 1, attempt + 1);
                 } else {
                     throw error;
                 }
@@ -1061,25 +1072,45 @@
         }
 
         function playPCM(base64Data, mimeType) {
-            let sampleRate = 24000;
-            const rateMatch = mimeType.match(/rate=(\d+)/);
-            if (rateMatch) {
-                sampleRate = parseInt(rateMatch[1], 10);
-            }
-            
-            const binaryStr = atob(base64Data);
-            const len = binaryStr.length;
-            const buffer = new ArrayBuffer(len);
-            const view = new Uint8Array(buffer);
-            for (let i = 0; i < len; i++) {
-                view[i] = binaryStr.charCodeAt(i);
-            }
-            
-            const wavBuffer = createWavHeader(buffer, sampleRate);
-            const blob = new Blob([wavBuffer], { type: 'audio/wav' });
-            const url = URL.createObjectURL(blob);
-            const audio = new Audio(url);
-            audio.play();
+            return new Promise((resolve, reject) => {
+                try {
+                    let sampleRate = 24000;
+                    const rateMatch = mimeType.match(/rate=(\d+)/);
+                    if (rateMatch) {
+                        sampleRate = parseInt(rateMatch[1], 10);
+                    }
+                    
+                    const binaryStr = atob(base64Data);
+                    const len = binaryStr.length;
+                    const buffer = new ArrayBuffer(len);
+                    const view = new Uint8Array(buffer);
+                    for (let i = 0; i < len; i++) {
+                        view[i] = binaryStr.charCodeAt(i);
+                    }
+                    
+                    const wavBuffer = createWavHeader(buffer, sampleRate);
+                    const blob = new Blob([wavBuffer], { type: 'audio/wav' });
+                    const url = URL.createObjectURL(blob);
+                    const audio = new Audio(url);
+                    
+                    audio.onended = () => {
+                        URL.revokeObjectURL(url);
+                        resolve();
+                    };
+                    
+                    audio.onerror = (e) => {
+                        URL.revokeObjectURL(url);
+                        reject(e);
+                    };
+
+                    audio.play().catch(err => {
+                        URL.revokeObjectURL(url);
+                        reject(err);
+                    });
+                } catch (err) {
+                    reject(err);
+                }
+            });
         }
 
         // Thực hiện tổng hợp phát âm thông minh (Hỗ trợ cả Local và AI Online)
@@ -1093,9 +1124,10 @@
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
                 
                 const payload = {
+                    model: "gemini-2.5-flash-preview-tts",
                     contents: [{
                         parts: [{
-                            text: `Phát âm thật rõ ràng, chậm rãi, chuẩn giọng tiếng Việt từ ngữ sau cho em bé tập nói bắt chước: "${text}"`
+                            text: `Say in a gentle, slow, and clear voice suitable for an infant learning to speak: "${text}"`
                         }]
                     }],
                     generationConfig: {
@@ -1118,13 +1150,13 @@
 
                 const inlineData = result.candidates?.[0]?.content?.parts?.[0]?.inlineData;
                 if (inlineData && inlineData.data) {
-                    playPCM(inlineData.data, inlineData.mimeType);
+                    await playPCM(inlineData.data, inlineData.mimeType);
                 } else {
-                    throw new Error("Không thể trích xuất dữ liệu giọng nói đám mây.");
+                    throw new Error("Không thể trích xuất dữ liệu âm thanh AI.");
                 }
             } catch (error) {
-                console.error("Lỗi AI Online TTS:", error);
-                showToast("Không kết nối được máy chủ AI, đang chuyển sang giọng cục bộ dự phòng.", "error");
+                console.warn("Chuyển hướng giọng nói dự phòng do lỗi kết nối:", error.message);
+                showToast("Đang phát bằng giọng đọc dự phòng của thiết bị 🔊", "info");
                 speakLocalFallback(text, speedRate);
             } finally {
                 isSpeakingAI = false;
@@ -1513,7 +1545,7 @@
             }
             const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'sub_accounts', loggedInChildCode);
             try {
-                const snap = await getDoc(snap);
+                const snap = await getDoc(docRef); // Sửa lỗi getDoc(snap) cũ thành getDoc(docRef)
                 if (snap.exists()) {
                     const data = snap.data();
                     
@@ -1536,7 +1568,7 @@
                     }
                 }
             } catch (err) {
-                console.log("Không tìm thấy kết quả sàng lọc cũ.");
+                console.log("Không tìm thấy kết quả sàng lọc cũ hoặc lỗi kết nối.");
             }
         }
 
@@ -2014,8 +2046,8 @@
                 banner.classList.add('bg-amber-100', 'text-amber-800');
 
                 list.innerHTML = `
-                    <li><strong>Kích hoạt nhu cầu nói của con:</strong> Đừng vội đáp ứng ngay khi bé chỉ trỏ khóc đòi. Gợi ý cho bé bật hơi âm tiết đầu (Ví dụ: "Bé muốn sữa... nói: Sữa!").</li>
-                    <li><strong>Trò chuyện song hành với hoạt động:</strong> Khi dọn dẹp, rửa bát, hãy tường thuật trực tiếp việc bạn đang làm bằng từ ngắn: "Bố rửa bát", "Mẹ lau nhà".</li>
+                    <li><strong>Kích hoạt nhu cầu nói của con:</strong> Đừng vội đáp ứng ngay khi bé chỉ trỏ khóc đòi. Gợi ý cho bé bật hơi âm tiết đầu (Ví dụ: \"Bé muốn sữa... nói: Sữa!\").</li>
+                    <li><strong>Trò chuyện song hành với hoạt động:</strong> Khi dọn dẹp, rửa bát, hãy tường thuật trực tiếp việc bạn đang làm bằng từ ngắn: \"Bố rửa bát\", \"Mẹ lau nhà\".</li>
                     <li><strong>Học thông qua hình ảnh:</strong> Đọc truyện tranh tranh động vật lớn, khuyến khích bé bắt chước các nguyên âm đơn giản.</li>
                     <li>Dành 15 phút mỗi ngày cùng chơi các thẻ từ tại phần <strong>🗣️ Bé Tập Nói</strong> của app này.</li>
                 `;
@@ -2024,7 +2056,7 @@
                 banner.classList.add('bg-emerald-100', 'text-emerald-800');
 
                 list.innerHTML = `
-                    <li><strong>Liên tục mở rộng vốn từ:</strong> Đọc sách kể chuyện dài hơn một chút, cho bé quyền lựa chọn bằng câu hỏi: "Bé ăn chuối hay cam nào?".</li>
+                    <li><strong>Liên tục mở rộng vốn từ:</strong> Đọc sách kể chuyện dài hơn một chút, cho bé quyền lựa chọn bằng câu hỏi: \"Bé ăn chuối hay cam nào?\".</li>
                     <li><strong>Chơi đóng vai:</strong> Dạy con cách chơi giả vờ (cho gấu ăn, bế búp bê đi ngủ) để kích thích trí tưởng tượng xã hội cao cấp.</li>
                     <li>Hãy để bé tiếp tục luyện các từ ghép cao hơn tại phần <strong>🗣️ Bé Tập Nói</strong> để làm phong phú vốn từ vựng nhé!</li>
                 `;
