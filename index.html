@@ -74,7 +74,8 @@
                 'resetFlashcardsToDefault', 'copyToClipboard', 'updateSpeechRateDisplay',
                 'handleAdminImageUpload', 'clearUploadedImage', 'handleRegisterAccount',
                 'startMathGame', 'answerMathQuestion', 'quitMathGame', 'selectQuizGrade',
-                'saveChildVoicePreference', 'switchLearnSubTab', 'selectNumberRange', 'convertNumberToVietnameseWords'
+                'saveChildVoicePreference', 'switchLearnSubTab', 'selectNumberRange', 'convertNumberToVietnameseWords',
+                'openStudentEditModal', 'closeStudentEditModal', 'saveStudentEdit'
             ];
             earlyGlobals.forEach(fn => {
                 window[fn] = window[fn] || function() {
@@ -106,6 +107,47 @@
             <div class="flex gap-3 mt-6">
                 <button id="confirm-btn-cancel" class="flex-1 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-sm transition-all">Hủy bỏ</button>
                 <button id="confirm-btn-ok" class="flex-1 py-3 rounded-xl bg-babyPink hover:bg-opacity-95 text-white font-bold text-sm transition-all shadow-md shadow-babyPink/15">Đồng ý</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CHỈNH SỬA THÔNG TIN & MÃ HỌC SINH (ADMIN ONLY) -->
+    <div id="student-edit-modal" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 hidden backdrop-blur-sm">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 md:p-8 shadow-2xl border border-slate-50">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-black text-slate-800 flex items-center gap-2">
+                    <span>✏️</span> Sửa Mã & Thông Tin Bé
+                </h3>
+                <button onclick="closeStudentEditModal()" class="text-gray-400 hover:text-slate-600 font-bold text-xl">&times;</button>
+            </div>
+
+            <div class="space-y-4">
+                <input type="hidden" id="edit-student-old-code">
+                
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Mã học sinh mới (Tùy chỉnh)</label>
+                    <input type="text" id="edit-student-code-input" class="w-full px-4 py-3 rounded-2xl border-2 border-slate-100 focus:border-babyPink focus:outline-none font-black text-slate-800 uppercase tracking-wider transition-all" placeholder="Ví dụ: BAP, ECO999, TOM...">
+                    <p class="text-[10px] text-gray-400 mt-1">Viết liền không dấu, không khoảng trắng (Ví dụ: BEBAP, ECO102...)</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Họ & Tên của bé</label>
+                    <input type="text" id="edit-student-name-input" class="w-full px-4 py-3 rounded-2xl border-2 border-slate-100 focus:border-babyPink focus:outline-none font-bold text-slate-800 transition-all">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Phân cấp lớp học</label>
+                    <select id="edit-student-grade-input" class="w-full px-4 py-3 rounded-2xl border-2 border-slate-100 focus:border-babyPink focus:outline-none font-bold text-slate-700 bg-white transition-all">
+                        <option value="Lớp 1">Mầm non / Lớp 1 🐥</option>
+                        <option value="Lớp 2">Lớp 2 thông minh 🦊</option>
+                        <option value="Lớp 3">Lớp 3 năng động 🦁</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-6">
+                <button onclick="closeStudentEditModal()" class="flex-1 py-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold transition-all">Hủy bỏ</button>
+                <button onclick="saveStudentEdit()" class="flex-1 py-3.5 rounded-2xl bg-babyPink hover:bg-opacity-95 text-white font-bold transition-all shadow-lg shadow-babyPink/20">Lưu Thay Đổi 💾</button>
             </div>
         </div>
     </div>
@@ -403,7 +445,7 @@
                 <div id="learn-section-alphabet" class="space-y-4">
                     <div class="text-center py-2">
                         <h3 class="text-xl font-black text-slate-800">✨ Bảng Chữ Cái Tiếng Việt Vui Nhộn ✨</h3>
-                        <p class="text-xs text-gray-400">Bé hãy bấm vào từng chữ cái để tập nói và nhận biết nhé!</p>
+                        <p class="text-xs text-gray-400">Bé hãy bấm vào từng chữ cái để nghe phát âm chuẩn âm vần mẫu giáo nhé!</p>
                     </div>
                     <!-- Lưới 29 chữ cái Tiếng Việt -->
                     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4" id="alphabet-grid-container">
@@ -608,7 +650,7 @@
                                 </h5>
                             </div>
                             <div>
-                                <span class="text-xs font-bold uppercase text-gray-400 tracking-wider">Hướng Dẫn Cho Ba Mẹ</span>
+                                <span class="text-xs font-bold uppercase text-gray-400 tracking-wider">Hướng Dần Cho Ba Mẹ</span>
                                 <p id="selected-day-guide" class="text-sm text-slate-600 leading-relaxed mt-1">Khi nói, ba mẹ hãy cúi đầu thấp vừa tầm mắt con, chỉ tay nhẹ nhàng vào má mình và bật hơi rõ ràng để con nhìn khẩu hình.</p>
                             </div>
                         </div>
@@ -664,7 +706,7 @@
                 <div class="bg-white p-6 rounded-3xl custom-shadow border border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
                     <div class="w-full md:w-auto">
                         <h3 class="text-xl font-extrabold text-slate-800">Cấp mã học tập & Quản trị dữ liệu</h3>
-                        <p class="text-gray-500 text-sm mt-1">Đăng ký tự động qua app hoặc Admin cấp thủ công mã "ECOxxx".</p>
+                        <p class="text-gray-500 text-sm mt-1">Đăng ký tự động qua app hoặc Admin cấp thủ công, sửa mã tùy ý.</p>
                     </div>
                     <div class="w-full md:w-72 relative">
                         <input type="text" id="admin-search-input" oninput="renderAdminList()" placeholder="Tìm kiếm theo tên / mã số..." class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-babyPink focus:outline-none text-sm font-semibold">
@@ -835,7 +877,7 @@
         // State quản lý trong ứng dụng
         let currentAuthUser = null;
         let loggedInRole = null; // 'admin' | 'parent' | 'guest'
-        let loggedInChildCode = null; // mã ECOxxx
+        let loggedInChildCode = null; // mã ECOxxx / mã tự chỉnh
         let loggedInChildName = "Bé Tự Do";
         let loggedInChildGrade = "Lớp 1";
         let subAccountsList = []; // lưu tạm cục bộ từ Firebase
@@ -909,6 +951,40 @@
             { letter: "Y", word: "Y tá", emoji: "🧑‍⚕️" }
         ];
 
+        // TỪ ĐIỂN PHIÊN ÂM CHUẨN ÂM VẦN MẪU GIÁO VIỆT NAM (PHONICS)
+        // Tránh lỗi TTS đọc B thành "Bi" hay "Bê". Giúp con nghe chuẩn "bờ", "cờ", "dờ"...
+        const phoneticMap = {
+            "A": "a", 
+            "Ă": "á", 
+            "Â": "ớ",
+            "B": "bờ", 
+            "C": "cờ", 
+            "D": "dờ", 
+            "Đ": "đờ",
+            "E": "e", 
+            "Ê": "ê", 
+            "G": "gờ", 
+            "H": "hờ",
+            "I": "i", 
+            "K": "cờ", 
+            "L": "lờ", 
+            "M": "mờ",
+            "N": "nờ", 
+            "O": "o", 
+            "Ô": "ô", 
+            "Ơ": "ơ",
+            "P": "pờ", 
+            "Q": "quờ", 
+            "R": "rờ", 
+            "S": "sờ",
+            "T": "tờ", 
+            "U": "u", 
+            "Ư": "ư", 
+            "V": "vờ",
+            "X": "xờ", 
+            "Y": "i"
+        };
+
         // State cho tab Học Chữ & Số
         let activeLearnSubTab = 'alphabet'; // 'alphabet' | 'numbers'
         let numberRangeStart = 1;
@@ -962,9 +1038,9 @@
             1: { dayName: "Thứ Hai", code: "family", title: "Gia đình thân thương 🏡", icon: "🏡", desc: "Khuyến khích bé tương tác sâu bằng các danh từ thân thuộc như Ba ba, Mẹ ơi, Ông bà." },
             2: { dayName: "Thứ Ba", code: "demand", title: "Nhu cầu hàng ngày 🍚", icon: "🍚", desc: "Hỗ trợ bé biểu đạt ý muốn tự nhiên: 'Măm măm' đòi ăn hoặc 'Bóng' khi muốn chơi." },
             3: { dayName: "Thứ Tư", code: "animals", title: "Thế giới động vật nhỏ 🐶", icon: "🐶", desc: "Phát triển óc tưởng tượng khi bé học bắt chước tiếng 'Gà gáy' hoặc chơi với 'Con chó'." },
-            4: { dayName: "Thứ Năm", code: "fruits", title: "Trái cây thơm ngon 🍎", icon: "🍎", desc: "Rèn luyện phân biệt màu sắc, hình học qua các loại quả ngọt ngào chín mọng tự nhiên." },
+            4: { dayName: "Thứ Năm", code: "fruits", title: "Trái cây thơm ngon 🍎", icon: "🍎", desc: "Rèn luyện phân biệt màu sắc, hình học qua các loại quả ngọt ngào chịu mọng tự nhiên." },
             5: { dayName: "Thứ Sáu", code: "vehicles", title: "Giao thông chuyển động 🚗", icon: "🚗", desc: "Giúp bé hào hứng thông qua âm thanh các phương tiện di chuyển nhanh chóng quanh khu phố." },
-            6: { dayName: "Thứ Bảy", code: "family", title: "Gia đình sum họp vui vẻ 🏡", icon: "🏡", desc: "Cả nhà cùng quây quản bên bé và thực hiện ôn luyện tương tác phát âm các đại từ nhân xưng." },
+            6: { dayName: "Thứ Bảy", code: "family", title: "Gia đình sum họp vui vẻ 🏡", icon: "🏡", desc: "Cả nhà cùng quây quần bên bé và thực hiện ôn luyện tương tác phát âm các đại từ nhân xưng." },
             0: { dayName: "Chủ Nhật", code: "all", title: "Ôn tập tổng hợp đầy màu sắc ✨", icon: "✨", desc: "Mở rộng tối đa phản xạ của con, ôn lại toàn bộ từ vựng đã học trong tuần một cách tự nhiên." }
         };
 
@@ -1121,6 +1197,8 @@
                 } else {
                     initializeDefaultSettingsOnCloud();
                 }
+            }, (error) => {
+                console.error("Lỗi nghe cấu hình toàn cục từ Firestore:", error);
             });
         }
 
@@ -1152,6 +1230,8 @@
                     renderAdminList();
                     updateAdminStats();
                 }
+            }, (error) => {
+                console.error("Lỗi nghe danh sách học sinh từ Firestore:", error);
             });
         }
 
@@ -1276,6 +1356,124 @@
             );
         };
 
+        // ================= ADMIN SỬA THÔNG TIN & MÃ HỌC SINH TÙY BIẾN =================
+        window.openStudentEditModal = function(code) {
+            const acc = subAccountsList.find(a => a.code === code);
+            if (!acc) return;
+            document.getElementById('edit-student-old-code').value = code;
+            document.getElementById('edit-student-code-input').value = code;
+            document.getElementById('edit-student-name-input').value = acc.name || "";
+            document.getElementById('edit-student-grade-input').value = acc.grade || "Lớp 1";
+            document.getElementById('student-edit-modal').classList.remove('hidden');
+        };
+
+        window.closeStudentEditModal = function() {
+            document.getElementById('student-edit-modal').classList.add('hidden');
+        };
+
+        window.saveStudentEdit = async function() {
+            const oldCode = document.getElementById('edit-student-old-code').value;
+            const newCode = document.getElementById('edit-student-code-input').value.trim().toUpperCase();
+            const newName = document.getElementById('edit-student-name-input').value.trim();
+            const newGrade = document.getElementById('edit-student-grade-input').value;
+
+            if (!newCode || !newName) {
+                showToast("Mã học sinh và Họ tên bé không được để trống!", "error");
+                return;
+            }
+
+            // Kiểm tra mã chỉ được chứa chữ cái không dấu, số, gạch nối, gạch dưới
+            if (!/^[A-Z0-9_-]+$/.test(newCode)) {
+                showToast("Mã học sinh không được chứa khoảng trắng, dấu tiếng Việt hoặc ký tự đặc biệt!", "error");
+                return;
+            }
+
+            const isCodeChanged = (oldCode !== newCode);
+
+            if (isCodeChanged) {
+                // Kiểm tra mã mới đã tồn tại chưa
+                const isDuplicate = subAccountsList.some(acc => acc.code === newCode);
+                if (isDuplicate) {
+                    showToast(`Mã "${newCode}" đã được sử dụng bởi học sinh khác!`, "error");
+                    return;
+                }
+
+                // Thực hiện đồng bộ di dời tài liệu trên Firestore
+                showConfirmDialog(
+                    "Đổi mã học sinh",
+                    `Bạn có đồng ý đổi mã học sinh từ "${oldCode}" thành "${newCode}"? Toàn bộ lộ trình 30 ngày, kỷ lục game và điểm số trắc nghiệm sẽ được bảo toàn và chuyển sang mã mới.`,
+                    "🔄",
+                    async () => {
+                        const oldDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'sub_accounts', oldCode);
+                        const newDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'sub_accounts', newCode);
+
+                        try {
+                            // Lấy dữ liệu từ mã cũ
+                            const oldSnap = await getDoc(oldDocRef);
+                            let data = {};
+                            if (oldSnap.exists()) {
+                                data = oldSnap.data();
+                            }
+
+                            // Cập nhật thông tin mới
+                            const updatedData = {
+                                ...data,
+                                code: newCode,
+                                name: newName,
+                                grade: newGrade,
+                                lastUpdated: new Date().toISOString()
+                            };
+
+                            // Tạo tài liệu mới và xóa tài liệu cũ
+                            await setDoc(newDocRef, updatedData);
+                            await deleteDoc(oldDocRef);
+
+                            // Nếu bé đang được sửa chính là tài khoản đang đăng nhập hiện tại -> cập nhật session lưu giữ phiên
+                            if (loggedInRole === 'parent' && loggedInChildCode === oldCode) {
+                                loggedInChildCode = newCode;
+                                loggedInChildName = newName;
+                                loggedInChildGrade = newGrade;
+                                sessionStorage.setItem('loggedInChildCode', newCode);
+                                
+                                document.getElementById('display-child-name').innerText = newName;
+                                document.getElementById('display-child-code').innerText = newCode;
+                                document.getElementById('child-grade-badge').innerText = newGrade;
+                            }
+
+                            closeStudentEditModal();
+                            showToast(`Đã lưu thay đổi & chuyển đổi mã học sinh sang "${newCode}"!`, "success");
+                        } catch (err) {
+                            console.error("Lỗi đổi mã học sinh:", err);
+                            showToast("Gặp sự cố kết nối Firestore khi chuyển đổi dữ liệu mã.", "error");
+                        }
+                    }
+                );
+            } else {
+                // Chỉ sửa đổi Tên hoặc Lớp, không đổi Mã học sinh
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'sub_accounts', oldCode);
+                try {
+                    await updateDoc(docRef, {
+                        name: newName,
+                        grade: newGrade,
+                        lastUpdated: new Date().toISOString()
+                    });
+
+                    if (loggedInRole === 'parent' && loggedInChildCode === oldCode) {
+                        loggedInChildName = newName;
+                        loggedInChildGrade = newGrade;
+                        document.getElementById('display-child-name').innerText = newName;
+                        document.getElementById('child-grade-badge').innerText = newGrade;
+                    }
+
+                    closeStudentEditModal();
+                    showToast("Cập nhật thông tin bé thành công!", "success");
+                } catch (err) {
+                    console.error("Lỗi cập nhật học sinh:", err);
+                    showToast("Không thể lưu cập nhật lên máy chủ.", "error");
+                }
+            }
+        };
+
         // KHI BÉ LÀM XONG TRẮC NGHIỆM SGK -> LƯU KẾT QUẢ LÊN FIRESTORE
         async function saveQuizResultToCloud(score) {
             if (loggedInRole === 'guest') {
@@ -1364,7 +1562,7 @@
         window.handleParentLogin = function() {
             const inputVal = document.getElementById('parent-code-input').value.trim().toUpperCase();
             if (!inputVal) {
-                showToast("Vui lòng nhập mã ECO của bé!", "error");
+                showToast("Vui lòng nhập mã học tập của bé!", "error");
                 return;
             }
 
@@ -1617,7 +1815,7 @@
             }
         }
 
-        // ================= PHÂN HỆ MỚI: HỌC CHỮ CÁI & ĐẾM SỐ 1-100 =================
+        // ================= PHÂN HỆ: HỌC CHỮ CÁI & ĐẾM SỐ 1-100 =================
         window.switchLearnSubTab = function(subtabName) {
             activeLearnSubTab = subtabName;
             const btnAlphabet = document.getElementById('learn-subtab-btn-alphabet');
@@ -1653,11 +1851,14 @@
                 const borderCol = colors[index % colors.length];
                 const card = document.createElement('div');
                 
-                // Khi chạm sẽ nói chữ cái và từ mẫu: "Chữ A, Ca"
+                // Khi chạm sẽ nói chữ cái theo âm vần (bờ, cờ...) và từ mẫu: "Bờ... bò"
                 card.onclick = () => {
                     card.classList.add('scale-95', 'bg-slate-50');
                     setTimeout(() => card.classList.remove('scale-95', 'bg-slate-50'), 150);
-                    speakWord(`Chữ ${item.letter}. ${item.word}`, card);
+                    
+                    const pLetter = phoneticMap[item.letter] || item.letter;
+                    const speechText = `${pLetter}. ${item.word}`;
+                    speakWord(speechText, card);
                 };
 
                 card.className = `bg-white rounded-2xl border-b-4 border-2 ${borderCol} p-4 flex flex-col items-center justify-center cursor-pointer transition-all hover:scale-105 active:scale-95 shadow-sm text-center select-none`;
@@ -2115,7 +2316,7 @@
                     <td class="py-4 px-6 font-black text-slate-800 tracking-wider">
                         <div class="flex items-center gap-2">
                             <span>🎒</span>
-                            <span>${acc.code}</span>
+                            <span class="bg-slate-100 px-2.5 py-1 rounded-xl font-mono text-sm border border-slate-200/55">${acc.code}</span>
                         </div>
                     </td>
                     <td class="py-4 px-6">
@@ -2125,9 +2326,12 @@
                     <td class="py-4 px-6">${journeyBadge}</td>
                     <td class="py-4 px-6">${quizLabel}</td>
                     <td class="py-4 px-6">${gameLabel}</td>
-                    <td class="py-4 px-6 text-right space-x-1">
+                    <td class="py-4 px-6 text-right space-x-1 whitespace-nowrap">
                         <button onclick="copyToClipboard('${acc.code}')" class="bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-all">
                             Sao chép
+                        </button>
+                        <button onclick="openStudentEditModal('${acc.code}')" class="bg-amber-50 text-amber-600 hover:bg-amber-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-all">
+                            Sửa thông tin
                         </button>
                         <button onclick="deleteSubAccount('${acc.code}')" class="bg-rose-50 text-rose-600 hover:bg-rose-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-all">
                             Xóa
@@ -2360,7 +2564,7 @@
             try {
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
                 
-                // Gửi chỉ dẫn tiếng Việt chuẩn để AI đọc đúng từ ngữ
+                // Gửi chỉ dẫn tiếng Việt chuẩn để AI đọc đúng âm mầm non Việt Nam
                 const payload = {
                     model: "gemini-2.5-flash-preview-09-2025",
                     contents: [{
@@ -2890,6 +3094,9 @@
         window.switchLearnSubTab = switchLearnSubTab;
         window.selectNumberRange = selectNumberRange;
         window.convertNumberToVietnameseWords = convertNumberToVietnameseWords;
+        window.openStudentEditModal = openStudentEditModal;
+        window.closeStudentEditModal = closeStudentEditModal;
+        window.saveStudentEdit = saveStudentEdit;
     </script>
 </body>
 </html>
