@@ -55,7 +55,8 @@
                 'saveFlashcardEdit', 'answerQuestion', 'resetQuiz', 'toggleDayCompleted', 
                 'selectJourneyDay', 'speakSelectedDayWord', 'applyDailyThemeFilter', 
                 'createNewSubAccount', 'deleteSubAccount', 'saveGlobalVoiceConfig', 
-                'resetFlashcardsToDefault', 'copyToClipboard', 'updateSpeechRateDisplay'
+                'resetFlashcardsToDefault', 'copyToClipboard', 'updateSpeechRateDisplay',
+                'handleAdminImageUpload', 'clearUploadedImage'
             ];
             earlyGlobals.forEach(fn => {
                 window[fn] = window[fn] || function() {
@@ -133,9 +134,32 @@
                     <input type="text" id="edit-card-desc" class="w-full px-4 py-3 rounded-2xl border-2 border-slate-100 focus:border-babyPink focus:outline-none text-slate-600 transition-all">
                 </div>
 
-                <div>
-                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Liên kết hình ảnh minh họa (Thực tế & Sắc nét)</label>
-                    <input type="text" id="edit-card-image" oninput="previewEditImage(this.value)" class="w-full px-4 py-3 rounded-2xl border-2 border-slate-100 focus:border-babyPink focus:outline-none text-xs text-slate-500 font-mono transition-all" placeholder="Dán link ảnh từ Unsplash, Google...">
+                <!-- TÍNH NĂNG MỚI: Nhập URL hoặc Tải ảnh trực tiếp -->
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Lựa chọn 1: Liên kết hình ảnh (URL)</label>
+                        <input type="text" id="edit-card-image" oninput="previewEditImage(this.value)" class="w-full px-4 py-3 rounded-2xl border-2 border-slate-100 focus:border-babyPink focus:outline-none text-xs text-slate-500 font-mono transition-all" placeholder="Dán link ảnh từ Unsplash, Google...">
+                    </div>
+                    
+                    <div class="relative flex py-1 items-center">
+                        <div class="flex-grow border-t border-slate-200"></div>
+                        <span class="flex-shrink mx-4 text-slate-400 text-xs font-bold">HOẶC</span>
+                        <div class="flex-grow border-t border-slate-200"></div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Lựa chọn 2: Tải lên từ thiết bị</label>
+                        <div class="flex items-center gap-3">
+                            <label class="flex-grow flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border-2 border-dashed border-slate-200 hover:border-babyPink cursor-pointer bg-white text-slate-600 hover:text-babyPink transition-all">
+                                <span class="text-lg">📁</span>
+                                <span class="text-sm font-bold truncate" id="upload-file-label">Chọn tệp hình ảnh...</span>
+                                <input type="file" id="edit-card-file-input" accept="image/*" class="hidden" onchange="handleAdminImageUpload(this)">
+                            </label>
+                            <button id="btn-clear-upload" onclick="clearUploadedImage()" class="hidden p-3.5 rounded-2xl bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-500 transition-all" title="Xóa ảnh đã tải để dùng URL">
+                                ✕
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Khung xem trước ảnh trực tiếp -->
@@ -625,6 +649,9 @@
         // Tiến trình 30 ngày tập nói của Bé hiện tại
         let completedDaysArray = []; 
         let activeJourneyDay = 1;
+
+        // Lưu trữ ảnh tải lên từ thiết bị tạm thời (Base64 tối ưu hóa)
+        let tempUploadedImageBase64 = "";
 
         // Bộ giọng đọc AI Online tích hợp chất lượng cao (Gemini Model Premium Voices)
         const geminiAiVoices = [
@@ -1821,12 +1848,30 @@
             const word = currentWordDatabase.find(w => w.id === id);
             if (!word) return;
 
+            // Đặt lại các trạng thái Upload tệp của modal
+            tempUploadedImageBase64 = "";
+            const fileInput = document.getElementById('edit-card-file-input');
+            if (fileInput) fileInput.value = "";
+            const label = document.getElementById('upload-file-label');
+            if (label) label.innerText = "Chọn tệp hình ảnh...";
+            const clearBtn = document.getElementById('btn-clear-upload');
+            if (clearBtn) clearBtn.classList.add('hidden');
+
             document.getElementById('edit-card-id').value = word.id;
             document.getElementById('edit-card-text').value = word.text;
             document.getElementById('edit-card-icon').value = word.icon;
             document.getElementById('edit-card-category').value = word.category;
             document.getElementById('edit-card-desc').value = word.description;
-            document.getElementById('edit-card-image').value = word.imageUrl;
+            
+            // Nếu ảnh cũ là Base64 tải lên, để trống dòng link URL và bật trạng thái đã tải
+            if (word.imageUrl && word.imageUrl.startsWith('data:')) {
+                tempUploadedImageBase64 = word.imageUrl;
+                document.getElementById('edit-card-image').value = "";
+                if (label) label.innerText = "Ảnh cục bộ đã được thiết lập";
+                if (clearBtn) clearBtn.classList.remove('hidden');
+            } else {
+                document.getElementById('edit-card-image').value = word.imageUrl || "";
+            }
 
             previewEditImage(word.imageUrl);
 
@@ -1834,12 +1879,12 @@
             modal.classList.remove('hidden');
         };
 
-        // Xem trước ảnh trực tiếp khi đang gõ/dán link
+        // Xem trước ảnh trực tiếp khi đang gõ/dán link hoặc tải file
         window.previewEditImage = function(url) {
             const previewImg = document.getElementById('edit-image-preview');
             const placeholder = document.getElementById('edit-image-placeholder');
 
-            if (url && url.startsWith('http')) {
+            if (url && (url.startsWith('http') || url.startsWith('data:'))) {
                 previewImg.src = url;
                 previewImg.classList.remove('hidden');
                 placeholder.classList.add('hidden');
@@ -1848,6 +1893,79 @@
                 previewImg.classList.add('hidden');
                 placeholder.classList.remove('hidden');
             }
+        };
+
+        // XỬ LÝ TẢI ẢNH ĐỘC LẬP TỪ THIẾT BỊ (NÉN & TỐI ƯU HÓA)
+        window.handleAdminImageUpload = function(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            // Kiểm tra định dạng tệp tải lên
+            if (!file.type.startsWith('image/')) {
+                showToast("Vui lòng tải lên một tệp hình ảnh hợp lệ!", "error");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    // Thiết lập thông số nén tối đa (500px) để tệp cực gọn nhẹ
+                    const maxDim = 500;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > maxDim || height > maxDim) {
+                        if (width > height) {
+                            height = Math.round((height * maxDim) / width);
+                            width = maxDim;
+                        } else {
+                            width = Math.round((width * maxDim) / height);
+                            height = maxDim;
+                        }
+                    }
+
+                    // Thực hiện vẽ lại lên Canvas để xuất Base64 tối ưu
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Xuất định dạng JPEG dung lượng nén thông minh (~15-40KB)
+                    const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+
+                    // Đồng bộ trạng thái giao diện xem trước
+                    tempUploadedImageBase64 = compressedDataUrl;
+                    
+                    const previewImg = document.getElementById('edit-image-preview');
+                    const placeholder = document.getElementById('edit-image-placeholder');
+                    previewImg.src = compressedDataUrl;
+                    previewImg.classList.remove('hidden');
+                    placeholder.classList.add('hidden');
+
+                    // Làm trống dòng dán link để ưu tiên ảnh upload
+                    document.getElementById('edit-card-image').value = "";
+                    document.getElementById('upload-file-label').innerText = file.name;
+                    document.getElementById('btn-clear-upload').classList.remove('hidden');
+
+                    showToast("Đã tải và tối ưu hóa tệp hình ảnh thành công! 📸", "success");
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        };
+
+        // Hủy bỏ ảnh tải lên để dùng lại liên kết URL
+        window.clearUploadedImage = function() {
+            tempUploadedImageBase64 = "";
+            document.getElementById('edit-card-file-input').value = "";
+            document.getElementById('upload-file-label').innerText = "Chọn tệp hình ảnh...";
+            document.getElementById('btn-clear-upload').classList.add('hidden');
+
+            const originalUrl = document.getElementById('edit-card-image').value;
+            previewEditImage(originalUrl);
+            showToast("Đã xóa ảnh tải lên. Bạn có thể dán link URL mới.", "info");
         };
 
         window.closeFlashcardModal = function() {
@@ -1861,10 +1979,15 @@
             const icon = document.getElementById('edit-card-icon').value.trim();
             const category = document.getElementById('edit-card-category').value;
             const description = document.getElementById('edit-card-desc').value.trim();
-            const imageUrl = document.getElementById('edit-card-image').value.trim();
+            
+            // Ưu tiên tệp tải lên nếu tồn tại, ngược lại lấy liên kết URL dán ở ô input
+            let imageUrl = document.getElementById('edit-card-image').value.trim();
+            if (tempUploadedImageBase64) {
+                imageUrl = tempUploadedImageBase64;
+            }
 
             if (!text || !imageUrl) {
-                showToast("Vui lòng không để trống Từ vựng hoặc Liên kết ảnh!", "error");
+                showToast("Vui lòng điền Từ vựng và dán link ảnh hoặc Chọn ảnh tải lên!", "error");
                 return;
             }
 
@@ -2274,6 +2397,8 @@
         window.resetFlashcardsToDefault = resetFlashcardsToDefault;
         window.copyToClipboard = copyToClipboard;
         window.updateSpeechRateDisplay = updateSpeechRateDisplay;
+        window.handleAdminImageUpload = handleAdminImageUpload;
+        window.clearUploadedImage = clearUploadedImage;
 
     </script>
 </body>
