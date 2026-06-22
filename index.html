@@ -58,7 +58,7 @@
             0% { transform: translateY(0) rotate(0deg); opacity: 0; }
             10% { opacity: 1; }
             90% { opacity: 1; }
-            100% { transform: translateY(-1000px) rotate(360deg); opacity: 0; }
+            100% { transform: translateY(-1000px) rotate(360deg) opacity: 0; }
         }
     </style>
     <!-- KHỞI TẠO TRÁNH LỖI PHƯƠNG THỨC TRÊN WINDOW -->
@@ -74,7 +74,7 @@
                 'resetFlashcardsToDefault', 'copyToClipboard', 'updateSpeechRateDisplay',
                 'handleAdminImageUpload', 'clearUploadedImage', 'handleRegisterAccount',
                 'startMathGame', 'answerMathQuestion', 'quitMathGame', 'selectQuizGrade',
-                'saveChildVoicePreference', 'switchLearnSubTab', 'selectNumberRange'
+                'saveChildVoicePreference', 'switchLearnSubTab', 'selectNumberRange', 'convertNumberToVietnameseWords'
             ];
             earlyGlobals.forEach(fn => {
                 window[fn] = window[fn] || function() {
@@ -842,7 +842,7 @@
         let activeWordsFilter = 'all';
         let speechVoices = [];
 
-        // Trạng thái cấu hình giọng đọc cá nhân hóa được lưu nhớ
+        // Trạng thái cấu hình giọng đọc cá nhân hóa được lưu nhớ (Thiết lập mặc định thành Giọng nữ Bắc chuẩn - gemini-Aoede)
         let loggedInChildVoice = "";
         let loggedInChildRate = 0.65;
 
@@ -914,10 +914,10 @@
         let numberRangeStart = 1;
         let numberRangeEnd = 20;
 
-        // Bộ giọng đọc AI Online
+        // Bộ giọng đọc AI Online (Ưu tiên giọng Nữ Hà Nội Aoede lên đầu tiên)
         const geminiAiVoices = [
+            { id: "gemini-Aoede", value: "Aoede", label: "Aoede [AI Online - Giọng Nữ Hà Nội Chuẩn 🎙️]" },
             { id: "gemini-Kore", value: "Kore", label: "Kore [AI Online - Giọng Nữ Cao Cấp 🌟]" },
-            { id: "gemini-Aoede", value: "Aoede", label: "Aoede [AI Online - Giọng Nữ Dịu Dàng]" },
             { id: "gemini-Leda", value: "Leda", label: "Leda [AI Online - Giọng Nữ Ngọt Ngào]" },
             { id: "gemini-Zephyr", value: "Zephyr", label: "Zephyr [AI Online - Giọng Nam Trẻ Trung]" },
             { id: "gemini-Puck", value: "Puck", label: "Puck [AI Online - Giọng Nam Hoạt Bát]" },
@@ -1128,7 +1128,7 @@
             const globalSettingsDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'global');
             try {
                 await setDoc(globalSettingsDocRef, {
-                    globalVoiceName: "gemini-Kore", 
+                    globalVoiceName: "gemini-Aoede", // Chuyển giọng mặc định toàn cục thành Aoede (Giọng nữ Bắc chuẩn)
                     globalSpeechRate: 0.65,
                     words: defaultWordDatabase
                 });
@@ -1190,7 +1190,7 @@
                 quizLatestScore: null,
                 quizLatestGrade: null,
                 quizLatestTime: null,
-                preferredVoice: "gemini-Kore", // Giọng AI mặc định ban đầu khi đăng ký
+                preferredVoice: "gemini-Aoede", // Đăng ký mặc định dùng giọng Nữ Hà Nội chuẩn
                 preferredRate: 0.65
             };
 
@@ -1204,7 +1204,7 @@
                 loggedInChildName = nameInput;
                 loggedInChildGrade = gradeInput;
                 mathGameHighScore = 0;
-                loggedInChildVoice = "gemini-Kore";
+                loggedInChildVoice = "gemini-Aoede"; // Đồng bộ giọng đọc chuẩn Hà Nội
                 loggedInChildRate = 0.65;
 
                 sessionStorage.setItem('loggedInRole', 'parent');
@@ -1246,7 +1246,7 @@
                 quizLatestScore: null,
                 quizLatestGrade: null,
                 quizLatestTime: null,
-                preferredVoice: "",
+                preferredVoice: "gemini-Aoede", // Mặc định giọng Nữ Hà Nội
                 preferredRate: 0.65
             };
 
@@ -1377,7 +1377,7 @@
                 mathGameHighScore = foundAcc.mathGameHighScore || 0;
                 
                 // Đồng bộ lựa chọn giọng đọc đã lưu trước đó của bé từ đám mây
-                loggedInChildVoice = foundAcc.preferredVoice || "";
+                loggedInChildVoice = foundAcc.preferredVoice || "gemini-Aoede";
                 loggedInChildRate = foundAcc.preferredRate || 0.65;
 
                 sessionStorage.setItem('loggedInRole', 'parent');
@@ -1402,14 +1402,14 @@
             }
         }
 
-        // ĐĂNG NHẬP KHÁCH TRẢI NGHIỆM
+        // ĐĂNG NHẬP KHÁCH TRẠI NGHIỆM
         window.enterAsGuest = function() {
             loggedInRole = 'guest';
             loggedInChildCode = 'GUEST_TEMP';
             loggedInChildName = "Khách Trải Nghiệm";
             loggedInChildGrade = "Lớp 1";
             mathGameHighScore = 0;
-            loggedInChildVoice = "";
+            loggedInChildVoice = "gemini-Aoede"; // Mặc định cho khách dùng giọng Nữ Hà Nội chuẩn
             loggedInChildRate = 0.65;
 
             sessionStorage.setItem('loggedInRole', 'guest');
@@ -1504,6 +1504,8 @@
                         loggedInChildVoice = data.preferredVoice;
                         const voiceSelect = document.getElementById('voice-select');
                         if (voiceSelect) voiceSelect.value = data.preferredVoice;
+                    } else {
+                        loggedInChildVoice = "gemini-Aoede";
                     }
                     if (data.preferredRate) {
                         loggedInChildRate = data.preferredRate;
@@ -1525,7 +1527,7 @@
         window.logout = function() {
             loggedInRole = null;
             loggedInChildCode = null;
-            loggedInChildVoice = "";
+            loggedInChildVoice = "gemini-Aoede";
             loggedInChildRate = 0.65;
             sessionStorage.clear();
             
@@ -1668,6 +1670,36 @@
             });
         }
 
+        // HÀM CHUYỂN ĐỔI SỐ THÀNH CHỮ TIẾNG VIỆT (Giúp TTS phát âm chuẩn xác không bị đọc thành tiếng Anh)
+        window.convertNumberToVietnameseWords = function(num) {
+            const units = ["không", "một", "hai", "ba", "bốn", "năm", "sáu", "bảy", "tám", "chín"];
+            if (num === 100) return "một trăm";
+            if (num < 10) return units[num];
+            
+            const chuc = Math.floor(num / 10);
+            const donVi = num % 10;
+            
+            let result = "";
+            if (chuc === 1) {
+                result = "mười";
+            } else {
+                result = units[chuc] + " mươi";
+            }
+            
+            if (donVi > 0) {
+                if (donVi === 1 && chuc > 1) {
+                    result += " mốt";
+                } else if (donVi === 5) {
+                    result += " lăm";
+                } else if (donVi === 4 && chuc > 1) {
+                    result += " tư";
+                } else {
+                    result += " " + units[donVi];
+                }
+            }
+            return result;
+        }
+
         // Tạo lưới đếm số 1 đến 100 theo phân khúc
         window.renderNumbersGrid = function() {
             const container = document.getElementById('numbers-grid-container');
@@ -1691,11 +1723,12 @@
                 const colorTheme = bubbleColors[i % bubbleColors.length];
                 const bubble = document.createElement('button');
                 
-                // Khi bấm vào sẽ phát âm chữ số tiếng việt trực tiếp
+                // Khi bấm vào sẽ phát âm chữ số tiếng việt trực tiếp thông qua chữ tiếng việt đã dịch
                 bubble.onclick = () => {
                     bubble.classList.add('scale-125');
                     setTimeout(() => bubble.classList.remove('scale-125'), 200);
-                    speakWord(String(i), bubble);
+                    const textNumber = convertNumberToVietnameseWords(i);
+                    speakWord(textNumber, bubble);
                 };
 
                 bubble.className = `w-14 h-14 md:w-16 md:h-16 rounded-full border-2 font-black text-xl md:text-2xl flex items-center justify-center transition-all active:scale-90 shadow-md ${colorTheme} mx-auto`;
@@ -2252,8 +2285,8 @@
         }
 
         window.speakWord = function(text, element) {
-            // Ưu tiên tùy chọn giọng nói cá nhân của bé, nếu chưa có sẽ dùng cấu hình chung
-            const selectedVoiceId = document.getElementById('voice-select').value || loggedInChildVoice || globalVoiceNameConfig;
+            // Ưu tiên tùy chọn giọng nói cá nhân của bé, nếu chưa có sẽ dùng cấu hình chung (Mặc định dùng Aoede chuẩn Bắc)
+            const selectedVoiceId = document.getElementById('voice-select').value || loggedInChildVoice || globalVoiceNameConfig || "gemini-Aoede";
             const rateValue = parseFloat(document.getElementById('speech-rate').value) || loggedInChildRate || globalSpeechRateConfig;
 
             if (element) {
@@ -2269,11 +2302,23 @@
                 if ('speechSynthesis' in window) {
                     window.speechSynthesis.cancel();
                     const voiceMsg = new SpeechSynthesisUtterance(text);
+                    voiceMsg.lang = 'vi-VN';
+                    
                     if (selectedVoiceId && speechVoices.length > 0) {
                         const matchedVoice = speechVoices.find(v => v.name === selectedVoiceId);
-                        if (matchedVoice) voiceMsg.voice = matchedVoice;
+                        if (matchedVoice) {
+                            voiceMsg.voice = matchedVoice;
+                        }
                     }
-                    voiceMsg.lang = 'vi-VN';
+                    
+                    // Ưu tiên tìm giọng nữ Bắc cục bộ (Ví dụ: Microsoft An hoặc Google vi-VN)
+                    if ((!voiceMsg.voice || !voiceMsg.voice.lang.includes('vi')) && speechVoices.length > 0) {
+                        const viVoice = speechVoices.find(v => v.name.includes('An') || v.name.includes('Google') || v.lang.includes('vi-VN') || v.lang.includes('vi'));
+                        if (viVoice) {
+                            voiceMsg.voice = viVoice;
+                        }
+                    }
+                    
                     voiceMsg.rate = rateValue; 
                     voiceMsg.pitch = 1.25;      
                     window.speechSynthesis.speak(voiceMsg);
@@ -2313,11 +2358,13 @@
             const cleanVoiceName = voiceId.replace("gemini-", "");
 
             try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+                
+                // Gửi chỉ dẫn tiếng Việt chuẩn để AI đọc đúng từ ngữ
                 const payload = {
-                    model: "gemini-2.5-flash-preview-tts",
+                    model: "gemini-2.5-flash-preview-09-2025",
                     contents: [{
-                        parts: [{ text: `Say in a gentle, slow, and clear voice suitable for an infant learning to speak: "${text}"` }]
+                        parts: [{ text: `Hãy đọc từ sau bằng tiếng Việt miền Bắc chuẩn, giọng nữ ấm áp dịu dàng và đáng yêu cho bé mầm non tập nói: "${text}"` }]
                     }],
                     generationConfig: {
                         responseModalities: ["AUDIO"],
@@ -2349,6 +2396,11 @@
             window.speechSynthesis.cancel();
             const voiceMsg = new SpeechSynthesisUtterance(text);
             voiceMsg.lang = 'vi-VN';
+            if (speechVoices.length > 0) {
+                // Ưu tiên chọn giọng nữ chuẩn (Microsoft An hoặc Google vi-VN mang giọng nữ miền Bắc)
+                const viVoice = speechVoices.find(v => v.name.includes('An') || v.name.includes('Google') || v.lang.includes('vi-VN') || v.lang.includes('vi'));
+                if (viVoice) voiceMsg.voice = viVoice;
+            }
             voiceMsg.rate = speedRate;
             voiceMsg.pitch = 1.25;
             window.speechSynthesis.speak(voiceMsg);
@@ -2362,7 +2414,7 @@
                 const localVietnameseVoices = speechVoices.filter(voice => voice.lang.includes('vi-VN') || voice.lang.includes('vi'));
                 
                 // Xác định giọng nói ưu tiên (giọng cá nhân của bé -> giọng Admin -> mặc định)
-                const preferredVoice = loggedInChildVoice || globalVoiceNameConfig;
+                const preferredVoice = loggedInChildVoice || globalVoiceNameConfig || "gemini-Aoede";
 
                 const voiceSelect = document.getElementById('voice-select');
                 if (voiceSelect) {
@@ -2385,7 +2437,7 @@
                         localVietnameseVoices.forEach((voice) => {
                             const opt = document.createElement('option');
                             opt.value = voice.name;
-                            opt.innerText = voice.name.includes('Google') ? "Google (Giọng chuẩn) [Cục bộ]" : `${voice.name} [Cục bộ]`;
+                            opt.innerText = voice.name.includes('Google') ? "Google (Giọng Hà Nội chuẩn) [Cục bộ]" : `${voice.name} [Cục bộ]`;
                             if (preferredVoice && voice.name === preferredVoice) opt.selected = true;
                             voiceSelect.appendChild(opt);
                         });
@@ -2784,7 +2836,7 @@
                             mathGameHighScore = foundAcc.mathGameHighScore || 0;
                             
                             // Phục hồi giọng đọc ưu thích
-                            loggedInChildVoice = foundAcc.preferredVoice || "";
+                            loggedInChildVoice = foundAcc.preferredVoice || "gemini-Aoede";
                             loggedInChildRate = foundAcc.preferredRate || 0.65;
 
                             enterChildDashboard();
@@ -2797,7 +2849,7 @@
                 loggedInChildName = "Khách Trải Nghiệm";
                 loggedInChildGrade = "Lớp 1";
                 mathGameHighScore = 0;
-                loggedInChildVoice = "";
+                loggedInChildVoice = "gemini-Aoede";
                 loggedInChildRate = 0.65;
                 enterChildDashboard();
             }
@@ -2837,6 +2889,7 @@
         window.saveChildVoicePreference = saveChildVoicePreference;
         window.switchLearnSubTab = switchLearnSubTab;
         window.selectNumberRange = selectNumberRange;
+        window.convertNumberToVietnameseWords = convertNumberToVietnameseWords;
     </script>
 </body>
 </html>
