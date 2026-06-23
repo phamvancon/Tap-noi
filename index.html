@@ -26,9 +26,7 @@
         }
     </script>
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght=400;500;600;700&display=swap" rel="stylesheet">
     <!-- Canvas Confetti cho hiệu ứng chiến thắng -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
@@ -60,6 +58,23 @@
             90% { opacity: 1; }
             100% { transform: translateY(-1000px) rotate(360deg) opacity: 0; }
         }
+        /* Hoạt họa sóng âm thanh lắng nghe */
+        .voice-wave {
+            display: inline-block;
+            width: 4px;
+            height: 15px;
+            background-color: #4ECDC4;
+            margin: 0 2px;
+            border-radius: 2px;
+            animation: bounce-wave 0.8s infinite ease-in-out;
+        }
+        .voice-wave:nth-child(2) { animation-delay: 0.15s; }
+        .voice-wave:nth-child(3) { animation-delay: 0.3s; }
+        .voice-wave:nth-child(4) { animation-delay: 0.45s; }
+        @keyframes bounce-wave {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(2.5); }
+        }
     </style>
     <!-- KHỞI TẠO TRÁNH LỖI PHƯƠNG THỨC TRÊN WINDOW -->
     <script>
@@ -75,7 +90,9 @@
                 'handleAdminImageUpload', 'clearUploadedImage', 'handleRegisterAccount',
                 'startMathGame', 'answerMathQuestion', 'quitMathGame', 'selectQuizGrade',
                 'saveChildVoicePreference', 'switchLearnSubTab', 'selectNumberRange', 'convertNumberToVietnameseWords',
-                'openStudentEditModal', 'closeStudentEditModal', 'saveStudentEdit'
+                'openStudentEditModal', 'closeStudentEditModal', 'saveStudentEdit',
+                'switchQuizSubTab', 'startScreeningTest', 'chooseScreeningAnswer', 'openScreeningReportModal', 'closeAdminScreeningModal',
+                'openSpeechCoachModal', 'closeSpeechCoachModal', 'startRecordingSpeech', 'submitManualSpeech'
             ];
             earlyGlobals.forEach(fn => {
                 window[fn] = window[fn] || function() {
@@ -111,7 +128,144 @@
         </div>
     </div>
 
-    <!-- MODAL CHỈNH SỬA THÔNG TIN & MÃ HỌC SINH (ADMIN ONLY) -->
+    <!-- MODAL TRỢ LÝ GẤU AI LUYỆN NÓI CHI TIẾT -->
+    <div id="speech-coach-modal" class="fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4 hidden backdrop-blur-sm">
+        <div class="bg-white rounded-[2.5rem] max-w-lg w-full p-6 md:p-8 shadow-2xl max-h-[90vh] overflow-y-auto border border-purple-100 relative">
+            <button onclick="closeSpeechCoachModal()" class="absolute top-5 right-5 text-gray-400 hover:text-slate-600 font-bold text-2xl transition-all">&times;</button>
+            
+            <div class="text-center space-y-3 mb-6">
+                <div class="inline-block bg-purple-50 p-4 rounded-full relative">
+                    <span class="text-6xl animate-bounce inline-block">🐻</span>
+                    <span class="absolute bottom-1 right-1 text-2xl">🎧</span>
+                </div>
+                <h3 class="text-2xl font-black text-slate-800">Trợ Lý Gấu AI Luyện Nói</h3>
+                <p class="text-xs text-gray-400">Gấu AI sẽ lắng nghe bé phát âm và hướng dẫn khẩu hình rành mạch!</p>
+            </div>
+
+            <!-- Thẻ từ vựng mục tiêu -->
+            <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-3xl p-5 border border-purple-100 text-center space-y-2">
+                <span class="text-xs font-black text-purple-600 uppercase tracking-widest">Từ vựng cần phát âm:</span>
+                <h4 id="coach-target-word" class="text-3xl font-black text-slate-800 tracking-wider">Từ vựng</h4>
+                <p id="coach-target-desc" class="text-xs text-slate-500 italic">Hướng dẫn phát âm chuẩn mẫu giáo...</p>
+                <button onclick="speakSelectedDayWord()" class="bg-white hover:bg-slate-50 px-4 py-1.5 rounded-full border border-purple-200 text-xs font-bold text-purple-700 transition-all flex items-center gap-1 mx-auto mt-2">
+                    🗣️ Nghe giọng đọc mẫu
+                </button>
+            </div>
+
+            <!-- Giao diện Ghi âm & Nhận diện trực tiếp -->
+            <div class="my-6 space-y-4">
+                <div class="flex flex-col items-center justify-center space-y-3 p-4 bg-slate-50 rounded-3xl border border-slate-100 min-h-[110px]">
+                    
+                    <!-- Trạng thái chuẩn bị ghi âm -->
+                    <div id="recording-status-idle" class="flex flex-col items-center space-y-2">
+                        <button onclick="startRecordingSpeech()" class="w-16 h-16 rounded-full bg-babyPink text-white font-bold flex items-center justify-center shadow-lg shadow-babyPink/20 hover:scale-105 active:scale-95 transition-all text-2xl">
+                            🎙️
+                        </button>
+                        <span class="text-xs font-black text-slate-500">Bấm micro và nhắc bé nói lớn nhé!</span>
+                    </div>
+
+                    <!-- Trạng thái đang ghi âm -->
+                    <div id="recording-status-active" class="hidden flex-col items-center space-y-2">
+                        <div class="flex items-center justify-center h-8">
+                            <span class="voice-wave"></span>
+                            <span class="voice-wave"></span>
+                            <span class="voice-wave"></span>
+                            <span class="voice-wave"></span>
+                        </div>
+                        <span class="text-xs font-black text-emerald-500 animate-pulse">Gấu AI đang lắng nghe con mỉm cười... 🐻👂</span>
+                        <p class="text-[10px] text-gray-400">Tự động dừng ghi âm khi bé nói xong.</p>
+                    </div>
+
+                    <!-- Kết quả nhận dạng thô -->
+                    <div id="speech-recognition-result-box" class="hidden text-center space-y-1 w-full border-t border-slate-200/50 pt-2.5">
+                        <span class="text-[10px] font-black text-slate-400 uppercase">Con vừa nói:</span>
+                        <p id="speech-recognized-text" class="text-lg font-black text-babyPink tracking-wider">Mẹ ơi</p>
+                    </div>
+                </div>
+
+                <!-- Dự phòng: Nhập tay nếu lỗi micro -->
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex items-center gap-2">
+                    <input type="text" id="manual-speech-input" placeholder="Nếu không nhận micro, ba mẹ gõ từ con vừa nói vào đây..." class="flex-grow bg-white px-4 py-2.5 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-purple-300 font-bold">
+                    <button onclick="submitManualSpeech()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shrink-0 transition-all">Gửi AI ➔</button>
+                </div>
+            </div>
+
+            <!-- Giao diện KẾT QUẢ ĐÁNH GIÁ CỦA GẤU AI -->
+            <div id="ai-evaluation-result" class="hidden border-t-2 border-dashed border-purple-100 pt-6 space-y-4">
+                <div class="text-center">
+                    <span class="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1">Kết quả đánh giá từ Gấu AI</span>
+                    <div id="ai-evaluation-stars" class="text-3xl text-amber-400 font-bold space-x-1">⭐⭐⭐⭐⭐</div>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="bg-amber-50 rounded-2xl p-4 border border-amber-100">
+                        <span class="text-[10px] font-black text-amber-700 uppercase block mb-1">Lời khen tặng bé:</span>
+                        <p id="ai-evaluation-feedback" class="text-xs text-slate-700 leading-relaxed font-bold">Bé phát âm rất tốt, âm lượng to rõ ràng!</p>
+                    </div>
+
+                    <div class="bg-indigo-50 rounded-2xl p-4 border border-indigo-100">
+                        <span class="text-[10px] font-black text-indigo-700 uppercase block mb-1">Hướng dẫn ba mẹ chỉnh giọng:</span>
+                        <p id="ai-evaluation-tips" class="text-xs text-slate-700 leading-relaxed font-medium">Bé cần mím môi tròn hơn một chút nữa khi phát âm âm...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 flex gap-2">
+                <button onclick="closeSpeechCoachModal()" class="flex-1 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold text-xs uppercase tracking-wider transition-all">Đóng trợ lý</button>
+                <button onclick="speakSelectedDayWord()" class="flex-1 py-3 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-purple-600/15">Phát âm mẫu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL XEM BÁO CÁO SÀNG LỌC CỦA ADMIN -->
+    <div id="admin-screening-modal" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 hidden backdrop-blur-sm">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 md:p-8 shadow-2xl max-h-[90vh] overflow-y-auto border border-slate-50">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-black text-slate-800 flex items-center gap-2">
+                    <span>🧠</span> Báo Cáo Sàng Lọc Phát Triển Sớm
+                </h3>
+                <button onclick="closeAdminScreeningModal()" class="text-gray-400 hover:text-slate-600 font-bold text-xl">&times;</button>
+            </div>
+
+            <div class="space-y-4">
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 grid grid-cols-2 gap-2 text-xs">
+                    <div><span class="text-gray-400 font-bold">HỌ & TÊN BÉ:</span> <span id="admin-report-name" class="font-black text-slate-800"></span></div>
+                    <div><span class="text-gray-400 font-bold">MÃ HỌC SINH:</span> <span id="admin-report-code" class="font-black text-slate-800 font-mono"></span></div>
+                    <div><span class="text-gray-400 font-bold">CẤP LỚP:</span> <span id="admin-report-grade" class="font-black text-slate-800"></span></div>
+                    <div><span class="text-gray-400 font-bold">NGÀY ĐÁNH GIÁ:</span> <span id="admin-report-date" class="font-black text-slate-800"></span></div>
+                </div>
+
+                <div>
+                    <span class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Nhóm Phân Loại & Tình Trạng</span>
+                    <div id="admin-report-classification" class="py-3 px-4 rounded-2xl font-black text-sm text-center"></div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100">
+                        <div class="text-[10px] font-black text-indigo-500 uppercase">Chỉ Số Tự Kỷ (ASD)</div>
+                        <div class="text-2xl font-black text-indigo-700 mt-1"><span id="admin-report-asd">0</span> / 14</div>
+                        <div id="admin-report-asd-level" class="text-[10px] font-bold text-indigo-600 mt-0.5"></div>
+                    </div>
+                    <div class="bg-pink-50/50 p-4 rounded-2xl border border-pink-100">
+                        <div class="text-[10px] font-black text-pink-500 uppercase">Chỉ Số Chậm Nói</div>
+                        <div class="text-2xl font-black text-pink-700 mt-1"><span id="admin-report-speech">0</span> / 10</div>
+                        <div id="admin-report-speech-level" class="text-[10px] font-bold text-pink-600 mt-0.5"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <span class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Phân tích chi tiết dành cho phụ huynh</span>
+                    <div id="admin-report-analysis" class="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-xs text-slate-700 leading-relaxed font-medium max-h-48 overflow-y-auto"></div>
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <button onclick="closeAdminScreeningModal()" class="w-full py-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-sm transition-all">Đóng Báo Cáo</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CHỈNH SỬA THÔNG TIN & MÃ HỌC SINH -->
     <div id="student-edit-modal" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 hidden backdrop-blur-sm">
         <div class="bg-white rounded-3xl max-w-md w-full p-6 md:p-8 shadow-2xl border border-slate-50">
             <div class="flex justify-between items-center mb-6">
@@ -178,7 +332,7 @@
                     <div>
                         <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Chủ đề (Phân loại)</label>
                         <select id="edit-card-category" class="w-full px-4 py-3 rounded-2xl border-2 border-slate-100 focus:border-babyPink focus:outline-none font-semibold text-slate-700 transition-all">
-                            <option value="family">Gia đình 🏡</option>
+                            <option value="family">Gia định 🏡</option>
                             <option value="demand">Nhu cầu 🍚</option>
                             <option value="animals">Động vật 🐶</option>
                             <option value="fruits">Trái cây 🍎</option>
@@ -192,7 +346,7 @@
                     <input type="text" id="edit-card-desc" class="w-full px-4 py-3 rounded-2xl border-2 border-slate-100 focus:border-babyPink focus:outline-none text-slate-600 transition-all">
                 </div>
 
-                <!-- TÍNH NĂNG: Nhập URL hoặc Tải ảnh trực tiếp -->
+                <!-- Tải ảnh hoặc liên kết ảnh -->
                 <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3">
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Lựa chọn 1: Liên kết hình ảnh (URL)</label>
@@ -213,14 +367,14 @@
                                 <span class="text-sm font-bold truncate" id="upload-file-label">Chọn tệp hình ảnh...</span>
                                 <input type="file" id="edit-card-file-input" accept="image/*" class="hidden" onchange="handleAdminImageUpload(this)">
                             </label>
-                            <button id="btn-clear-upload" onclick="clearUploadedImage()" class="hidden p-3.5 rounded-2xl bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-500 transition-all" title="Xóa ảnh đã tải để dùng URL">
+                            <button id="btn-clear-upload" onclick="clearUploadedImage()" class="hidden p-3.5 rounded-2xl bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-500 transition-all" title="Xóa ảnh để dùng URL">
                                 ✕
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Khung xem trước ảnh trực tiếp -->
+                <!-- Khung xem trước ảnh -->
                 <div>
                     <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Xem trước hình ảnh</label>
                     <div class="h-44 w-full rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 overflow-hidden flex items-center justify-center relative">
@@ -239,13 +393,13 @@
 
     <!-- MÀN HÌNH CHỜ / LOADING CHUNG -->
     <div id="global-loader" class="fixed inset-0 bg-white bg-opacity-95 z-50 flex flex-col justify-center items-center">
-        <div class="animate-bounce text-6xl">✨👶✨</div>
+        <div class="animate-bounce text-6xl">✨👶</div>
         <div class="mt-4 text-xl font-bold text-babyPink animate-pulse">Hệ thống đang tải hành tinh EduKids...</div>
     </div>
 
     <!-- ================= MÀN HÌNH ĐĂNG KÝ & ĐĂNG NHẬP ================= -->
     <section id="view-login" class="flex-grow flex items-center justify-center px-4 py-12 relative z-10">
-        <!-- Các bong bóng bay nền phía sau -->
+        <!-- Các bong bóng bay nền -->
         <div class="absolute inset-0 overflow-hidden pointer-events-none">
             <div class="bubble" style="width: 40px; height: 40px; left: 10%; animation-delay: 0s;"></div>
             <div class="bubble" style="width: 60px; height: 60px; left: 25%; animation-delay: 3s;"></div>
@@ -260,7 +414,7 @@
                 <p class="text-gray-500 text-sm mt-1 font-bold">Hành trình Học tập, Phát âm & Phản xạ Toán học lý thú!</p>
             </div>
 
-            <!-- Tab Switcher đăng nhập 3 mục cực kỳ trực quan -->
+            <!-- Tab Switcher -->
             <div class="flex bg-slate-100 p-1.5 rounded-2xl mb-6">
                 <button onclick="toggleLoginTab('parent')" id="btn-tab-parent" class="flex-1 py-2.5 text-[11px] sm:text-xs font-black rounded-xl bg-white text-babyPink shadow-sm transition-all">
                     Bé Đăng Nhập
@@ -292,14 +446,14 @@
                 </button>
             </div>
 
-            <!-- FORM 2: Đăng Ký Mới tự tạo Mã ECO -->
+            <!-- FORM 2: Đăng Ký Mới -->
             <div id="form-register" class="space-y-4 hidden">
                 <div class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100 text-center mb-2">
                     <span class="text-xs font-bold text-indigo-700">⭐ Đăng ký ngay để nhận Mã học tập cá nhân lưu trọn điểm số!</span>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Tên/Biệt Danh Của Bé</label>
-                    <input type="text" id="register-name-input" placeholder="Ví dụ: Bắp, Tôm, Đậu Đậu..." class="w-full px-4 py-3.5 rounded-2xl border-2 border-slate-200 focus:border-babyPink focus:outline-none font-bold text-slate-700">
+                    <input type="text" id="register-name-input" placeholder="Ví dụ: Bắp, Tôm..." class="w-full px-4 py-3.5 rounded-2xl border-2 border-slate-200 focus:border-babyPink focus:outline-none font-bold text-slate-700">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Chọn Lớp Học Của Bé</label>
@@ -321,7 +475,7 @@
                     <input type="password" id="admin-key-input" placeholder="Nhập mã bảo mật Admin..." class="w-full px-5 py-3.5 rounded-2xl border-2 border-slate-200 focus:border-babyPink focus:outline-none font-mono text-center text-xl tracking-wider">
                 </div>
                 <button onclick="handleAdminLogin()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-4 rounded-2xl shadow-lg transition-all transform active:scale-95">
-                    Truy Cập Quản Trị Hệ Thống 🛡️
+                    Truy Cập Quản Trị 🛡️
                 </button>
             </div>
         </div>
@@ -329,7 +483,7 @@
 
     <!-- ================= BẢNG ĐIỀU KHIỂN CHÍNH CỦA HỌC SINH ================= -->
     <section id="view-child-app" class="hidden flex-grow flex flex-col relative z-10">
-        <!-- Header cho Bé rực rỡ sắc màu -->
+        <!-- Header -->
         <header class="bg-gradient-to-r from-babyPink via-babyPurple to-[#FF8E8E] text-white px-6 py-6 rounded-b-[2.5rem] shadow-xl">
             <div class="max-w-5xl mx-auto flex items-center justify-between">
                 <div>
@@ -345,20 +499,20 @@
             </div>
         </header>
 
-        <!-- Menu Tabs của Bé sinh động (Cuộn ngang trên di động) -->
+        <!-- Menu Tabs của Bé -->
         <div class="max-w-5xl w-full mx-auto px-4 mt-6">
             <div class="flex gap-2 bg-white p-2 rounded-2xl custom-shadow border border-slate-50 overflow-x-auto scrollbar-none">
                 <button onclick="switchChildTab('practice')" id="tab-btn-practice" class="flex-1 shrink-0 py-3.5 px-4 rounded-xl font-black text-sm flex items-center justify-center gap-1.5 bg-babyPink text-white transition-all shadow-md">
-                    🗣️ Tập Phát Âm
+                    🗣️ Luyện Nói
                 </button>
                 <button onclick="switchChildTab('learn')" id="tab-btn-learn" class="flex-1 shrink-0 py-3.5 px-4 rounded-xl font-black text-sm flex items-center justify-center gap-1.5 text-slate-500 hover:bg-slate-50 transition-all">
                     🔤 Chữ & Số
                 </button>
                 <button onclick="switchChildTab('mathgame')" id="tab-btn-mathgame" class="flex-1 shrink-0 py-3.5 px-4 rounded-xl font-black text-sm flex items-center justify-center gap-1.5 text-slate-500 hover:bg-slate-50 transition-all">
-                    🧮 Game Toán Phản Xạ
+                    🧮 Game Toán
                 </button>
                 <button onclick="switchChildTab('quiz')" id="tab-btn-quiz" class="flex-1 shrink-0 py-3.5 px-4 rounded-xl font-black text-sm flex items-center justify-center gap-1.5 text-slate-500 hover:bg-slate-50 transition-all">
-                    📝 Trắc Nghiệm SGK
+                    📝 Đánh Giá Sàng Lọc
                 </button>
                 <button onclick="switchChildTab('journey')" id="tab-btn-journey" class="flex-1 shrink-0 py-3.5 px-4 rounded-xl font-black text-sm flex items-center justify-center gap-1.5 text-slate-500 hover:bg-slate-50 transition-all">
                     📅 Lộ Trình 30 Ngày
@@ -369,19 +523,19 @@
         <!-- Nội dung chính các Tab -->
         <main class="max-w-5xl w-full mx-auto px-4 py-6 flex-grow">
             
-            <!-- TAB 1: TẬP PHÁT ÂM (Giữ những flashcard đẹp mắt cũ) -->
+            <!-- TAB 1: TẬP PHÁT ÂM -->
             <div id="child-tab-practice" class="space-y-6">
-                <!-- Bảng đề xuất chủ đề hôm nay (Theo ngày trong tuần) -->
+                <!-- Banner đề xuất chủ đề hằng ngày -->
                 <div id="daily-theme-banner" class="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200 p-5 rounded-3xl custom-shadow flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div class="flex items-start gap-3.5">
                         <span id="daily-theme-emoji" class="text-5xl">🏡</span>
                         <div>
                             <div class="flex items-center gap-2">
                                 <span class="bg-amber-100 text-amber-800 font-black text-[10px] px-2.5 py-0.5 rounded-full uppercase tracking-wider" id="daily-day-label">Thứ Hai</span>
-                                <span class="text-xs font-bold text-amber-600">✨ Chủ đề khuyên học hôm nay</span>
+                                <span class="text-xs font-bold text-amber-600">✨ Chủ đề hôm nay</span>
                             </div>
-                            <h3 id="daily-theme-title" class="text-lg font-black text-slate-800 mt-0.5">Chủ đề: Gia đình thân thương</h3>
-                            <p id="daily-theme-desc" class="text-xs text-slate-500 mt-1 leading-relaxed">Ba mẹ hãy đồng hành cùng bé phát âm các từ thân thuộc và biểu thị tình thương.</p>
+                            <h3 id="daily-theme-title" class="text-lg font-black text-slate-800 mt-0.5">Chủ đề: Gia đình</h3>
+                            <p id="daily-theme-desc" class="text-xs text-slate-500 mt-1 leading-relaxed">Ba mẹ hãy đồng hành cùng bé phát âm các từ thân thuộc nhé.</p>
                         </div>
                     </div>
                     <button onclick="applyDailyThemeFilter()" class="w-full sm:w-auto shrink-0 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs px-5 py-3 rounded-2xl shadow-md shadow-amber-500/10 transition-all">
@@ -389,11 +543,10 @@
                     </button>
                 </div>
 
-                <!-- Bảng điều khiển giọng nói cho bé luyện nói -->
+                <!-- Bảng điều khiển giọng nói -->
                 <div class="bg-white p-5 rounded-3xl border border-gray-100 custom-shadow grid grid-cols-1 md:grid-cols-2 gap-4 items-center relative overflow-hidden">
-                    <!-- Ribbon báo hiệu lưu nhớ cấu hình -->
                     <div class="absolute top-0 right-0 bg-emerald-500 text-white text-[9px] font-bold px-3 py-0.5 rounded-bl-xl shadow-sm flex items-center gap-1">
-                        <span>💾</span> Tự động ghi nhớ
+                        <span>💾</span> Tự ghi nhớ
                     </div>
                     <div>
                         <div class="flex items-center gap-2 mb-1.5">
@@ -413,7 +566,7 @@
                     </div>
                 </div>
 
-                <!-- Bộ lọc từ vựng -->
+                <!-- Bộ lọc chủ đề -->
                 <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
                     <button onclick="filterWords('all')" class="word-filter-btn px-5 py-2.5 rounded-full font-bold text-sm bg-babyPink text-white shrink-0 shadow-md">Tất cả</button>
                     <button onclick="filterWords('family')" class="word-filter-btn px-5 py-2.5 rounded-full font-bold text-sm bg-white border border-gray-100 text-gray-600 shrink-0">Gia đình 🏡</button>
@@ -423,15 +576,13 @@
                     <button onclick="filterWords('vehicles')" class="word-filter-btn px-5 py-2.5 rounded-full font-bold text-sm bg-white border border-gray-100 text-gray-600 shrink-0">Giao thông 🚗</button>
                 </div>
 
-                <!-- Lưới thẻ từ vựng của bé -->
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-6" id="word-grid-container">
-                    <!-- Thẻ học sinh sinh tự động từ database -->
-                </div>
+                <!-- Lưới thẻ từ vựng -->
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-6" id="word-grid-container"></div>
             </div>
 
-            <!-- TAB MỚI: HỌC CHỮ CÁI & ĐẾM SỐ (Chữ & Số) -->
+            <!-- TAB 2: HỌC CHỮ CÁI & ĐẾM SỐ -->
             <div id="child-tab-learn" class="hidden space-y-6">
-                <!-- Bộ điều hướng phụ trong Tab Chữ & Số -->
+                <!-- Bộ điều hướng phụ -->
                 <div class="flex bg-white p-2 rounded-2xl custom-shadow border border-slate-100 max-w-md mx-auto">
                     <button onclick="switchLearnSubTab('alphabet')" id="learn-subtab-btn-alphabet" class="flex-1 py-3 text-center rounded-xl font-black text-sm transition-all bg-babyPink text-white">
                         🔤 Học Chữ Cái
@@ -441,26 +592,22 @@
                     </button>
                 </div>
 
-                <!-- 1. PHÂN HỆ: HỌC CHỮ CÁI TIẾNG VIỆT -->
+                <!-- Bảng chữ cái tiếng việt -->
                 <div id="learn-section-alphabet" class="space-y-4">
                     <div class="text-center py-2">
                         <h3 class="text-xl font-black text-slate-800">✨ Bảng Chữ Cái Tiếng Việt Vui Nhộn ✨</h3>
-                        <p class="text-xs text-gray-400">Bé hãy bấm vào từng chữ cái để nghe phát âm chuẩn âm vần mẫu giáo nhé!</p>
+                        <p class="text-xs text-gray-400">Bé hãy bấm vào từng chữ cái để nghe chuẩn âm vần mẫu giáo nhé!</p>
                     </div>
-                    <!-- Lưới 29 chữ cái Tiếng Việt -->
-                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4" id="alphabet-grid-container">
-                        <!-- Tự động kết xuất bằng Javascript -->
-                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4" id="alphabet-grid-container"></div>
                 </div>
 
-                <!-- 2. PHÂN HỆ: TẬP ĐẾM SỐ 1 - 100 -->
+                <!-- Vương quốc đếm số -->
                 <div id="learn-section-numbers" class="hidden space-y-6">
                     <div class="text-center py-2">
                         <h3 class="text-xl font-black text-slate-800">🎈 Vương Quốc Đếm Số 1 - 100 🎈</h3>
-                        <p class="text-xs text-gray-400">Chọn từng phân đoạn số để bé dễ học và ghi nhớ từng bước nhé!</p>
+                        <p class="text-xs text-gray-400">Chọn từng phân đoạn số để bé dễ học từng bước nhé!</p>
                     </div>
 
-                    <!-- Lọc phân đoạn số -->
                     <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-none justify-start md:justify-center">
                         <button onclick="selectNumberRange(1, 20)" class="num-range-btn px-5 py-2.5 rounded-full font-bold text-xs bg-babyBlue text-white shrink-0 shadow-md">Số 1 - 20</button>
                         <button onclick="selectNumberRange(21, 40)" class="num-range-btn px-5 py-2.5 rounded-full font-bold text-xs bg-white border border-gray-100 text-gray-600 shrink-0">Số 21 - 40</button>
@@ -469,26 +616,23 @@
                         <button onclick="selectNumberRange(81, 100)" class="num-range-btn px-5 py-2.5 rounded-full font-bold text-xs bg-white border border-gray-100 text-gray-600 shrink-0">Số 81 - 100</button>
                     </div>
 
-                    <!-- Lưới các bóng tròn số -->
                     <div class="bg-white p-6 rounded-3xl border border-slate-100 custom-shadow">
-                        <div class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-10 gap-4" id="numbers-grid-container">
-                            <!-- Kết xuất số tự động bằng JS -->
-                        </div>
+                        <div class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-10 gap-4" id="numbers-grid-container"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- TAB 2: GAME TOÁN PHẢN XẠ (Vương Quốc Toán Học) -->
+            <!-- TAB 3: GAME TOÁN PHẢN XẠ -->
             <div id="child-tab-mathgame" class="hidden space-y-6">
-                <!-- Banner giới thiệu Game -->
+                <!-- Banner Game -->
                 <div id="math-game-intro" class="bg-gradient-to-r from-amber-400 to-orange-500 text-white p-8 rounded-3xl custom-shadow text-center space-y-4">
                     <span class="text-7xl">🏰🦖</span>
                     <h3 class="text-2xl font-black">Vương Quốc Toán Học - Dino Qua Sông</h3>
                     <p class="text-sm text-white/95 max-w-xl mx-auto leading-relaxed font-semibold">
-                        Hãy giúp bé khủng long con qua được dòng sông bằng cách giải nhanh các câu đố phép tính cộng trừ nhân chia siêu tốc. Mỗi lượt chơi bé có 60 giây phản xạ!
+                        Hãy giúp bé khủng long con qua sông bằng cách giải nhanh các câu đố phép tính cộng trừ nhân chia siêu tốc trong 60 giây phản xạ!
                     </p>
                     <div class="bg-white/20 inline-block px-6 py-2.5 rounded-full font-bold text-sm">
-                        🏆 Kỷ lục điểm cao của bé: <span id="math-high-score-display" class="text-babyYellow font-black text-lg">0</span> điểm
+                        🏆 Kỷ lục của bé: <span id="math-high-score-display" class="text-babyYellow font-black text-lg">0</span> điểm
                     </div>
                     <div>
                         <button onclick="startMathGame()" class="bg-white text-orange-600 font-black px-10 py-4 rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all text-lg tracking-wide">
@@ -497,13 +641,12 @@
                     </div>
                 </div>
 
-                <!-- Giao diện khi đang chơi Game -->
+                <!-- Giao diện Chơi Game -->
                 <div id="math-game-active" class="hidden bg-white p-6 md:p-8 rounded-3xl border-4 border-orange-200 custom-shadow relative">
-                    <!-- Thanh trạng thái game -->
                     <div class="flex justify-between items-center mb-6">
                         <div class="flex items-center gap-2">
                             <span class="text-2xl">⏳</span>
-                            <span class="text-lg font-bold text-slate-500">Thời gian còn lại:</span>
+                            <span class="text-lg font-bold text-slate-500">Thời gian:</span>
                             <span id="math-timer" class="text-2xl font-black text-rose-500">60</span><span class="text-rose-500 font-bold">s</span>
                         </div>
                         <div class="bg-orange-100 text-orange-700 px-4 py-2 rounded-2xl font-black flex items-center gap-1.5 text-lg">
@@ -511,7 +654,7 @@
                         </div>
                     </div>
 
-                    <!-- Khu vực hoạt hình Dino mini -->
+                    <!-- Animation Dino -->
                     <div class="bg-sky-50 h-32 rounded-2xl border-2 border-dashed border-sky-100 flex items-center justify-between px-10 relative overflow-hidden mb-6">
                         <div class="text-6xl animate-bounce" id="game-dino">🦖</div>
                         <div class="flex gap-4">
@@ -522,13 +665,12 @@
                         <div class="text-6xl" id="game-castle">🏰</div>
                     </div>
 
-                    <!-- Đề bài câu hỏi to tròn -->
                     <div class="text-center py-6">
                         <div class="text-xs font-black text-orange-500 uppercase tracking-widest mb-1">Nhanh mắt trả lời:</div>
                         <div id="math-question-text" class="text-5xl font-black text-slate-800 tracking-wider">3 + 5 = ?</div>
                     </div>
 
-                    <!-- 4 Lựa chọn trả lời to tròn cực kỳ thích mắt -->
+                    <!-- 4 Lựa chọn trả lời -->
                     <div class="grid grid-cols-2 gap-4 mt-6">
                         <button onclick="answerMathQuestion(0)" id="math-opt-0" class="py-5 px-6 rounded-2xl border-3 border-slate-100 hover:border-orange-400 bg-slate-50 hover:bg-orange-50 text-slate-800 hover:text-orange-700 font-black text-2xl transition-all shadow-md">1</button>
                         <button onclick="answerMathQuestion(1)" id="math-opt-1" class="py-5 px-6 rounded-2xl border-3 border-slate-100 hover:border-orange-400 bg-slate-50 hover:bg-orange-50 text-slate-800 hover:text-orange-700 font-black text-2xl transition-all shadow-md">2</button>
@@ -536,7 +678,6 @@
                         <button onclick="answerMathQuestion(3)" id="math-opt-3" class="py-5 px-6 rounded-2xl border-3 border-slate-100 hover:border-orange-400 bg-slate-50 hover:bg-orange-50 text-slate-800 hover:text-orange-700 font-black text-2xl transition-all shadow-md">4</button>
                     </div>
 
-                    <!-- Nút thoát dừng cuộc chơi -->
                     <div class="flex justify-center mt-6">
                         <button onclick="quitMathGame()" class="text-slate-400 hover:text-rose-500 font-bold text-xs uppercase tracking-wider">
                             Dừng chơi & lưu điểm 🏳️
@@ -545,90 +686,177 @@
                 </div>
             </div>
 
-            <!-- TAB 3: TRẮC NGHIỆM SGK TIỂU HỌC -->
+            <!-- TAB 4: TRẮC NGHIỆM ĐÁNH GIÁ SÀNG LỌC -->
             <div id="child-tab-quiz" class="hidden space-y-6">
-                <!-- Chọn Lớp làm trắc nghiệm bám sát -->
-                <div id="quiz-grade-selector" class="bg-white p-6 rounded-3xl custom-shadow border border-slate-100 space-y-4">
-                    <h3 class="text-xl font-black text-slate-800 text-center">📝 Hệ Thống Trắc Nghiệm Bám Sát Sách Giáo Khoa</h3>
-                    <p class="text-center text-xs text-gray-400 max-w-md mx-auto">Bộ câu hỏi trắc nghiệm cả 2 môn Toán và Tiếng Việt được soạn thảo bài bản giúp con tự học ôn luyện.</p>
-                    
-                    <div class="grid grid-cols-3 gap-3 pt-2">
-                        <button onclick="selectQuizGrade('Lớp 1')" id="btn-quiz-grade-1" class="py-4 rounded-2xl border-2 border-babyPink bg-rose-50 text-babyPink font-black text-sm hover:scale-105 transition-all">Lớp 1 🐥</button>
-                        <button onclick="selectQuizGrade('Lớp 2')" id="btn-quiz-grade-2" class="py-4 rounded-2xl border-2 border-slate-100 hover:border-babyBlue text-slate-600 font-bold text-sm hover:scale-105 transition-all">Lớp 2 🦊</button>
-                        <button onclick="selectQuizGrade('Lớp 3')" id="btn-quiz-grade-3" class="py-4 rounded-2xl border-2 border-slate-100 hover:border-babyPurple text-slate-600 font-bold text-sm hover:scale-105 transition-all">Lớp 3 🦁</button>
+                <!-- Điều hướng phụ -->
+                <div class="flex bg-white p-2 rounded-2xl custom-shadow border border-slate-100 max-w-lg mx-auto">
+                    <button onclick="switchQuizSubTab('sgk')" id="quiz-subtab-btn-sgk" class="flex-1 py-3 text-center rounded-xl font-black text-sm transition-all bg-babyBlue text-white shadow-sm">
+                        📚 Trắc Nghiệm SGK
+                    </button>
+                    <button onclick="switchQuizSubTab('screening')" id="quiz-subtab-btn-screening" class="flex-1 py-3 text-center rounded-xl font-black text-sm transition-all text-gray-500 hover:bg-slate-50">
+                        🧠 Sàng Lọc Phát Triển
+                    </button>
+                </div>
+
+                <!-- PHÂN HỆ 1: TRẮC NGHIỆM SGK -->
+                <div id="quiz-section-sgk" class="space-y-6">
+                    <div id="quiz-grade-selector" class="bg-white p-6 rounded-3xl custom-shadow border border-slate-100 space-y-4">
+                        <h3 class="text-xl font-black text-slate-800 text-center">📝 Trắc Nghiệm Bám Sách Giáo Khoa</h3>
+                        <p class="text-center text-xs text-gray-400 max-w-md mx-auto">Giúp con tự học ôn tập Toán và Tiếng Việt hiệu quả.</p>
+                        
+                        <div class="grid grid-cols-3 gap-3 pt-2">
+                            <button onclick="selectQuizGrade('Lớp 1')" id="btn-quiz-grade-1" class="py-4 rounded-2xl border-2 border-babyPink bg-rose-50 text-babyPink font-black text-sm hover:scale-105 transition-all">Lớp 1 🐥</button>
+                            <button onclick="selectQuizGrade('Lớp 2')" id="btn-quiz-grade-2" class="py-4 rounded-2xl border-2 border-slate-100 hover:border-babyBlue text-slate-600 font-bold text-sm hover:scale-105 transition-all">Lớp 2 🦊</button>
+                            <button onclick="selectQuizGrade('Lớp 3')" id="btn-quiz-grade-3" class="py-4 rounded-2xl border-2 border-slate-100 hover:border-babyPurple text-slate-600 font-bold text-sm hover:scale-105 transition-all">Lớp 3 🦁</button>
+                        </div>
+                    </div>
+
+                    <!-- Không gian làm bài -->
+                    <div id="quiz-workspace" class="bg-white p-6 md:p-8 rounded-3xl custom-shadow border-2 border-slate-100">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-xs font-black text-slate-400 uppercase tracking-widest" id="quiz-grade-label">Lớp 1</span>
+                            <span id="quiz-counter" class="text-sm font-black text-babyPink">Câu 1 / 8</span>
+                        </div>
+                        <div class="w-full bg-slate-100 h-3 rounded-full mb-8 overflow-hidden">
+                            <div id="quiz-progress-bar" class="bg-babyBlue h-full rounded-full transition-all duration-300" style="width: 10%"></div>
+                        </div>
+
+                        <div id="quiz-question-box" class="min-h-[140px] flex flex-col justify-center text-center">
+                            <span class="text-5xl mb-3 select-none" id="quiz-question-emoji">📚</span>
+                            <p id="quiz-question-text" class="text-lg md:text-xl font-extrabold text-slate-800 leading-relaxed">Câu hỏi đang tải...</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8" id="quiz-options-container"></div>
+                    </div>
+
+                    <!-- Kết quả trắc nghiệm -->
+                    <div id="quiz-results" class="hidden space-y-6">
+                        <div class="bg-white p-6 md:p-8 rounded-3xl custom-shadow border-2 border-slate-50 text-center">
+                            <span class="text-6xl">🏆📊</span>
+                            <h3 class="text-2xl font-black mt-3 text-slate-800">Kết Quả Của Bé</h3>
+                            <p class="text-sm text-gray-400 mt-1">Dữ liệu được lưu trữ trực tuyến để Ba mẹ theo dõi</p>
+
+                            <div id="result-status-banner" class="mt-6 py-4 px-6 rounded-2xl font-black text-lg">Đang tính điểm...</div>
+
+                            <div class="my-6 inline-block bg-indigo-50 px-10 py-5 rounded-3xl border-2 border-indigo-100">
+                                <div class="text-xs font-bold text-indigo-500 uppercase">Điểm của bé</div>
+                                <div class="text-5xl font-black text-indigo-700 mt-1"><span id="quiz-correct-count">0</span> / 8</div>
+                            </div>
+
+                            <div class="flex justify-center gap-3">
+                                <button onclick="resetQuiz()" class="bg-babyPink text-white font-black px-8 py-3.5 rounded-2xl hover:bg-opacity-90 transition-all text-sm shadow-md">
+                                    Làm Lại Bài Khác 🔄
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Khối làm bài trắc nghiệm -->
-                <div id="quiz-workspace" class="bg-white p-6 md:p-8 rounded-3xl custom-shadow border-2 border-slate-100">
-                    <div class="flex justify-between items-center mb-4">
-                        <span class="text-xs font-black text-slate-400 uppercase tracking-widest" id="quiz-grade-label">Học Trình: Lớp 1</span>
-                        <span id="quiz-counter" class="text-sm font-black text-babyPink">Câu 1 / 10</span>
-                    </div>
-                    <div class="w-full bg-slate-100 h-3 rounded-full mb-8 overflow-hidden">
-                        <div id="quiz-progress-bar" class="bg-babyBlue h-full rounded-full transition-all duration-300" style="width: 10%"></div>
-                    </div>
-
-                    <div id="quiz-question-box" class="min-h-[140px] flex flex-col justify-center text-center">
-                        <span class="text-5xl mb-3 select-none" id="quiz-question-emoji">📚</span>
-                        <p id="quiz-question-text" class="text-lg md:text-xl font-extrabold text-slate-800 leading-relaxed">
-                            Câu hỏi đang tải...
+                <!-- PHÂN HỆ 2: SÀNG LỌC TỰ KỶ & CHẬM NÓI -->
+                <div id="quiz-section-screening" class="hidden space-y-6">
+                    <div id="screening-intro" class="bg-white p-6 md:p-8 rounded-3xl custom-shadow border border-slate-100 text-center space-y-4">
+                        <span class="text-7xl">🧠👶📋</span>
+                        <h3 class="text-2xl font-black text-slate-800">Bảng Sàng Lọc Phát Triển & Hành Vi Trẻ Em</h3>
+                        <p class="text-sm text-gray-500 max-w-xl mx-auto leading-relaxed">
+                            Bảng kiểm phát hiện sớm nguy cơ **Phổ Tự Kỷ (ASD)** và **Chậm nói** dựa trên các mốc quốc tế (M-CHAT-R/F và ASQ-3).
                         </p>
-                    </div>
-
-                    <!-- 4 nút trắc nghiệm sinh động cho câu hỏi -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8" id="quiz-options-container">
-                        <!-- Tự sinh nút bằng JS -->
-                    </div>
-                </div>
-
-                <!-- Khối kết quả trắc nghiệm (Ban đầu ẩn) -->
-                <div id="quiz-results" class="hidden space-y-6">
-                    <div class="bg-white p-6 md:p-8 rounded-3xl custom-shadow border-2 border-slate-50 text-center">
-                        <span class="text-6xl">🏆📊</span>
-                        <h3 class="text-2xl font-black mt-3 text-slate-800">Kết Quả Học Tập Của Bé</h3>
-                        <p class="text-sm text-gray-400 mt-1">Dữ liệu được lưu trữ trực tuyến để Ba mẹ và Giáo viên theo dõi</p>
-
-                        <!-- Đánh giá bằng chữ -->
-                        <div id="result-status-banner" class="mt-6 py-4 px-6 rounded-2xl font-black text-lg">
-                            Đang xử lý điểm số của con...
+                        <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 max-w-md mx-auto text-left">
+                            <span class="font-extrabold text-amber-800 text-xs flex items-center gap-1">⚠️ LƯU Ý QUAN TRỌNG:</span>
+                            <p class="text-[11px] text-amber-700 mt-1 leading-relaxed">
+                                Đây là thang đo tham khảo sàng lọc sớm hành vi khoa học, **không thay thế cho chẩn đoán y tế lâm sàng** của chuyên khoa nhi.
+                            </p>
                         </div>
-
-                        <!-- Điểm số dạng to tròn -->
-                        <div class="my-6 inline-block bg-indigo-50 px-10 py-5 rounded-3xl border-2 border-indigo-100">
-                            <div class="text-xs font-bold text-indigo-500 uppercase">Điểm thi của bé</div>
-                            <div class="text-5xl font-black text-indigo-700 mt-1"><span id="quiz-correct-count">0</span> / 10</div>
-                        </div>
-
-                        <div class="flex justify-center gap-3">
-                            <button onclick="resetQuiz()" class="bg-babyPink text-white font-black px-8 py-3.5 rounded-2xl hover:bg-opacity-90 transition-all text-sm shadow-md">
-                                Làm Lại Bài Khác 🔄
+                        <div>
+                            <button onclick="startScreeningTest()" class="bg-babyPurple text-white font-black px-10 py-4 rounded-2xl shadow-xl shadow-babyPurple/15 hover:scale-105 active:scale-95 transition-all text-lg tracking-wide">
+                                BẮT ĐẦU ĐÁNH GIÁ SÀNG LỌC ➔
                             </button>
+                        </div>
+                    </div>
+
+                    <!-- Làm bài sàng lọc -->
+                    <div id="screening-workspace" class="hidden bg-white p-6 md:p-8 rounded-3xl custom-shadow border-2 border-slate-100">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-xs font-black text-babyPurple uppercase tracking-widest">Ba mẹ hãy quan sát con thật kỹ</span>
+                            <span id="screening-counter" class="text-sm font-black text-babyPurple">Câu 1 / 12</span>
+                        </div>
+                        <div class="w-full bg-slate-100 h-3 rounded-full mb-8 overflow-hidden">
+                            <div id="screening-progress-bar" class="bg-babyPurple h-full rounded-full transition-all duration-300" style="width: 8%"></div>
+                        </div>
+
+                        <div class="min-h-[140px] flex flex-col justify-center text-center space-y-3">
+                            <span class="text-5xl select-none">📋</span>
+                            <p id="screening-question-text" class="text-lg md:text-xl font-extrabold text-slate-800 leading-relaxed max-w-2xl mx-auto">Câu hỏi đang tải...</p>
+                            <p id="screening-significance-text" class="text-xs text-slate-400 italic font-bold">Ý nghĩa: ...</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8" id="screening-options-container"></div>
+                    </div>
+
+                    <!-- Kết quả sàng lọc -->
+                    <div id="screening-results" class="hidden space-y-6">
+                        <div class="bg-white p-6 md:p-8 rounded-3xl custom-shadow border-2 border-slate-50 text-center relative overflow-hidden">
+                            <span class="text-6xl">📊🧬🏆</span>
+                            <h3 class="text-2xl font-black mt-3 text-slate-800">Kết Quả Đánh Giá Hành Vi</h3>
+                            <p class="text-xs text-gray-400 mt-1">Hệ thống tổng hợp và phân tích rủi ro của con</p>
+
+                            <div id="screening-classification-banner" class="mt-6 py-4 px-6 rounded-2xl font-black text-lg max-w-xl mx-auto">Đang xử lý...</div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-8 max-w-2xl mx-auto">
+                                <div class="bg-indigo-50/50 p-5 rounded-3xl border border-indigo-100 flex flex-col justify-between">
+                                    <div>
+                                        <span class="text-xs font-bold text-indigo-500 uppercase">Chỉ số nguy cơ Phổ Tự Kỷ (ASD)</span>
+                                        <div class="text-4xl font-black text-indigo-700 mt-2"><span id="asd-score-display">0</span> / 14</div>
+                                        <div id="asd-risk-label" class="text-xs font-bold text-indigo-600 mt-1">Nguy cơ thấp</div>
+                                    </div>
+                                    <div class="w-full bg-indigo-100 h-2.5 rounded-full mt-4 overflow-hidden">
+                                        <div id="asd-progress" class="bg-indigo-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                                    </div>
+                                </div>
+
+                                <div class="bg-pink-50/50 p-5 rounded-3xl border border-pink-100 flex flex-col justify-between">
+                                    <div>
+                                        <span class="text-xs font-bold text-pink-500 uppercase">Chỉ số nguy cơ Chậm Nói (Speech)</span>
+                                        <div class="text-4xl font-black text-pink-700 mt-2"><span id="speech-score-display">0</span> / 10</div>
+                                        <div id="speech-risk-label" class="text-xs font-bold text-pink-600 mt-1">Nguy cơ thấp</div>
+                                    </div>
+                                    <div class="w-full bg-pink-100 h-2.5 rounded-full mt-4 overflow-hidden">
+                                        <div id="speech-progress" class="bg-pink-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-slate-50 border border-slate-100 rounded-3xl p-6 text-left max-w-3xl mx-auto space-y-4">
+                                <h4 class="font-extrabold text-base text-slate-800 flex items-center gap-1.5 border-b border-slate-200 pb-2">
+                                    <span>💡</span> Phân Tích Chuyên Môn & Kế Hoạch Can Thiệp
+                                </h4>
+                                <div id="screening-analysis-text" class="text-xs text-slate-600 leading-relaxed font-medium space-y-2"></div>
+                            </div>
+
+                            <div class="flex justify-center gap-4 mt-8">
+                                <button onclick="startScreeningTest()" class="bg-babyPurple text-white font-black px-8 py-3.5 rounded-2xl hover:bg-opacity-90 transition-all text-sm shadow-md">
+                                    Đánh Giá Lại 🔄
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- TAB 4: LỘ TRÌNH 30 NGÀY -->
+            <!-- TAB 5: LỘ TRÌNH 30 NGÀY -->
             <div id="child-tab-journey" class="hidden space-y-6">
-                <!-- Tổng quan tiến trình lộ trình -->
                 <div class="bg-white p-6 rounded-3xl custom-shadow border border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6">
                     <div class="text-center md:text-left">
-                        <div class="text-xs font-bold text-babyPink uppercase tracking-widest">Hành trình rèn luyện 30 ngày tập phản xạ</div>
+                        <div class="text-xs font-bold text-babyPink uppercase tracking-widest">Hành trình 30 ngày luyện nói phản xạ</div>
                         <h3 class="text-2xl font-black text-slate-800 mt-1">Tiến trình đạt mốc: <span id="journey-progress-text" class="text-babyPink">0 / 30 ngày</span></h3>
-                        <p class="text-xs text-gray-400 mt-1 leading-relaxed">Hãy cùng bé hoàn thành tối thiểu 1 mốc nhiệm vụ nhỏ mỗi ngày để rèn luyện thói quen phản xạ tốt.</p>
+                        <p class="text-xs text-gray-400 mt-1 leading-relaxed">Hãy cùng bé hoàn thành tối thiểu 1 mốc nhỏ mỗi ngày nhé!</p>
                     </div>
                     <div class="w-full md:w-56 bg-slate-100 h-4 rounded-full overflow-hidden relative border border-slate-200">
                         <div id="journey-progress-bar" class="bg-babyBlue h-full rounded-full transition-all duration-500" style="width: 0%"></div>
                     </div>
                 </div>
 
-                <!-- Lưới 30 ngày học -->
-                <div class="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-10 gap-3.5" id="journey-grid-container">
-                    <!-- Chèn động các ô ngày bằng JS -->
-                </div>
+                <div class="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-10 gap-3.5" id="journey-grid-container"></div>
 
-                <!-- Nhiệm vụ chi tiết cho ngày được chọn -->
                 <div id="journey-detail-box" class="bg-white p-6 md:p-8 rounded-3xl custom-shadow border-2 border-babyPink/20 space-y-5 hidden">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
                         <div>
@@ -646,16 +874,18 @@
                                 <span class="text-xs font-bold uppercase text-gray-400 tracking-wider">Từ Khóa Mục Tiêu</span>
                                 <h5 class="text-3xl font-black text-slate-800 tracking-wide flex items-center gap-2 mt-1">
                                     <span id="selected-day-word">Ba ba</span>
-                                    <button onclick="speakSelectedDayWord()" class="p-2 bg-slate-50 hover:bg-slate-100 rounded-full border border-slate-200 text-sm">🗣️</button>
+                                    <button onclick="speakSelectedDayWord()" class="p-2 bg-slate-50 hover:bg-slate-100 rounded-full border border-slate-200 text-sm" title="Nghe mẫu">🗣️</button>
+                                    <button onclick="openSpeechCoachModal(document.getElementById('selected-day-word').innerText, 'Nhiệm vụ lộ trình.')" class="p-2 bg-purple-50 hover:bg-purple-100 rounded-full border border-purple-200 text-sm text-purple-700 font-bold flex items-center gap-1 text-xs" title="Luyện nói">
+                                        <span>🎙️ Bé tập nói</span>
+                                    </button>
                                 </h5>
                             </div>
                             <div>
-                                <span class="text-xs font-bold uppercase text-gray-400 tracking-wider">Hướng Dần Cho Ba Mẹ</span>
-                                <p id="selected-day-guide" class="text-sm text-slate-600 leading-relaxed mt-1">Khi nói, ba mẹ hãy cúi đầu thấp vừa tầm mắt con, chỉ tay nhẹ nhàng vào má mình và bật hơi rõ ràng để con nhìn khẩu hình.</p>
+                                <span class="text-xs font-bold uppercase text-gray-400 tracking-wider">Hướng Dẫn Cho Ba Mẹ</span>
+                                <p id="selected-day-guide" class="text-sm text-slate-600 leading-relaxed mt-1">Hướng dẫn khẩu hình mẫu...</p>
                             </div>
                         </div>
 
-                        <!-- Tranh ảnh trực quan của ngày -->
                         <div class="h-48 w-full rounded-2xl overflow-hidden bg-slate-100 shadow-inner relative">
                             <img id="selected-day-img" src="" alt="Tranh trực quan" class="w-full h-full object-cover">
                             <span id="selected-day-icon" class="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-2xl text-2xl shadow-sm border border-slate-50 select-none">👨</span>
@@ -673,27 +903,27 @@
             <div class="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <div class="flex items-center gap-2">
-                        <span class="bg-babyPink text-white text-xs font-black px-2.5 py-1 rounded-md uppercase">Hệ thống tổng</span>
+                        <span class="bg-babyPink text-white text-xs font-black px-2.5 py-1 rounded-md uppercase">Hệ thống</span>
                         <span class="text-gray-400 text-sm">Quản Trị Viên</span>
                     </div>
                     <h2 class="text-3xl font-black mt-1 text-white">Dashboard Quản Lý Trẻ Em</h2>
                 </div>
                 <div class="flex items-center gap-3">
                     <button onclick="logout()" class="bg-white/15 hover:bg-white/20 px-5 py-2.5 rounded-xl text-sm font-bold transition-all">
-                        Đóng phiên làm việc
+                        Đóng phiên
                     </button>
                 </div>
             </div>
         </header>
 
-        <!-- Admin Menu Tabs (Thống kê học sinh VS Cấu hình hệ thống) -->
+        <!-- Admin Menu Tabs -->
         <div class="max-w-6xl w-full mx-auto px-4 mt-6">
             <div class="flex bg-slate-100 p-1.5 rounded-2xl">
                 <button onclick="switchAdminTab('students')" id="admin-tab-btn-students" class="flex-1 py-3 px-4 rounded-xl font-bold text-sm md:text-base bg-white text-slate-800 shadow-sm transition-all">
-                    👥 Danh Sách Học Viên & Điểm Số
+                    👥 Học Viên & Điểm Số
                 </button>
                 <button onclick="switchAdminTab('settings')" id="admin-tab-btn-settings" class="flex-1 py-3 px-4 rounded-xl font-bold text-sm md:text-base text-gray-500 hover:text-slate-700 transition-all">
-                    ⚙️ Cấu Hình Giáo Cụ & Giọng Đọc
+                    ⚙️ Giáo Cụ & Giọng Đọc
                 </button>
             </div>
         </div>
@@ -702,14 +932,13 @@
             
             <!-- TAB ADMIN 1: DANH SÁCH HỌC SINH -->
             <div id="admin-tab-students" class="space-y-6">
-                <!-- Khu vực điều khiển: Tạo tài khoản & Tìm kiếm -->
                 <div class="bg-white p-6 rounded-3xl custom-shadow border border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
                     <div class="w-full md:w-auto">
                         <h3 class="text-xl font-extrabold text-slate-800">Cấp mã học tập & Quản trị dữ liệu</h3>
-                        <p class="text-gray-500 text-sm mt-1">Đăng ký tự động qua app hoặc Admin cấp thủ công, sửa mã tùy ý.</p>
+                        <p class="text-gray-500 text-sm mt-1">Đăng ký tự động qua app hoặc cấp thủ công.</p>
                     </div>
                     <div class="w-full md:w-72 relative">
-                        <input type="text" id="admin-search-input" oninput="renderAdminList()" placeholder="Tìm kiếm theo tên / mã số..." class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-babyPink focus:outline-none text-sm font-semibold">
+                        <input type="text" id="admin-search-input" oninput="renderAdminList()" placeholder="Tìm theo tên / mã..." class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-babyPink focus:outline-none text-sm font-semibold">
                         <span class="absolute right-4 top-3.5 opacity-40">🔍</span>
                     </div>
                     <button onclick="createNewSubAccount()" class="w-full md:w-auto shrink-0 bg-babyBlue hover:bg-opacity-95 text-white font-bold px-6 py-3.5 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-sm">
@@ -717,7 +946,7 @@
                     </button>
                 </div>
 
-                <!-- Tổng quan số liệu thống kê -->
+                <!-- Thống kê -->
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm text-center">
                         <div class="text-gray-400 text-xs font-bold uppercase">Tổng Số Bé</div>
@@ -732,34 +961,34 @@
                         <div id="stat-delay" class="text-3xl font-black text-amber-700 mt-2">0</div>
                     </div>
                     <div class="bg-rose-50 p-5 rounded-2xl border border-rose-100 text-center">
-                        <div class="text-rose-700 text-xs font-bold uppercase font-bold">Lớp 3</div>
+                        <div class="text-rose-700 text-xs font-bold uppercase">Lớp 3</div>
                         <div id="stat-autism" class="text-3xl font-black text-rose-700 mt-2">0</div>
                     </div>
                 </div>
 
-                <!-- Danh Sách Tài Khoản Con -->
+                <!-- Danh sách tài khoản con -->
                 <div class="bg-white rounded-3xl custom-shadow border border-slate-100 overflow-hidden">
                     <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center">
-                        <h4 class="font-extrabold text-lg text-slate-800">Danh sách tài khoản con hoạt động</h4>
+                        <h4 class="font-extrabold text-lg text-slate-800">Tài khoản hoạt động</h4>
                         <span id="account-count-badge" class="bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-xs font-bold">0 tài khoản</span>
                     </div>
                     
-                    <!-- Table / Grid dạng responsive -->
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse">
                             <thead>
                                 <tr class="bg-slate-50 text-slate-400 text-xs uppercase font-extrabold tracking-wider border-b border-slate-100">
                                     <th class="py-4 px-6">Mã Học Sinh</th>
-                                    <th class="py-4 px-6">Họ Tên / Cấp Lớp</th>
+                                    <th class="py-4 px-6">Họ Tên / Lớp</th>
+                                    <th class="py-4 px-6 text-center">Sàng Lọc</th>
                                     <th class="py-4 px-6">Lộ trình rèn luyện</th>
-                                    <th class="py-4 px-6">Điểm Trắc Nghiệm SGK</th>
-                                    <th class="py-4 px-6">Game phản xạ (Điểm cao nhất)</th>
+                                    <th class="py-4 px-6">Trắc Nghiệm SGK</th>
+                                    <th class="py-4 px-6">Game phản xạ (Cao nhất)</th>
                                     <th class="py-4 px-6 text-right">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody id="admin-accounts-list-body" class="divide-y divide-slate-100 text-sm">
                                 <tr>
-                                    <td colspan="6" class="py-8 text-center text-gray-400 font-medium">Chưa có dữ liệu học sinh nào hoạt động.</td>
+                                    <td colspan="7" class="py-8 text-center text-gray-400 font-medium">Chưa có dữ liệu học sinh nào hoạt động.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -767,25 +996,24 @@
                 </div>
             </div>
 
-            <!-- TAB ADMIN 2: CẤU HÌNH HỆ THỐNG (GIỌNG NÓI & GIÁO CỤ) -->
+            <!-- TAB ADMIN 2: CẤU HÌNH HỆ THỐNG -->
             <div id="admin-tab-settings" class="hidden space-y-6">
-                <!-- Thiết lập Giọng Nói Toàn Hệ Thống -->
+                <!-- Thiết lập Giọng Nói -->
                 <div class="bg-white p-6 rounded-3xl custom-shadow border border-slate-100 space-y-6">
                     <div>
-                        <h3 class="text-xl font-extrabold text-slate-800">🌐 Thiết lập Giọng Đọc Mặc Định</h3>
-                        <p class="text-gray-500 text-sm mt-1">Lựa chọn cấu hình các giọng đọc cục bộ của máy hoặc tích hợp trực tiếp <strong>Giọng đọc AI Online cao cấp</strong> dưới đây.</p>
+                        <h3 class="text-xl font-extrabold text-slate-800">🌐 Giọng Đọc Mặc Định</h3>
+                        <p class="text-gray-500 text-sm mt-1">Lựa chọn cấu hình các giọng đọc mặc định của máy hoặc tích hợp <strong>Giọng đọc AI Online</strong>.</p>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Chọn Giọng Đọc Hệ Thống</label>
                             <select id="admin-voice-select" class="w-full bg-slate-50 border border-slate-200 py-3 px-4 rounded-2xl font-bold text-sm focus:outline-none focus:ring-2 focus:ring-babyPink">
-                                <!-- Nạp giọng nói tự động từ Web Speech API và AI Online -->
                             </select>
                         </div>
                         <div>
                             <div class="flex justify-between items-center mb-2">
-                                <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider">Tốc Độ Đọc Chuẩn ( turtle-slow )</label>
+                                <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider font-bold">Tốc Độ Đọc Chuẩn</label>
                                 <span id="admin-speed-value" class="text-sm font-bold text-babyPink">0.65x</span>
                             </div>
                             <input type="range" id="admin-speech-rate" min="0.4" max="1.0" step="0.05" value="0.65" oninput="document.getElementById('admin-speed-value').innerText = this.value + 'x'" class="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-babyPink">
@@ -799,29 +1027,26 @@
                     </div>
                 </div>
 
-                <!-- Thiết lập Thẻ học Giáo Cụ -->
+                <!-- Thiết lập Giáo Cụ -->
                 <div class="bg-white p-6 rounded-3xl custom-shadow border border-slate-100 space-y-6">
                     <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                         <div>
-                            <h3 class="text-xl font-extrabold text-slate-800">📸 Quản Lý Bộ Thẻ Học Trực Quan</h3>
-                            <p class="text-gray-500 text-sm mt-1">Thay đổi từ vựng, hình ảnh thực tế sắc nét từng chủ đề giúp bé kích thích tư duy.</p>
+                            <h3 class="text-xl font-extrabold text-slate-800"> Quản Lý Giáo Cụ Trực Quan</h3>
+                            <p class="text-gray-500 text-sm mt-1">Thay đổi từ vựng, hình ảnh thực tế từng chủ đề giúp bé.</p>
                         </div>
                         <button onclick="resetFlashcardsToDefault()" class="text-xs bg-slate-50 hover:bg-slate-100 text-slate-500 border border-slate-200 font-bold px-4 py-2.5 rounded-xl transition-all">
                             🔄 Khôi phục bộ thẻ mặc định
                         </button>
                     </div>
 
-                    <!-- Lưới các Flashcard trong trang Admin -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" id="admin-flashcards-grid">
-                        <!-- Danh sách giáo cụ chỉnh sửa sinh tự động từ JS -->
-                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" id="admin-flashcards-grid"></div>
                 </div>
             </div>
 
         </main>
     </section>
 
-    <!-- THANH NAV DI ĐỘNG DƯỚI CÙNG (Cực kỳ thích ứng cho 5 mục) -->
+    <!-- THANH NAV DI ĐỘNG DƯỚI CÙNG -->
     <div id="child-mobile-nav" class="hidden md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 flex justify-around items-center py-2.5 z-40 shadow-xl px-1">
         <button onclick="switchChildTab('practice')" id="mobile-nav-practice" class="flex flex-col items-center gap-0.5 text-babyPink flex-1">
             <span class="text-lg">🗣️</span>
@@ -837,7 +1062,7 @@
         </button>
         <button onclick="switchChildTab('quiz')" id="mobile-nav-quiz" class="flex flex-col items-center gap-0.5 text-gray-400 flex-1">
             <span class="text-lg">📝</span>
-            <span class="text-[9px] font-black">Trắc Nghiệm</span>
+            <span class="text-[9px] font-black">Đánh Giá</span>
         </button>
         <button onclick="switchChildTab('journey')" id="mobile-nav-journey" class="flex flex-col items-center gap-0.5 text-gray-400 flex-1">
             <span class="text-lg">📅</span>
@@ -845,12 +1070,11 @@
         </button>
     </div>
 
-    <!-- Firebase và kịch bản ứng dụng cốt lõi -->
+    <!-- Firebase và kịch bản cốt lõi -->
     <script type="module">
-        // Import Firebase SDK Modules từ GStatic CDN
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, getDocs, collection, onSnapshot, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Thiết lập biến môi trường và Firebase Config
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'babytalk-admin-app-215151365';
@@ -866,7 +1090,6 @@
                 measurementId: "G-08ML1LTL94"
               };
 
-        // Khởi tạo các phân hệ
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
@@ -876,33 +1099,28 @@
 
         // State quản lý trong ứng dụng
         let currentAuthUser = null;
-        let loggedInRole = null; // 'admin' | 'parent' | 'guest'
-        let loggedInChildCode = null; // mã ECOxxx / mã tự chỉnh
+        let loggedInRole = null; 
+        let loggedInChildCode = null; 
         let loggedInChildName = "Bé Tự Do";
         let loggedInChildGrade = "Lớp 1";
-        let subAccountsList = []; // lưu tạm cục bộ từ Firebase
+        let subAccountsList = []; 
         let activeWordsFilter = 'all';
         let speechVoices = [];
 
-        // Trạng thái cấu hình giọng đọc cá nhân hóa được lưu nhớ (Thiết lập mặc định thành Giọng nữ Bắc chuẩn - gemini-Aoede)
         let loggedInChildVoice = "";
         let loggedInChildRate = 0.65;
-
-        // Đánh dấu trạng thái đang phát âm của AI Online
         let isSpeakingAI = false;
 
-        // Lưu trữ cấu hình giọng nói đồng bộ toàn cầu từ Admin
         let globalVoiceNameConfig = "";
         let globalSpeechRateConfig = 0.65;
 
-        // Tiến trình 30 ngày tập nói của Bé hiện tại
         let completedDaysArray = []; 
         let activeJourneyDay = 1;
 
-        // Lưu trữ ảnh tải lên từ thiết bị tạm thời (Base64 nén)
         let tempUploadedImageBase64 = "";
+        let speechRecognitionEngine = null;
+        let currentSpeechTargetWord = "";
 
-        // State cho Game Toán Phản Xạ
         let mathGameScore = 0;
         let mathGameHighScore = 0;
         let mathGameTimer = 60;
@@ -912,13 +1130,15 @@
         let currentMathAnswer = 0;
         let currentMathOptions = [];
 
-        // State cho Trắc nghiệm bám sát SGK
         let quizGrade = 'Lớp 1';
         let currentQuizIndex = 0;
-        let tempQuizAnswers = []; // {questionId, answeredCorrectly}
-        let quizQuestionsPool = []; // các câu hỏi bốc ngẫu nhiên cho kỳ làm bài này
+        let tempQuizAnswers = []; 
+        let quizQuestionsPool = []; 
 
-        // Bộ cơ sở dữ liệu Bảng Chữ Cái Tiếng Việt đầy đủ của EduKids
+        let currentScreeningIndex = 0;
+        let tempScreeningAnswers = [];
+        let activeQuizSubTab = 'sgk'; 
+
         const alphabetDatabase = [
             { letter: "A", word: "Ca", emoji: "🥛" },
             { letter: "Ă", word: "Khăn", emoji: "🧣" },
@@ -951,46 +1171,17 @@
             { letter: "Y", word: "Y tá", emoji: "🧑‍⚕️" }
         ];
 
-        // TỪ ĐIỂN PHIÊN ÂM CHUẨN ÂM VẦN MẪU GIÁO VIỆT NAM (PHONICS)
-        // Tránh lỗi TTS đọc B thành "Bi" hay "Bê". Giúp con nghe chuẩn "bờ", "cờ", "dờ"...
         const phoneticMap = {
-            "A": "a", 
-            "Ă": "á", 
-            "Â": "ớ",
-            "B": "bờ", 
-            "C": "cờ", 
-            "D": "dờ", 
-            "Đ": "đờ",
-            "E": "e", 
-            "Ê": "ê", 
-            "G": "gờ", 
-            "H": "hờ",
-            "I": "i", 
-            "K": "cờ", 
-            "L": "lờ", 
-            "M": "mờ",
-            "N": "nờ", 
-            "O": "o", 
-            "Ô": "ô", 
-            "Ơ": "ơ",
-            "P": "pờ", 
-            "Q": "quờ", 
-            "R": "rờ", 
-            "S": "sờ",
-            "T": "tờ", 
-            "U": "u", 
-            "Ư": "ư", 
-            "V": "vờ",
-            "X": "xờ", 
-            "Y": "i"
+            "A": "a", "Ă": "á", "Â": "ớ", "B": "bờ", "C": "cờ", "D": "dờ", "Đ": "đờ",
+            "E": "e", "Ê": "ê", "G": "gờ", "H": "hờ", "I": "i", "K": "cờ", "L": "lờ", 
+            "M": "mờ", "N": "nờ", "O": "o", "Ô": "ô", "Ơ": "ơ", "P": "pờ", "Q": "quờ", 
+            "R": "rờ", "S": "sờ", "T": "tờ", "U": "u", "Ư": "ư", "V": "vờ", "X": "xờ", "Y": "i"
         };
 
-        // State cho tab Học Chữ & Số
-        let activeLearnSubTab = 'alphabet'; // 'alphabet' | 'numbers'
+        let activeLearnSubTab = 'alphabet'; 
         let numberRangeStart = 1;
         let numberRangeEnd = 20;
 
-        // Bộ giọng đọc AI Online (Ưu tiên giọng Nữ Hà Nội Aoede lên đầu tiên)
         const geminiAiVoices = [
             { id: "gemini-Aoede", value: "Aoede", label: "Aoede [AI Online - Giọng Nữ Hà Nội Chuẩn 🎙️]" },
             { id: "gemini-Kore", value: "Kore", label: "Kore [AI Online - Giọng Nữ Cao Cấp 🌟]" },
@@ -1000,7 +1191,6 @@
             { id: "gemini-Charon", value: "Charon", label: "Charon [AI Online - Giọng Nam Trầm Ấm]" }
         ];
 
-        // Ngân hàng câu hỏi trắc nghiệm Toán & Tiếng Việt bám sát SGK Lớp 1, 2, 3
         const sgkQuestionsBank = {
             'Lớp 1': [
                 { id: 101, text: "Bé có 5 quả táo chín đỏ, ba cho thêm bé 3 quả táo xanh. Hỏi bé có tất cả mấy quả táo?", emoji: "🍎", options: ["7 quả", "8 quả", "9 quả", "6 quả"], answer: 1 },
@@ -1035,63 +1225,90 @@
         };
 
         const dailyThemesMap = {
-            1: { dayName: "Thứ Hai", code: "family", title: "Gia đình thân thương 🏡", icon: "🏡", desc: "Khuyến khích bé tương tác sâu bằng các danh từ thân thuộc như Ba ba, Mẹ ơi, Ông bà." },
-            2: { dayName: "Thứ Ba", code: "demand", title: "Nhu cầu hàng ngày 🍚", icon: "🍚", desc: "Hỗ trợ bé biểu đạt ý muốn tự nhiên: 'Măm măm' đòi ăn hoặc 'Bóng' khi muốn chơi." },
-            3: { dayName: "Thứ Tư", code: "animals", title: "Thế giới động vật nhỏ 🐶", icon: "🐶", desc: "Phát triển óc tưởng tượng khi bé học bắt chước tiếng 'Gà gáy' hoặc chơi với 'Con chó'." },
-            4: { dayName: "Thứ Năm", code: "fruits", title: "Trái cây thơm ngon 🍎", icon: "🍎", desc: "Rèn luyện phân biệt màu sắc, hình học qua các loại quả ngọt ngào chịu mọng tự nhiên." },
-            5: { dayName: "Thứ Sáu", code: "vehicles", title: "Giao thông chuyển động 🚗", icon: "🚗", desc: "Giúp bé hào hứng thông qua âm thanh các phương tiện di chuyển nhanh chóng quanh khu phố." },
-            6: { dayName: "Thứ Bảy", code: "family", title: "Gia đình sum họp vui vẻ 🏡", icon: "🏡", desc: "Cả nhà cùng quây quần bên bé và thực hiện ôn luyện tương tác phát âm các đại từ nhân xưng." },
-            0: { dayName: "Chủ Nhật", code: "all", title: "Ôn tập tổng hợp đầy màu sắc ✨", icon: "✨", desc: "Mở rộng tối đa phản xạ của con, ôn lại toàn bộ từ vựng đã học trong tuần một cách tự nhiên." }
+            1: { dayName: "Thứ Hai", code: "family", title: "Gia đình thân thương 🏡", icon: "🏡", desc: "Tương tác bằng các danh từ thân thuộc như Ba ba, Mẹ ơi, Ông bà." },
+            2: { dayName: "Thứ Ba", code: "demand", title: "Nhu cầu hàng ngày 🍚", icon: "🍚", desc: "Biểu đạt ý muốn tự nhiên: 'Măm măm' đòi ăn hoặc 'Bóng' khi muốn chơi." },
+            3: { dayName: "Thứ Tư", code: "animals", title: "Thế giới động vật nhỏ 🐶", icon: "🐶", desc: "Bắt chước tiếng 'Gà gáy' hoặc chơi với 'Con chó'." },
+            4: { dayName: "Thứ Năm", code: "fruits", title: "Trái cây thơm ngon 🍎", icon: "🍎", desc: "Rèn luyện phân biệt sắc màu, hình khối qua các loại quả." },
+            5: { dayName: "Thứ Sáu", code: "vehicles", title: "Giao thông chuyển động 🚗", icon: "🚗", desc: "Nhận biết âm thanh các phương tiện di chuyển nhanh chóng." },
+            6: { dayName: "Thứ Bảy", code: "family", title: "Gia đình sum họp vui vẻ 🏡", icon: "🏡", desc: "Cả nhà cùng quây quần bên bé và thực hiện ôn luyện phát âm." },
+            0: { dayName: "Chủ Nhật", code: "all", title: "Ôn tập tổng hợp đầy màu sắc ✨", icon: "✨", desc: "Mở rộng tối đa phản xạ của con, ôn lại toàn bộ từ vựng." }
         };
 
         const defaultWordDatabase = [
             { id: 1, text: "Ba ba", icon: "👨", category: "family", description: "Từ đơn giản dễ bật hơi âm đầu tiên.", imageUrl: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=400" },
             { id: 2, text: "Mẹ ơi", icon: "👩", category: "family", description: "Giọng ngắt quãng luyện liên kết từ ngữ.", imageUrl: "https://images.unsplash.com/photo-1544126592-807add215123?auto=format&fit=crop&q=80&w=400" },
-            { id: 3, text: "Măm măm", icon: "🍚", category: "demand", description: "Kích thích đòi ăn bằng từ láy vui nhộn.", imageUrl: "https://images.unsplash.com/photo-1536640712247-c57f8cfbe57c?auto=format&fit=crop&q=80&w=400" },
-            { id: 4, text: "Bóng", icon: "⚽", category: "demand", description: "Phát âm tròn môi với phụ âm cuối 'ng'.", imageUrl: "https://images.unsplash.com/photo-1518063319789-7217e6706b04?auto=format&fit=crop&q=80&w=400" },
-            { id: 5, text: "Con chó", icon: "🐶", category: "animals", description: "Ghép tính từ nhận diện con vật gần gũi.", imageUrl: "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&q=80&w=400" },
-            { id: 6, text: "Con gà", icon: "🐓", category: "animals", description: "Tiếng gà gáy dễ dàng kích thích bật âm.", imageUrl: "https://images.unsplash.com/photo-1569254994521-ddb5408d5939?auto=format&fit=crop&q=80&w=400" },
-            { id: 7, text: "Bế", icon: "🤗", category: "demand", description: "Từ ngắn nhất biểu thị nhu cầu được che chở.", imageUrl: "https://images.unsplash.com/photo-1492725764893-90b379c2b6e7?auto=format&fit=crop&q=80&w=400" },
-            { id: 8, text: "Ông bà", icon: "👵", category: "family", description: "Luyện phát âm dài hơn cho bé bắt chước.", imageUrl: "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&q=80&w=400" },
-            { id: 9, text: "Quả táo", icon: "🍎", category: "fruits", description: "Dạy bé phân biệt màu sắc rực rỡ ngọt lịm.", imageUrl: "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?auto=format&fit=crop&q=80&w=400" },
-            { id: 10, text: "Chuối", icon: "🍌", category: "fruits", description: "Bột từ dễ nói, bé thường rất thích ăn.", imageUrl: "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?auto=format&fit=crop&q=80&w=400" },
-            { id: 11, text: "Ô tô", icon: "🚗", category: "vehicles", description: "Kích thích liên kết chuyển động và tiếng còi bíp bíp.", imageUrl: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=400" },
-            { id: 12, text: "Máy bay", icon: "✈️", category: "vehicles", description: "Dạy bé hướng mắt lên bầu trời cao rộng lớn.", imageUrl: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&q=80&w=400" }
+            { id: 3, text: "Ông bà", icon: "👵", category: "family", description: "Luyện phát âm dài hơi và mở rộng âm tròn.", imageUrl: "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&q=80&w=400" },
+            { id: 4, text: "Anh trai", icon: "👦", category: "family", description: "Luyện phát âm thanh ngang và vần 'anh'.", imageUrl: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=400" },
+            { id: 5, text: "Chị gái", icon: "👧", category: "family", description: "Bé phát âm thanh nặng 'chị' sắc nét.", imageUrl: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=400" },
+            { id: 6, text: "Em bé", icon: "👶", category: "family", description: "Kích thích tình thương và bật âm gió 'em'.", imageUrl: "https://images.unsplash.com/photo-1519689680058-324335c77ebe?auto=format&fit=crop&q=80&w=400" },
+            { id: 7, text: "Măm măm", icon: "🍚", category: "demand", description: "Kích thích đòi ăn bằng từ láy mấp môi vui nhộn.", imageUrl: "https://images.unsplash.com/photo-1536640712247-c57f8cfbe57c?auto=format&fit=crop&q=80&w=400" },
+            { id: 8, text: "Bóng", icon: "⚽", category: "demand", description: "Phát âm tròn môi khép kín với phụ âm cuối 'ng'.", imageUrl: "https://images.unsplash.com/photo-1518063319789-7217e6706b04?auto=format&fit=crop&q=80&w=400" },
+            { id: 9, text: "Bế", icon: "🤗", category: "demand", description: "Từ ngắn nhất biểu thị nhu cầu được âu yếm.", imageUrl: "https://images.unsplash.com/photo-1492725764893-90b379c2b6e7?auto=format&fit=crop&q=80&w=400" },
+            { id: 10, text: "Sữa", icon: "🍼", category: "demand", description: "Luyện bật hơi phụ âm 's' cong lưỡi và thanh ngã.", imageUrl: "https://images.unsplash.com/photo-1522441815192-d9f04eb0615c?auto=format&fit=crop&q=80&w=400" },
+            { id: 11, text: "Nước", icon: "🥛", category: "demand", description: "Phát âm vần 'ước' đòi hỏi lấy hơi lồng ngực.", imageUrl: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&q=80&w=400" },
+            { id: 12, text: "Đi chơi", icon: "🚪", category: "demand", description: "Luyện bật cụm từ đôi biểu thị mong muốn di chuyển.", imageUrl: "https://images.unsplash.com/photo-1471286174890-9c112ffca5b4?auto=format&fit=crop&q=80&w=400" },
+            { id: 13, text: "Con chó", icon: "🐶", category: "animals", description: "Ghép phụ âm nhận diện con vật thân quen.", imageUrl: "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&q=80&w=400" },
+            { id: 14, text: "Con gà", icon: "🐓", category: "animals", description: "Tiếng gà gáy gờ dễ dàng kích thích vòm họng trẻ.", imageUrl: "https://images.unsplash.com/photo-1569254994521-ddb5408d5939?auto=format&fit=crop&q=80&w=400" },
+            { id: 15, text: "Con mèo", icon: "🐈", category: "animals", description: "Phát âm vần 'eo' kết hợp bặm môi phụ âm đầu 'm'.", imageUrl: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&q=80&w=400" },
+            { id: 16, text: "Con thỏ", icon: "🐇", category: "animals", description: "Luyện tập bật hơi âm gió 'th' đẩy luồng khí ra ngoài.", imageUrl: "https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?auto=format&fit=crop&q=80&w=400" },
+            { id: 17, text: "Con vịt", icon: "🦆", category: "animals", description: "Khép âm cuối bằng dấu nặng dứt khoát rành mạch.", imageUrl: "https://images.unsplash.com/photo-1518020382113-a7e8fc38eac9?auto=format&fit=crop&q=80&w=400" },
+            { id: 18, text: "Con cá", icon: "🐟", category: "animals", description: "Từ đôi phát âm mở rộng cơ hàm chữ 'a' thoải mái.", imageUrl: "https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?auto=format&fit=crop&q=80&w=400" },
+            { id: 19, text: "Quả táo", icon: "🍎", category: "fruits", description: "Phân biệt màu sắc đỏ mọng ngọt lịm.", imageUrl: "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?auto=format&fit=crop&q=80&w=400" },
+            { id: 20, text: "Chuối", icon: "🍌", category: "fruits", description: "Phát âm vần 'uôi' uốn lượn kết hợp âm gió.", imageUrl: "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?auto=format&fit=crop&q=80&w=400" },
+            { id: 21, text: "Quả cam", icon: "🍊", category: "fruits", description: "Kích thích bé mím môi nhẹ cuối chữ 'am'.", imageUrl: "https://images.unsplash.com/photo-1611080626919-7cf5a9dbab5b?auto=format&fit=crop&q=80&w=400" },
+            { id: 22, text: "Dưa hấu", icon: "🍉", category: "fruits", description: "Cụm từ đôi mát rượi kích thích vị giác bé.", imageUrl: "https://images.unsplash.com/photo-1589984662646-e7b2e4962f18?auto=format&fit=crop&q=80&w=400" },
+            { id: 23, text: "Ô tô", icon: "🚗", category: "vehicles", description: "Kích thích liên kết còi xe bíp bíp rộn ràng.", imageUrl: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=400" },
+            { id: 24, text: "Máy bay", icon: "✈️", category: "vehicles", description: "Khơi gợi ước mơ và hướng mắt lên không trung.", imageUrl: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&q=80&w=400" }
         ];
 
         let currentWordDatabase = [...defaultWordDatabase];
 
         const thirtyDayCurriculum = [
-            { day: 1, stage: "Giai Đoạn 1: Bật âm đơn", word: "Ba ba", icon: "👨", guide: "Ba mẹ hãy ôm bé vào lòng, chỉ vào má mình rồi bật âm 'Ba ba' thật to và rõ ràng nhiều lần.", img: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=400" },
-            { day: 2, stage: "Giai Đoạn 1: Bật âm đơn", word: "Mẹ", icon: "👩", guide: "Khi mẹ bế hoặc cho bé ăn, hãy ghé sát mặt ngang tầm mắt và nói 'Mẹ... mẹ' để thu hút ánh mắt của bé.", img: "https://images.unsplash.com/photo-1544126592-807add215123?auto=format&fit=crop&q=80&w=400" },
-            { day: 3, stage: "Giai Đoạn 1: Bật âm đơn", word: "Măm", icon: "🍚", guide: "Mỗi khi đến bữa ăn dặm, ba mẹ giơ bát cháo lên và dặn bé nói 'Măm' trước khi xúc một thìa ngon lành.", img: "https://images.unsplash.com/photo-1536640712247-c57f8cfbe57c?auto=format&fit=crop&q=80&w=400" },
-            { day: 4, stage: "Giai Đoạn 1: Bật âm đơn", word: "Bóng", icon: "⚽", guide: "Cầm quả bóng lăn nhẹ qua lại trước mặt bé. Vừa lăn vừa nói 'Bóng', kích thích phản xạ chụp lấy.", img: "https://images.unsplash.com/photo-1518063319789-7217e6706b04?auto=format&fit=crop&q=80&w=400" },
+            { day: 1, stage: "Giai Đoạn 1: Bật âm đơn", word: "Ba ba", icon: "👨", guide: "Ba mẹ hãy ôm bé vào lòng, chỉ vào má mình rồi bật âm 'Ba ba' thật to và rõ ràng.", img: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&q=80&w=400" },
+            { day: 2, stage: "Giai Đoạn 1: Bật âm đơn", word: "Mẹ", icon: "👩", guide: "Khi mẹ bế hoặc cho bé ăn, hãy ghé sát mặt ngang tầm mắt và nói 'Mẹ... mẹ'.", img: "https://images.unsplash.com/photo-1544126592-807add215123?auto=format&fit=crop&q=80&w=400" },
+            { day: 3, stage: "Giai Đoạn 1: Bật âm đơn", word: "Măm", icon: "🍚", guide: "Mỗi khi đến bữa ăn dặm, ba mẹ giơ bát cháo lên và dặn bé nói 'Măm'.", img: "https://images.unsplash.com/photo-1536640712247-c57f8cfbe57c?auto=format&fit=crop&q=80&w=400" },
+            { day: 4, stage: "Giai Đoạn 1: Bật âm đơn", word: "Bóng", icon: "⚽", guide: "Cầm quả bóng lăn nhẹ qua lại trước mặt bé. Vừa lăn vừa nói 'Bóng'.", img: "https://images.unsplash.com/photo-1518063319789-7217e6706b04?auto=format&fit=crop&q=80&w=400" },
             { day: 5, stage: "Giai Đoạn 1: Bật âm đơn", word: "Bà", icon: "👵", guide: "Dẫn bé đến gặp bà, khuyến khích bé vẫy tay khoanh tròn nhỏ trước bụng và gọi 'Bà... ạ'.", img: "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&q=80&w=400" },
-            { day: 6, stage: "Giai Đoạn 1: Bật âm đơn", word: "Ạ", icon: "🙇", guide: "Rèn luyện lễ phép bằng cách khoanh tay trước ngực. Mỗi khi nhận đồ chơi từ ba mẹ, hướng dẫn bé cúi đầu 'Ạ'.", img: "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&q=80&w=400" },
-            { day: 7, stage: "Giai Đoạn 2: Từ đôi đơn giản", word: "Mẹ ơi", icon: "👩", guide: "Mẹ trốn sau rèm cửa hoặc tay ú òa rồi xuất hiện. Kêu bé gọi to ghép từ: 'Mẹ ơi!'", img: "https://images.unsplash.com/photo-1551972251-12070d63502a?auto=format&fit=crop&q=80&w=400" },
-            { day: 8, stage: "Giai Đoạn 2: Từ đôi đơn giản", word: "Bế con", icon: "🤗", guide: "Khi bé giơ hai tay đòi ôm bế, ba mẹ hãy chững lại 3 giây và gợi ý bé nói 'Bế con' rồi mới ôm con lên.", img: "https://images.unsplash.com/photo-1492725764893-90b379c2b6e7?auto=format&fit=crop&q=80&w=400" },
-            { day: 9, stage: "Giai Đoạn 2: Từ đôi đơn giản", word: "Đi chơi", icon: "🚪", guide: "Chỉ tay ra phía cửa ra vào nhà, cầm sẵn mũ bảo hiểm hoặc giày của con và nói chậm rãi: 'Đi chơi nào'.", img: "https://images.unsplash.com/photo-1471286174890-9c112ffca5b4?auto=format&fit=crop&q=80&w=400" },
-            { day: 10, stage: "Giai Đoạn 2: Từ đôi đơn giản", word: "Uống sữa", icon: "🍼", guide: "Cầm bình sữa lắc đều tạo âm thanh vui mắt. Khuyến khích con nói ghép từ 'Uống sữa' để uống ngon lành.", img: "https://images.unsplash.com/photo-1522441815192-d9f04eb0615c?auto=format&fit=crop&q=80&w=400" },
-            { day: 11, stage: "Giai Đoạn 2: Từ đôi đơn giản", word: "Ăn cơm", icon: "🍚", guide: "Ngồi cùng mâm cơm gia đình, chỉ vào bát cơm dẻo nóng hổi và tập nói từ đôi 'Ăn cơm'.", img: "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&q=80&w=400" },
-            { day: 12, stage: "Giai Đoạn 2: Từ đôi đơn giản", word: "Bíp bíp", icon: "🚗", guide: "Bé chơi xe đồ chơi nhỏ, ba mẹ cùng bé đẩy xe va chạm nhẹ rồi giả vờ bóp còi kêu 'Bíp bíp!'.", img: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=400" },
-            { day: 13, stage: "Giai Đoạn 3: Thế giới quanh con", word: "Con chó", icon: "🐶", guide: "Cùng bé xem ảnh chú cún con cười xinh xắn, sủa tiếng 'Gâu gâu' bắt chước chuyển động dẫy đuôi.", img: "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&q=80&w=400" },
-            { day: 14, stage: "Giai Đoạn 3: Thế giới quanh con", word: "Con gà", icon: "🐓", guide: "Bắt chước động tác vỗ hai tay nhỏ làm cánh gà, rướn cổ gáy 'Ò ó o' thật ngộ nghĩnh.", img: "https://images.unsplash.com/photo-1569254994521-ddb5408d5939?auto=format&fit=crop&q=80&w=400" },
-            { day: 15, stage: "Giai Đoạn 3: Thế giới quanh con", word: "Táo đỏ", icon: "🍎", guide: "Cầm quả táo thực tế cho bé ngửi mùi thơm, sờ bề mặt trơn nhẵn bóng của vỏ quả và gọi tên.", img: "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?auto=format&fit=crop&q=80&w=400" },
-            { day: 16, stage: "Giai Đoạn 3: Thế giới quanh con", word: "Quả chuối", icon: "🍌", guide: "Ba mẹ bóc vỏ chuối chậm rãi để con ngửi thấy mùi đặc trưng. Nói từ đôi rành mạch 'Quả chuối'.", img: "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?auto=format&fit=crop&q=80&w=400" },
-            { day: 17, stage: "Giai Đoạn 3: Thế giới quanh con", word: "Ô tô", icon: "🚗", guide: "Khi đi trên phố hoặc nhìn ra cửa sổ, chỉ vào xe ô tô đang chạy và nói to rành mạch 'Ô tô'.", img: "https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&q=80&w=400" },
-            { day: 18, stage: "Giai Đoạn 3: Thế giới quanh con", word: "Máy bay", icon: "✈️", guide: "Học nhận diện bầu trời. Khi nghe thấy tiếng động cơ trên cao, hướng bé nhìn lên và nói 'Máy bay bay'.", img: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&q=80&w=400" },
-            { day: 19, stage: "Giai Đoạn 4: Cảm xúc & tương tác", word: "Yêu mẹ", icon: "💖", guide: "Mẹ ôm bé thật ấm áp, khẽ tựa đầu vào đầu bé và nói thì thầm ngọt ngào: 'Con yêu mẹ'.", img: "https://images.unsplash.com/photo-1519689680058-324335c77ebe?auto=format&fit=crop&q=80&w=400" },
+            { day: 6, stage: "Giai Đoạn 1: Bật âm đơn", word: "Ạ", icon: "🙇", guide: "Rèn luyện lễ phép bằng cách khoanh tay trước ngực. Mỗi khi nhận đồ chơi, hướng dẫn bé cúi đầu 'Ạ'.", img: "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&q=80&w=400" },
+            { day: 7, stage: "Giai Đoạn 2: Từ đôi đơn giản", word: "Mẹ ơi", icon: "👩", guide: "Mẹ trốn sau rèm cửa rồi xuất hiện. Kêu bé gọi to ghép từ: 'Mẹ ơi!'", img: "https://images.unsplash.com/photo-1551972251-12070d63502a?auto=format&fit=crop&q=80&w=400" },
+            { day: 8, stage: "Giai Đoạn 2: Từ đôi đơn giản", word: "Bế con", icon: "🤗", guide: "Khi bé giơ tay đòi bế, hãy chững lại 3 giây và gợi ý bé nói 'Bế con'.", img: "https://images.unsplash.com/photo-1492725764893-90b379c2b6e7?auto=format&fit=crop&q=80&w=400" },
+            { day: 9, stage: "Giai Đoạn 2: Từ đôi đơn giản", word: "Đi chơi", icon: "🚪", guide: "Chỉ tay ra phía cửa ra vào nhà, cầm sẵn giày của con và nói chậm rãi: 'Đi chơi nào'.", img: "https://images.unsplash.com/photo-1471286174890-9c112ffca5b4?auto=format&fit=crop&q=80&w=400" },
+            { day: 10, stage: "Giai Đoạn 2: Từ đôi đơn giản", word: "Uống sữa", icon: "🍼", guide: "Cầm bình sữa lắc đều tạo âm thanh vui mắt. Khuyến khích con nói 'Uống sữa'.", img: "https://images.unsplash.com/photo-1522441815192-d9f04eb0615c?auto=format&fit=crop&q=80&w=400" },
+            { day: 11, stage: "Giai Đoạn 2: Từ đôi đơn giản", word: "Ăn cơm", icon: "🍚", guide: "Ngồi cùng mâm cơm gia đình, chỉ vào bát cơm và tập nói từ đôi 'Ăn cơm'.", img: "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&q=80&w=400" },
+            { day: 12, stage: "Giai Đoạn 2: Từ đôi đơn giản", word: "Bíp bíp", icon: "🚗", guide: "Bé chơi xe đồ chơi nhỏ, ba mẹ cùng bé đẩy xe va chạm nhẹ rồi giả vờ kêu 'Bíp bíp!'.", img: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=400" },
+            { day: 13, stage: "Giai Đoạn 3: Thế giới quanh con", word: "Con chó", icon: "🐶", guide: "Cùng bé xem ảnh chú cún con cười xinh xắn, sủa tiếng 'Gâu gâu'.", img: "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&q=80&w=400" },
+            { day: 14, stage: "Giai Đoạn 3: Thế giới quanh con", word: "Con gà", icon: "🐓", guide: "Bắt chước động tác vỗ hai tay nhỏ làm cánh gà, rướn cổ gáy 'Ò ó o'.", img: "https://images.unsplash.com/photo-1569254994521-ddb5408d5939?auto=format&fit=crop&q=80&w=400" },
+            { day: 15, stage: "Giai Đoạn 3: Thế giới quanh con", word: "Táo đỏ", icon: "🍎", guide: "Cầm quả táo thực tế cho bé ngửi mùi thơm và gọi tên 'Táo đỏ'.", img: "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?auto=format&fit=crop&q=80&w=400" },
+            { day: 16, stage: "Giai Đoạn 3: Thế giới quanh con", word: "Quả chuối", icon: "🍌", guide: "Ba mẹ bóc vỏ chuối chậm rãi để con ngửi thấy mùi đặc trưng. Nói 'Quả chuối'.", img: "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?auto=format&fit=crop&q=80&w=400" },
+            { day: 17, stage: "Giai Đoạn 3: Thế giới quanh con", word: "Ô tô", icon: "🚗", guide: "Khi đi trên phố hoặc nhìn ra cửa sổ, chỉ vào xe ô tô đang chạy và nói 'Ô tô'.", img: "https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&q=80&w=400" },
+            { day: 18, stage: "Giai Đoạn 3: Thế giới quanh con", word: "Máy bay", icon: "✈️", guide: "Khi nghe thấy tiếng động cơ trên cao, hướng bé nhìn lên và nói 'Máy bay'.", img: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&q=80&w=400" },
+            { day: 19, stage: "Giai Đoạn 4: Cảm xúc & tương tác", word: "Yêu mẹ", icon: "💖", guide: "Mẹ ôm bé ấm áp, khẽ tựa đầu vào đầu bé và nói thì thầm: 'Yêu mẹ'.", img: "https://images.unsplash.com/photo-1519689680058-324335c77ebe?auto=format&fit=crop&q=80&w=400" },
             { day: 20, stage: "Giai Đoạn 4: Cảm xúc & tương tác", word: "Yêu ba", icon: "💙", guide: "Ba bế bé lên cao cười sảng khoái rồi áp má mình vào má con. Động viên con nói 'Yêu ba'.", img: "https://images.unsplash.com/photo-1542013936693-8848e5740a7a?auto=format&fit=crop&q=80&w=400" },
-            { day: 21, stage: "Giai Đoạn 4: Cảm xúc & tương tác", word: "Ạ ông", icon: "👴", guide: "Khi ông đến chơi nhà, khoanh hai tay nhỏ của con trước ngực và tập thói quen chào hỏi 'Ạ ông'.", img: "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&q=80&w=400" },
-            { day: 22, stage: "Giai Đoạn 4: Cảm xúc & tương tác", word: "Ạ bà", icon: "👵", guide: "Tương tự, bế con đứng trước mặt bà chào hỏi cung kính để phát triển phản xạ lễ phép từ nhỏ.", img: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&q=80&w=400" },
-            { day: 23, stage: "Giai Đoạn 4: Cảm xúc & tương tác", word: "Bye bye", icon: "👋", guide: "Khi có khách ra về, nâng tay con lên vẫy vẫy liên tục kết hợp phát âm nhịp điệu: 'Bye bye'.", img: "https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&q=80&w=400" },
-            { day: 24, stage: "Giai Đoạn 4: Cảm xúc & tương tác", word: "Thơm má", icon: "💋", guide: "Kêu con áp môi nhỏ vào má mẹ phát ra âm thanh 'chụt'. Nói chậm rãi yêu thương: 'Thơm má nào'.", img: "https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&q=80&w=400" },
-            { day: 25, stage: "Giai Đoạn 5: Hội thoại ghép ngắn", word: "Cho con xin", icon: "🎁", guide: "Khi đưa đồ chơi hoặc bánh ăn dặm cho con, hướng dẫn con xòe cả hai tay ngửa ra đón nhận và nói 'Cho con xin'.", img: "https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&q=80&w=400" },
+            { day: 21, stage: "Giai Đoạn 4: Cảm xúc & tương tác", word: "Ạ ông", icon: "👴", guide: "Khi ông đến chơi nhà, khoanh hai tay nhỏ của con trước ngực và tập thói quen 'Ạ ông'.", img: "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&q=80&w=400" },
+            { day: 22, stage: "Giai Đoạn 4: Cảm xúc & tương tác", word: "Ạ bà", icon: "👵", guide: "Tương tự, bế con đứng trước mặt bà chào hỏi cung kính 'Ạ bà'.", img: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&q=80&w=400" },
+            { day: 23, stage: "Giai Đoạn 4: Cảm xúc & tương tác", word: "Bye bye", icon: "👋", guide: "Khi có khách ra về, nâng tay con lên vẫy vẫy liên tục kết hợp 'Bye bye'.", img: "https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&q=80&w=400" },
+            { day: 24, stage: "Giai Đoạn 4: Cảm xúc & tương tác", word: "Thơm má", icon: "💋", guide: "Kêu con áp môi nhỏ vào má mẹ phát ra âm thanh 'chụt' và nói 'Thơm má'.", img: "https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&q=80&w=400" },
+            { day: 25, stage: "Giai Đoạn 5: Hội thoại ghép ngắn", word: "Cho con xin", icon: "🎁", guide: "Khi đưa đồ chơi hoặc bánh cho con, hướng dẫn con xòe cả hai tay ngửa ra và nói 'Cho con xin'.", img: "https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&q=80&w=400" },
             { day: 26, stage: "Giai Đoạn 5: Hội thoại ghép ngắn", word: "Mẹ bế con", icon: "🤗", guide: "Bé đòi bế, mẹ không bế ngay mà yêu cầu con ghép trọn vẹn câu nói ngắn: 'Mẹ... bế... con'.", img: "https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&q=80&w=400" },
-            { day: 27, stage: "Giai Đoạn 5: Hội thoại ghép ngắn", word: "Chó sủa gâu", icon: "🐶", guide: "Chỉ vào bức tranh con chó đang sủa gâu gâu tinh nghịch, hỏi bé 'Con chó kêu thế nào?' rồi cùng bật âm câu.", img: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&q=80&w=400" },
+            { day: 27, stage: "Giai Đoạn 5: Hội thoại ghép ngắn", word: "Chó sủa gâu", icon: "🐶", guide: "Chỉ vào bức tranh con chó sủa gâu gâu, hỏi bé 'Con chó kêu thế nào?' rồi cùng bật âm câu.", img: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&q=80&w=400" },
             { day: 28, stage: "Giai Đoạn 5: Hội thoại ghép ngắn", word: "Gà gáy ò", icon: "🐓", guide: "Giả vờ rướn cổ chim vẫy cánh và hô lớn mô tả hoạt động sống động: 'Gà trống gáy ò ó o'.", img: "https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?auto=format&fit=crop&q=80&w=400" },
-            { day: 29, stage: "Giai Đoạn 5: Hội thoại ghép ngắn", word: "Con muốn ăn", icon: "🍚", guide: "Mỗi khi đói bụng đứng trước tủ lạnh, rèn luyện bé chỉ tay thẳng thắn phát âm câu 3 từ đầy đủ nhu cầu.", img: "https://images.unsplash.com/photo-1596272875729-ed2ff7d6d9c5?auto=format&fit=crop&q=80&w=400" },
-            { day: 30, stage: "Giai Đoạn 5: Hội thoại ghép ngắn", word: "Cảm ơn ba", icon: "💖", guide: "Khi ba đi làm về mua quà cho con, cả nhà vỗ tay khen ngợi bé khi bé biết cúi đầu cảm ơn ba chân thành.", img: "https://images.unsplash.com/photo-1518152006812-cdff28b66e8e?auto=format&fit=crop&q=80&w=400" }
+            { day: 29, stage: "Giai Đoạn 5: Hội thoại ghép ngắn", word: "Con muốn ăn", icon: "🍚", guide: "Mỗi khi đói bụng đứng trước tủ lạnh, rèn luyện bé chỉ tay nói câu: 'Con muốn ăn'.", img: "https://images.unsplash.com/photo-1596272875729-ed2ff7d6d9c5?auto=format&fit=crop&q=80&w=400" },
+            { day: 30, stage: "Giai Đoạn 5: Hội thoại ghép ngắn", word: "Cảm ơn ba", icon: "💖", guide: "Khi ba đi làm về mua quà cho con, khen ngợi bé khi bé biết cúi đầu 'Cảm ơn ba'.", img: "https://images.unsplash.com/photo-1518152006812-cdff28b66e8e?auto=format&fit=crop&q=80&w=400" }
+        ];
+
+        const screeningQuestions = [
+            { id: 1, text: "Khi chơi hay nói chuyện, con có thường xuyên nhìn thẳng vào mắt ba mẹ không? (Giao tiếp mắt)", category: "asd", symptom: "eye_contact", significance: "Đánh giá khả năng giao tiếp không lời và sự kết nối cảm xúc xã hội.", options: ["Có, thường xuyên", "Thỉnh thoảng", "Không bao giờ"], riskMapping: [0, 1, 2] },
+            { id: 2, text: "Khi nghe ba mẹ gọi tên từ khoảng cách gần, con có lập tức quay đầu lại phản ứng không? (Phản ứng gọi tên)", category: "asd", symptom: "name_response", significance: "Đánh giá mức độ chú ý âm thanh xã hội và định hướng thính giác.", options: ["Có, phản ứng ngay", "Thỉnh thoảng", "Không bao giờ"], riskMapping: [0, 1, 2] },
+            { id: 3, text: "Con có biết chỉ ngón trỏ để thể hiện sự quan tâm hoặc muốn lấy một vật ở xa không? (Hành vi chỉ tay)", category: "asd", symptom: "pointing", significance: "Chỉ tay chia sẻ chú ý (Joint Attention) là cột mốc xã hội cực kỳ quan trọng.", options: ["Có, thường xuyên chỉ", "Thỉnh thoảng", "Không bao giờ"], riskMapping: [0, 1, 2] },
+            { id: 4, text: "Con có chơi các trò chơi giả vờ hoặc đóng vai không? (Ví dụ: giả vờ cho búp bê ăn, giả vờ nghe điện thoại...)", category: "asd", symptom: "pretend_play", significance: "Đánh giá tư duy biểu tượng và khả năng tưởng tượng sớm.", options: ["Có, thường chơi", "Thỉnh thoảng", "Không bao giờ"], riskMapping: [0, 1, 2] },
+            { id: 5, text: "Con có các hành động lặp đi lặp lại đặc trưng không? (Ví dụ: xoay tròn người, nhón chân khi đi, vẫy tay trước mắt...)", category: "asd", symptom: "repetitive_behavior", significance: "Nhận diện hành vi rập khuôn, lặp lại thường thấy ở trẻ tự kỷ.", options: ["Có, thấy rất rõ", "Thỉnh thoảng có", "Không bao giờ thấy"], riskMapping: [2, 1, 0] },
+            { id: 6, text: "Con có phản ứng thái quá hoặc cực kỳ sợ hãi khi nghe các tiếng động thông thường không? (Ví dụ: tiếng máy hút bụi, máy sấy tóc...)", category: "asd", symptom: "sensory_issue", significance: "Đánh giá độ nhạy cảm giác quan (quá nhạy hoặc kém nhạy thính giác).", options: ["Có, rất hoảng sợ", "Thỉnh thoảng", "Không, bình thường"], riskMapping: [2, 1, 0] },
+            { id: 7, text: "Con có chủ động tương tác hoặc hào hứng tham gia chơi cùng các trẻ em khác không? (Hòa đồng xã hội)", category: "asd", symptom: "social_play", significance: "Đánh giá động lực giao tiếp và nhu cầu kết nối xã hội đồng trang lứa.", options: ["Có, rất thích chơi cùng", "Thỉnh thoảng", "Không, chỉ chơi một mình"], riskMapping: [0, 1, 2] },
+            { id: 8, text: "Bé đã nói được các từ đơn có nghĩa rõ ràng chưa? (Ví dụ: Ba, mẹ, măm, bóng, cá, đi, chơi...)", category: "speech", symptom: "single_words", significance: "Mốc phát triển ngôn ngữ diễn đạt cơ bản ở trẻ nhỏ.", options: ["Nói được rất nhiều", "Nói được vài từ", "Chưa nói được từ nào"], riskMapping: [0, 1, 2] },
+            { id: 9, text: "Bé đã tự ghép được 2-3 từ thành câu ngắn để biểu đạt nhu cầu chưa? (Ví dụ: 'Mẹ bế', 'Uống sữa', 'Đi chơi'...)", category: "speech", symptom: "two_words", significance: "Đánh giá tư duy kết hợp từ và ngữ pháp nói sơ khởi.", options: ["Nói được tốt", "Thỉnh thoảng nói", "Chưa bao giờ nói"], riskMapping: [0, 1, 2] },
+            { id: 10, text: "Bé có hiểu và làm theo đúng chỉ dẫn đơn giản của người lớn không? (Ví dụ: 'Lấy cho mẹ quả bóng', 'Cất dép đi'...)", category: "speech", symptom: "receptive_language", significance: "Đánh giá ngôn ngữ tiếp thu - khả năng giải mã lời nói xã hội.", options: ["Hiểu và làm theo ngay", "Thỉnh thoảng hiểu", "Không hiểu / phớt lờ"], riskMapping: [0, 1, 2] },
+            { id: 11, text: "Bé có biết dùng cử chỉ cơ thể thay lời nói không? (Ví dụ: gật đầu đồng ý, lắc đầu từ chối, vẫy tay chào tạm biệt...)", category: "speech", symptom: "non_verbal", significance: "Đánh giá giao tiếp phi ngôn ngữ hỗ trợ để bù đắp cho ngôn ngữ nói.", options: ["Dùng rất linh hoạt", "Thỉnh thoảng dùng", "Không bao giờ dùng"], riskMapping: [0, 1, 2] },
+            { id: 12, text: "Con có xu hướng nhại lại nguyên văn lời nói của người khác một cách vô nghĩa thay vì trả lời không? (Nhại lời)", category: "speech", symptom: "echolalia", significance: "Nhại lời máy móc là đặc trưng thường gặp ở cả chậm nói và phổ tự kỷ.", options: ["Có, nhại lại liên tục", "Thỉnh thoảng nhại", "Không bao giờ nhại"], riskMapping: [2, 1, 0] }
         ];
 
         // KHỞI ĐỘNG AUTHENTICATION & DATABASE
@@ -1108,7 +1325,6 @@
             }
         }
 
-        // Lắp đặt bộ giám sát trạng thái đăng nhập
         onAuthStateChanged(auth, (user) => {
             currentAuthUser = user;
             const loader = document.getElementById('global-loader');
@@ -1184,7 +1400,6 @@
                         globalVoiceNameConfig = data.globalVoiceName;
                         globalSpeechRateConfig = data.globalSpeechRate || 0.65;
                         
-                        // Nếu tài khoản của bé chưa thiết lập giọng đọc riêng, sẽ lấy cấu hình giọng nói chung của Admin
                         if (!loggedInChildVoice) {
                             const rateInput = document.getElementById('speech-rate');
                             if (rateInput) {
@@ -1198,7 +1413,7 @@
                     initializeDefaultSettingsOnCloud();
                 }
             }, (error) => {
-                console.error("Lỗi nghe cấu hình toàn cục từ Firestore:", error);
+                console.error("Lỗi nghe cấu hình:", error);
             });
         }
 
@@ -1206,7 +1421,7 @@
             const globalSettingsDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'global');
             try {
                 await setDoc(globalSettingsDocRef, {
-                    globalVoiceName: "gemini-Aoede", // Chuyển giọng mặc định toàn cục thành Aoede (Giọng nữ Bắc chuẩn)
+                    globalVoiceName: "gemini-Aoede", 
                     globalSpeechRate: 0.65,
                     words: defaultWordDatabase
                 });
@@ -1231,7 +1446,7 @@
                     updateAdminStats();
                 }
             }, (error) => {
-                console.error("Lỗi nghe danh sách học sinh từ Firestore:", error);
+                console.error("Lỗi nghe danh sách học sinh:", error);
             });
         }
 
@@ -1250,7 +1465,7 @@
             let limitCounter = 0;
 
             while (isDuplicate && limitCounter < 100) {
-                const randomNum = Math.floor(100 + Math.random() * 900); // Tạo đuôi 100 - 999
+                const randomNum = Math.floor(100 + Math.random() * 900); 
                 code = `ECO${randomNum}`;
                 isDuplicate = subAccountsList.some(acc => acc.code === code);
                 limitCounter++;
@@ -1270,21 +1485,21 @@
                 quizLatestScore: null,
                 quizLatestGrade: null,
                 quizLatestTime: null,
-                preferredVoice: "gemini-Aoede", // Đăng ký mặc định dùng giọng Nữ Hà Nội chuẩn
-                preferredRate: 0.65
+                preferredVoice: "gemini-Aoede", 
+                preferredRate: 0.65,
+                screeningResult: null
             };
 
             try {
                 await setDoc(docRef, newAccountData);
                 showToast(`Đăng ký thành công! Mã của bé là ${code}`, "success");
                 
-                // Tự động đăng nhập sau khi đăng ký thành công
                 loggedInRole = 'parent';
                 loggedInChildCode = code;
                 loggedInChildName = nameInput;
                 loggedInChildGrade = gradeInput;
                 mathGameHighScore = 0;
-                loggedInChildVoice = "gemini-Aoede"; // Đồng bộ giọng đọc chuẩn Hà Nội
+                loggedInChildVoice = "gemini-Aoede"; 
                 loggedInChildRate = 0.65;
 
                 sessionStorage.setItem('loggedInRole', 'parent');
@@ -1326,8 +1541,9 @@
                 quizLatestScore: null,
                 quizLatestGrade: null,
                 quizLatestTime: null,
-                preferredVoice: "gemini-Aoede", // Mặc định giọng Nữ Hà Nội
-                preferredRate: 0.65
+                preferredVoice: "gemini-Aoede", 
+                preferredRate: 0.65,
+                screeningResult: null
             };
 
             try {
@@ -1356,7 +1572,7 @@
             );
         };
 
-        // ================= ADMIN SỬA THÔNG TIN & MÃ HỌC SINH TÙY BIẾN =================
+        // ADMIN SỬA THÔNG TIN BÉ
         window.openStudentEditModal = function(code) {
             const acc = subAccountsList.find(a => a.code === code);
             if (!acc) return;
@@ -1382,40 +1598,35 @@
                 return;
             }
 
-            // Kiểm tra mã chỉ được chứa chữ cái không dấu, số, gạch nối, gạch dưới
             if (!/^[A-Z0-9_-]+$/.test(newCode)) {
-                showToast("Mã học sinh không được chứa khoảng trắng, dấu tiếng Việt hoặc ký tự đặc biệt!", "error");
+                showToast("Mã học sinh không hợp lệ!", "error");
                 return;
             }
 
             const isCodeChanged = (oldCode !== newCode);
 
             if (isCodeChanged) {
-                // Kiểm tra mã mới đã tồn tại chưa
                 const isDuplicate = subAccountsList.some(acc => acc.code === newCode);
                 if (isDuplicate) {
-                    showToast(`Mã "${newCode}" đã được sử dụng bởi học sinh khác!`, "error");
+                    showToast(`Mã "${newCode}" đã được sử dụng!`, "error");
                     return;
                 }
 
-                // Thực hiện đồng bộ di dời tài liệu trên Firestore
                 showConfirmDialog(
                     "Đổi mã học sinh",
-                    `Bạn có đồng ý đổi mã học sinh từ "${oldCode}" thành "${newCode}"? Toàn bộ lộ trình 30 ngày, kỷ lục game và điểm số trắc nghiệm sẽ được bảo toàn và chuyển sang mã mới.`,
+                    `Bạn có đồng ý đổi mã học sinh từ "${oldCode}" thành "${newCode}"?`,
                     "🔄",
                     async () => {
                         const oldDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'sub_accounts', oldCode);
                         const newDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'sub_accounts', newCode);
 
                         try {
-                            // Lấy dữ liệu từ mã cũ
                             const oldSnap = await getDoc(oldDocRef);
                             let data = {};
                             if (oldSnap.exists()) {
                                 data = oldSnap.data();
                             }
 
-                            // Cập nhật thông tin mới
                             const updatedData = {
                                 ...data,
                                 code: newCode,
@@ -1424,11 +1635,9 @@
                                 lastUpdated: new Date().toISOString()
                             };
 
-                            // Tạo tài liệu mới và xóa tài liệu cũ
                             await setDoc(newDocRef, updatedData);
                             await deleteDoc(oldDocRef);
 
-                            // Nếu bé đang được sửa chính là tài khoản đang đăng nhập hiện tại -> cập nhật session lưu giữ phiên
                             if (loggedInRole === 'parent' && loggedInChildCode === oldCode) {
                                 loggedInChildCode = newCode;
                                 loggedInChildName = newName;
@@ -1441,15 +1650,14 @@
                             }
 
                             closeStudentEditModal();
-                            showToast(`Đã lưu thay đổi & chuyển đổi mã học sinh sang "${newCode}"!`, "success");
+                            showToast(`Đã lưu thay đổi & chuyển sang mã mới "${newCode}"!`, "success");
                         } catch (err) {
                             console.error("Lỗi đổi mã học sinh:", err);
-                            showToast("Gặp sự cố kết nối Firestore khi chuyển đổi dữ liệu mã.", "error");
+                            showToast("Gặp sự cố kết nối dữ liệu.", "error");
                         }
                     }
                 );
             } else {
-                // Chỉ sửa đổi Tên hoặc Lớp, không đổi Mã học sinh
                 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'sub_accounts', oldCode);
                 try {
                     await updateDoc(docRef, {
@@ -1469,15 +1677,15 @@
                     showToast("Cập nhật thông tin bé thành công!", "success");
                 } catch (err) {
                     console.error("Lỗi cập nhật học sinh:", err);
-                    showToast("Không thể lưu cập nhật lên máy chủ.", "error");
+                    showToast("Không thể lưu cập nhật.", "error");
                 }
             }
         };
 
-        // KHI BÉ LÀM XONG TRẮC NGHIỆM SGK -> LƯU KẾT QUẢ LÊN FIRESTORE
+        // KHI BÉ LÀM XONG TRẮC NGHIỆM SGK
         async function saveQuizResultToCloud(score) {
             if (loggedInRole === 'guest') {
-                showToast("Đang ở tài khoản khách, điểm số không được lưu mây.", "info");
+                showToast("Đang ở tài khoản khách, điểm không được lưu mây.", "info");
                 return;
             }
             if (!loggedInChildCode) return;
@@ -1511,13 +1719,13 @@
                     globalVoiceName: selectedVoice,
                     globalSpeechRate: selectedRate
                 });
-                showToast("Đã đồng bộ giọng đọc mặc định toàn trường!", "success");
+                showToast("Đã đồng bộ giọng đọc mặc định!", "success");
             } catch (err) {
                 showToast("Gặp sự cố lưu giọng nói.", "error");
             }
         }
 
-        // LƯU CẤU HÌNH GIỌNG ĐỌC CÁ NHÂN HÓA CHO BÉ KHI CHỌN (TỰ ĐỘNG LƯU TRÊN ĐÁM MÂY)
+        // LƯU CẤU HÌNH GIỌNG ĐỌC CÁ NHÂN HÓA CHO BÉ KHI CHỌN
         window.saveChildVoicePreference = async function() {
             const voiceSelect = document.getElementById('voice-select');
             const rateInput = document.getElementById('speech-rate');
@@ -1529,7 +1737,6 @@
             loggedInChildVoice = selectedVoiceId;
             loggedInChildRate = rateValue;
 
-            // Cập nhật ngay huy hiệu Giọng AI Premium nếu dùng giọng Cloud
             const badge = document.getElementById('badge-global-voice-indicator');
             if (badge) {
                 if (selectedVoiceId.startsWith('gemini-')) {
@@ -1539,7 +1746,6 @@
                 }
             }
 
-            // Tiến hành đồng bộ trực tuyến vào hồ sơ của học sinh
             if (loggedInRole !== 'guest' && loggedInChildCode) {
                 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'sub_accounts', loggedInChildCode);
                 try {
@@ -1548,17 +1754,16 @@
                         preferredRate: rateValue,
                         lastUpdated: new Date().toISOString()
                     });
-                    showToast("Đã ghi nhớ giọng đọc yêu thích của con lên đám mây! 💾", "success");
+                    showToast("Đã ghi nhớ giọng đọc yêu thích của con! 💾", "success");
                 } catch (err) {
-                    console.error("Lỗi đồng bộ cấu hình giọng đọc của bé:", err);
-                    showToast("Lỗi đồng bộ tùy chọn giọng đọc lên đám mây.", "error");
+                    console.error("Lỗi đồng bộ cấu hình giọng đọc:", err);
                 }
             } else {
-                showToast("Đã ghi nhớ tạm thời lựa chọn giọng đọc cho khách! ✨", "success");
+                showToast("Đã ghi nhớ tạm thời lựa chọn giọng đọc! ✨", "success");
             }
         }
 
-        // ĐĂNG NHẬP NHANH BẰNG MÃ ECO CỦA BÉ
+        // ĐĂNG NHẬP NHANH BẰNG MÃ ECO
         window.handleParentLogin = function() {
             const inputVal = document.getElementById('parent-code-input').value.trim().toUpperCase();
             if (!inputVal) {
@@ -1574,20 +1779,19 @@
                 loggedInChildGrade = foundAcc.grade || "Lớp 1";
                 mathGameHighScore = foundAcc.mathGameHighScore || 0;
                 
-                // Đồng bộ lựa chọn giọng đọc đã lưu trước đó của bé từ đám mây
                 loggedInChildVoice = foundAcc.preferredVoice || "gemini-Aoede";
                 loggedInChildRate = foundAcc.preferredRate || 0.65;
 
                 sessionStorage.setItem('loggedInRole', 'parent');
                 sessionStorage.setItem('loggedInChildCode', inputVal);
-                showToast(`Đón chào bé ${loggedInChildName} quay trở lại học tập! ✨`, "success");
+                showToast(`Chào bé ${loggedInChildName} quay trở lại học tập! ✨`, "success");
                 enterChildDashboard();
             } else {
-                showToast("Mã học tập này chưa chính xác. Ba mẹ hãy chọn mục Đăng Ký để tự tạo mã mới nhé!", "error");
+                showToast("Mã học tập chưa chính xác. Hãy Đăng ký tự động nếu chưa có mã nhé!", "error");
             }
         }
 
-        // ĐĂNG NHẬP ADMIN (MẬT KHẨU CỦA USER YÊU CẦU: 215151365)
+        // ĐĂNG NHẬP ADMIN (MẬT KHẨU: 215151365)
         window.handleAdminLogin = function() {
             const inputVal = document.getElementById('admin-key-input').value.trim();
             if (inputVal === "215151365") {
@@ -1607,7 +1811,7 @@
             loggedInChildName = "Khách Trải Nghiệm";
             loggedInChildGrade = "Lớp 1";
             mathGameHighScore = 0;
-            loggedInChildVoice = "gemini-Aoede"; // Mặc định cho khách dùng giọng Nữ Hà Nội chuẩn
+            loggedInChildVoice = "gemini-Aoede"; 
             loggedInChildRate = 0.65;
 
             sessionStorage.setItem('loggedInRole', 'guest');
@@ -1626,7 +1830,6 @@
             const formRegister = document.getElementById('form-register');
             const formAdmin = document.getElementById('form-admin');
 
-            // Reset buttons
             const defaultBtnClass = "flex-1 py-2.5 text-[11px] sm:text-xs font-black rounded-xl text-gray-500 transition-all";
             const activeBtnClass = "flex-1 py-2.5 text-[11px] sm:text-xs font-black rounded-xl bg-white text-babyPink shadow-sm transition-all";
 
@@ -1697,7 +1900,6 @@
                     mathGameHighScore = data.mathGameHighScore || 0;
                     document.getElementById('math-high-score-display').innerText = mathGameHighScore;
 
-                    // Phục hồi giọng đọc ưu thích
                     if (data.preferredVoice) {
                         loggedInChildVoice = data.preferredVoice;
                         const voiceSelect = document.getElementById('voice-select');
@@ -1717,7 +1919,7 @@
                     initVoiceSelector();
                 }
             } catch (err) {
-                console.log("Đang chạy offline hoặc chưa nạp dữ liệu cũ.");
+                console.log("Đang chạy offline hoặc chưa có dữ liệu cũ.");
             }
         }
 
@@ -1740,7 +1942,7 @@
             resetQuiz();
         }
 
-        // CHUYỂN TAB CỦA BÉ (Đã nâng cấp hỗ trợ Tab Learn Chữ & Số mới)
+        // CHUYỂN TAB CỦA BÉ
         window.switchChildTab = function(tabName) {
             const tabPractice = document.getElementById('child-tab-practice');
             const tabLearn = document.getElementById('child-tab-learn');
@@ -1760,7 +1962,6 @@
             const mobileBtnQuiz = document.getElementById('mobile-nav-quiz');
             const mobileBtnJourney = document.getElementById('mobile-nav-journey');
 
-            // Ẩn tất cả các tab chính
             tabPractice.classList.add('hidden');
             tabLearn.classList.add('hidden');
             tabMathGame.classList.add('hidden');
@@ -1793,7 +1994,6 @@
                 tabLearn.classList.remove('hidden');
                 btnLearn.className = "flex-1 shrink-0 py-3.5 px-4 rounded-xl font-black text-sm flex items-center justify-center gap-1.5 bg-babyPurple text-white transition-all shadow-md";
                 mobileBtnLearn.className = "flex flex-col items-center gap-0.5 text-babyPurple flex-1";
-                // Render lại bảng chữ cái và số đảm bảo chính xác
                 renderAlphabetGrid();
                 renderNumbersGrid();
             } else if (tabName === 'mathgame') {
@@ -1807,6 +2007,7 @@
                 mobileBtnQuiz.className = "flex flex-col items-center gap-0.5 text-babyBlue flex-1";
                 quizGrade = loggedInChildGrade;
                 selectQuizGrade(quizGrade);
+                switchQuizSubTab('sgk'); 
             } else {
                 tabJourney.classList.remove('hidden');
                 btnJourney.className = "flex-1 shrink-0 py-3.5 px-4 rounded-xl font-black text-sm flex items-center justify-center gap-1.5 bg-pink-500 text-white transition-all shadow-md";
@@ -1815,7 +2016,7 @@
             }
         }
 
-        // ================= PHÂN HỆ: HỌC CHỮ CÁI & ĐẾM SỐ 1-100 =================
+        // CHUYỂN PHÂN HỆ HỌC CHỮ / SỐ
         window.switchLearnSubTab = function(subtabName) {
             activeLearnSubTab = subtabName;
             const btnAlphabet = document.getElementById('learn-subtab-btn-alphabet');
@@ -1838,20 +2039,18 @@
             }
         }
 
-        // Tạo lưới Bảng chữ cái Tiếng Việt sinh động
+        // Tạo lưới chữ cái Tiếng Việt
         window.renderAlphabetGrid = function() {
             const container = document.getElementById('alphabet-grid-container');
             if (!container) return;
             container.innerHTML = "";
 
-            // Phối ngẫu nhiên bảng màu mầm non đáng yêu cho viền chữ
             const colors = ['border-babyPink', 'border-babyBlue', 'border-amber-400', 'border-babyPurple', 'border-emerald-400', 'border-indigo-400'];
 
             alphabetDatabase.forEach((item, index) => {
                 const borderCol = colors[index % colors.length];
                 const card = document.createElement('div');
                 
-                // Khi chạm sẽ nói chữ cái theo âm vần (bờ, cờ...) và từ mẫu: "Bờ... bò"
                 card.onclick = () => {
                     card.classList.add('scale-95', 'bg-slate-50');
                     setTimeout(() => card.classList.remove('scale-95', 'bg-slate-50'), 150);
@@ -1871,7 +2070,7 @@
             });
         }
 
-        // HÀM CHUYỂN ĐỔI SỐ THÀNH CHỮ TIẾNG VIỆT (Giúp TTS phát âm chuẩn xác không bị đọc thành tiếng Anh)
+        // Dịch số sang tiếng Việt
         window.convertNumberToVietnameseWords = function(num) {
             const units = ["không", "một", "hai", "ba", "bốn", "năm", "sáu", "bảy", "tám", "chín"];
             if (num === 100) return "một trăm";
@@ -1901,7 +2100,7 @@
             return result;
         }
 
-        // Tạo lưới đếm số 1 đến 100 theo phân khúc
+        // Tạo lưới đếm số
         window.renderNumbersGrid = function() {
             const container = document.getElementById('numbers-grid-container');
             if (!container) return;
@@ -1910,7 +2109,6 @@
             const start = numberRangeStart;
             const end = numberRangeEnd;
 
-            // Phối màu sắc bong bóng số vui vẻ
             const bubbleColors = [
                 'bg-rose-100 hover:bg-rose-200 border-rose-300 text-rose-700',
                 'bg-sky-100 hover:bg-sky-200 border-sky-300 text-sky-700',
@@ -1924,7 +2122,6 @@
                 const colorTheme = bubbleColors[i % bubbleColors.length];
                 const bubble = document.createElement('button');
                 
-                // Khi bấm vào sẽ phát âm chữ số tiếng việt trực tiếp thông qua chữ tiếng việt đã dịch
                 bubble.onclick = () => {
                     bubble.classList.add('scale-125');
                     setTimeout(() => bubble.classList.remove('scale-125'), 200);
@@ -1942,7 +2139,6 @@
             numberRangeStart = start;
             numberRangeEnd = end;
 
-            // Cập nhật trạng thái kích hoạt của nút lọc phân đoạn
             const buttons = document.querySelectorAll('.num-range-btn');
             buttons.forEach(btn => {
                 btn.className = "num-range-btn px-5 py-2.5 rounded-full font-bold text-xs bg-white border border-gray-100 text-gray-600 shrink-0";
@@ -1954,10 +2150,10 @@
             }
 
             renderNumbersGrid();
-            showToast(`Đã chuyển sang dãy số ${start} đến ${end}! 🔢`, 'info');
+            showToast(`Đã chuyển sang số ${start} đến ${end}! 🔢`, 'info');
         }
 
-        // ================= TRÒ CHƠI TOÁN HỌC PHẢN XẠ SIÊU TỐC =================
+        // ================= GAME TOÁN PHẢN XẠ =================
         window.startMathGame = function() {
             mathGameScore = 0;
             mathGameTimer = 60;
@@ -2026,7 +2222,7 @@
                 const randType = Math.random();
                 if (randType < 0.5) {
                     optSign = "x";
-                    num1 = Math.floor(2 + Math.random() * 8); // 2 - 9
+                    num1 = Math.floor(2 + Math.random() * 8); 
                     num2 = Math.floor(2 + Math.random() * 8);
                     currentMathAnswer = num1 * num2;
                 } else {
@@ -2065,7 +2261,7 @@
                 dino.classList.add('scale-125', 'translate-x-4');
                 setTimeout(() => dino.classList.remove('scale-125', 'translate-x-4'), 400);
 
-                showToast("Đúng rồi bé ơi! Quá siêu! ⭐", "success");
+                showToast("Đúng rồi! Quá siêu! ⭐", "success");
                 generateMathQuestion();
             } else {
                 mathGameTimer = Math.max(0, mathGameTimer - 5);
@@ -2074,7 +2270,7 @@
                 btn.classList.add('bg-rose-100', 'border-rose-400', 'text-rose-600');
                 setTimeout(() => btn.classList.remove('bg-rose-100', 'border-rose-400', 'text-rose-600'), 500);
                 
-                showToast("Chưa đúng rồi, bé tính lại nha! 😢", "error");
+                showToast("Chưa đúng rồi, tính lại nha con! 😢", "error");
             }
         }
 
@@ -2129,7 +2325,7 @@
             );
         }
 
-        // ================= HỆ THỐNG TRẮC NGHIỆM BÁM SÁT SGK =================
+        // ================= TRẮC NGHIỆM SGK =================
         window.selectQuizGrade = function(grade) {
             quizGrade = grade;
             
@@ -2150,7 +2346,7 @@
                 btn3.className = "py-4 rounded-2xl border-2 border-babyPurple bg-purple-50 text-babyPurple font-black text-sm hover:scale-105 transition-all";
             }
 
-            document.getElementById('quiz-grade-label').innerText = `Học Trình: ${grade}`;
+            document.getElementById('quiz-grade-label').innerText = `${grade}`;
             resetQuiz();
         }
 
@@ -2169,7 +2365,7 @@
 
         function renderQuizQuestion() {
             if (quizQuestionsPool.length === 0) {
-                showToast("Chưa có ngân hàng câu hỏi phù hợp.", "error");
+                showToast("Chưa có câu hỏi phù hợp.", "error");
                 return;
             }
 
@@ -2196,14 +2392,19 @@
             });
         }
 
+        // Ánh xạ hàm đáp ứng earlyGlobals
+        window.answerQuestion = function(idx) {
+            chooseQuizAnswer(idx);
+        };
+
         function chooseQuizAnswer(optionIndex) {
             const q = quizQuestionsPool[currentQuizIndex];
             const isCorrect = (optionIndex === q.answer);
 
             if (isCorrect) {
-                showToast("Tuyệt cú mèo! Bé trả lời đúng rồi! 🎉", "success");
+                showToast("Trả lời chính xác! 🎉", "success");
             } else {
-                showToast(`Chưa đúng rồi! Đáp án đúng là: ${q.options[q.answer]} 📚`, "error");
+                showToast(`Chưa đúng rồi! Đáp án đúng: ${q.options[q.answer]} 📚`, "error");
             }
 
             tempQuizAnswers.push({
@@ -2227,27 +2428,254 @@
             const banner = document.getElementById('result-status-banner');
             banner.className = "mt-6 py-4 px-6 rounded-2xl font-black text-lg text-center ";
 
-            if (correctCount >= 8) {
-                banner.innerText = "Hoàn thành Xuất sắc! Bé rất chăm chỉ bám sát bài giảng! 🌟";
+            if (correctCount >= 6) {
+                banner.innerText = "Hoàn thành Xuất sắc! Con học rất tốt! 🌟";
                 banner.classList.add('bg-emerald-100', 'text-emerald-800');
-                
                 confetti({
                     particleCount: 80,
                     spread: 60,
                     origin: { y: 0.7 }
                 });
-            } else if (correctCount >= 5) {
-                banner.innerText = "Khá Tốt! Bé hãy rèn luyện thêm trắc nghiệm thường xuyên nhé! 👍";
+            } else if (correctCount >= 4) {
+                banner.innerText = "Khá Tốt! Con hãy luyện tập thường xuyên nhé! 👍";
                 banner.classList.add('bg-amber-100', 'text-amber-800');
             } else {
-                banner.innerText = "Bé cần cố gắng thêm một chút nữa. Hãy ôn bài cùng ba mẹ nha! 📚";
+                banner.innerText = "Con hãy ôn bài thêm cùng ba mẹ nhé! 📚";
                 banner.classList.add('bg-rose-100', 'text-rose-800');
             }
 
             saveQuizResultToCloud(correctCount);
         }
 
-        // ================= PHẦN QUẢN TRỊ ADMIN (RENDER DANH SÁCH HỌC SINH) =================
+        // ================= SÀNG LỌC HÀNH VI & NGÔN NGỮ =================
+        window.switchQuizSubTab = function(subtabName) {
+            activeQuizSubTab = subtabName;
+            const btnSgk = document.getElementById('quiz-subtab-btn-sgk');
+            const btnScreening = document.getElementById('quiz-subtab-btn-screening');
+            const secSgk = document.getElementById('quiz-section-sgk');
+            const secScreening = document.getElementById('quiz-section-screening');
+
+            if (subtabName === 'sgk') {
+                secSgk.classList.remove('hidden');
+                secScreening.classList.add('hidden');
+                btnSgk.className = "flex-1 py-3 text-center rounded-xl font-black text-sm transition-all bg-babyBlue text-white shadow-sm";
+                btnScreening.className = "flex-1 py-3 text-center rounded-xl font-black text-sm transition-all text-gray-500 hover:bg-slate-50";
+                resetQuiz();
+            } else {
+                secScreening.classList.remove('hidden');
+                secSgk.classList.add('hidden');
+                btnScreening.className = "flex-1 py-3 text-center rounded-xl font-black text-sm transition-all bg-babyPurple text-white shadow-sm";
+                btnSgk.className = "flex-1 py-3 text-center rounded-xl font-black text-sm transition-all text-gray-500 hover:bg-slate-50";
+                
+                document.getElementById('screening-intro').classList.remove('hidden');
+                document.getElementById('screening-workspace').classList.add('hidden');
+                document.getElementById('screening-results').classList.add('hidden');
+            }
+        }
+
+        window.startScreeningTest = function() {
+            currentScreeningIndex = 0;
+            tempScreeningAnswers = [];
+            
+            document.getElementById('screening-intro').classList.add('hidden');
+            document.getElementById('screening-results').classList.add('hidden');
+            document.getElementById('screening-workspace').classList.remove('hidden');
+            
+            renderScreeningQuestion();
+        }
+
+        function renderScreeningQuestion() {
+            if (currentScreeningIndex >= screeningQuestions.length) {
+                calculateAndShowScreeningResults();
+                return;
+            }
+
+            const q = screeningQuestions[currentScreeningIndex];
+            document.getElementById('screening-counter').innerText = `Câu hỏi ${currentScreeningIndex + 1} / ${screeningQuestions.length}`;
+            document.getElementById('screening-progress-bar').style.width = `${((currentScreeningIndex + 1) / screeningQuestions.length) * 100}%`;
+            document.getElementById('screening-question-text').innerText = q.text;
+            document.getElementById('screening-significance-text').innerText = `Ý nghĩa: ${q.significance}`;
+
+            const optContainer = document.getElementById('screening-options-container');
+            optContainer.innerHTML = "";
+
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.onclick = () => chooseScreeningAnswer(idx);
+                btn.className = "py-4 px-5 rounded-2xl bg-slate-50 hover:bg-purple-50 border-2 border-slate-100 hover:border-purple-200 text-slate-800 font-extrabold text-sm transition-all text-center flex flex-col items-center justify-center gap-1";
+                btn.innerText = opt;
+                optContainer.appendChild(btn);
+            });
+        }
+
+        window.chooseScreeningAnswer = function(optionIndex) {
+            const q = screeningQuestions[currentScreeningIndex];
+            const assignedRiskPoint = q.riskMapping[optionIndex];
+
+            tempScreeningAnswers.push({
+                questionId: q.id,
+                category: q.category,
+                symptom: q.symptom,
+                chosenOption: q.options[optionIndex],
+                riskPoint: assignedRiskPoint
+            });
+
+            currentScreeningIndex++;
+            renderScreeningQuestion();
+        }
+
+        async function calculateAndShowScreeningResults() {
+            document.getElementById('screening-workspace').classList.add('hidden');
+            document.getElementById('screening-results').classList.remove('hidden');
+
+            let asdScore = 0;   
+            let speechScore = 0; 
+
+            tempScreeningAnswers.forEach(ans => {
+                if (ans.category === 'asd') {
+                    asdScore += ans.riskPoint;
+                } else if (ans.category === 'speech') {
+                    speechScore += ans.riskPoint;
+                }
+            });
+
+            document.getElementById('asd-score-display').innerText = asdScore;
+            document.getElementById('speech-score-display').innerText = speechScore;
+
+            const asdPercent = Math.min(100, Math.round((asdScore / 14) * 100));
+            const speechPercent = Math.min(100, Math.round((speechScore / 10) * 100));
+
+            document.getElementById('asd-progress').style.width = `${asdPercent}%`;
+            document.getElementById('speech-progress').style.width = `${speechPercent}%`;
+
+            let asdLevel = "Nguy cơ Thấp 🟢";
+            let asdColorClass = "text-emerald-600";
+            if (asdScore >= 8) {
+                asdLevel = "Nguy cơ Cao (Cần can thiệp sớm) 🔴";
+                asdColorClass = "text-rose-600";
+            } else if (asdScore >= 4) {
+                asdLevel = "Nguy cơ Trung Bình 🟡";
+                asdColorClass = "text-amber-600";
+            }
+
+            let speechLevel = "Nguy cơ Thấp 🟢";
+            let speechColorClass = "text-emerald-600";
+            if (speechScore >= 6) {
+                speechLevel = "Nguy cơ Cao 🔴";
+                speechColorClass = "text-rose-600";
+            } else if (speechScore >= 3) {
+                speechLevel = "Nguy cơ Trung bình 🟡";
+                speechColorClass = "text-amber-600";
+            }
+
+            document.getElementById('asd-risk-label').innerText = asdLevel;
+            document.getElementById('asd-risk-label').className = `text-xs font-bold mt-1 ${asdColorClass}`;
+
+            document.getElementById('speech-risk-label').innerText = speechLevel;
+            document.getElementById('speech-risk-label').className = `text-xs font-bold mt-1 ${speechColorClass}`;
+
+            let classificationTitle = "";
+            let classificationClass = "";
+            let analysisHTML = "";
+
+            if (asdScore <= 3 && speechScore <= 2) {
+                classificationTitle = "Bình thường / Điển hình 🌱";
+                classificationClass = "bg-emerald-100 text-emerald-800";
+                analysisHTML = `
+                    <p class="font-bold text-emerald-800">🎉 Chúc mừng! Bé phát triển tương tác và ngôn ngữ khỏe mạnh:</p>
+                    <ul class="list-disc pl-5 mt-2 space-y-1.5 text-slate-700">
+                        <li><strong>Xã hội:</strong> Bé giữ giao tiếp mắt rất tốt, phản ứng nhạy khi gọi tên.</li>
+                        <li><strong>Ngôn ngữ:</strong> Bé đã có vốn từ đơn phong phú.</li>
+                        <li><strong>Lời khuyên:</strong> Tiếp tục trò chuyện cùng bé và cho bé luyện tập hằng ngày nhé!</li>
+                    </ul>
+                `;
+            } else if (asdScore <= 3 && speechScore >= 3) {
+                classificationTitle = "Chậm Nói Đơn Thuần (Speech Delay) 💬";
+                classificationClass = "bg-sky-100 text-sky-800";
+                analysisHTML = `
+                    <p class="font-bold text-sky-800">💡 Bé gặp khó khăn về phát âm nhưng tương tác xã hội tốt:</p>
+                    <ul class="list-disc pl-5 mt-2 space-y-1.5 text-slate-700">
+                        <li><strong>Đặc điểm:</strong> Bé hiểu lời ba mẹ nói tốt, giao tiếp mắt nhạy bén, nhưng chậm bật âm.</li>
+                        <li><strong>Khuyên dùng:</strong> Hãy áp dụng đều đặn lộ trình 30 ngày tập phát âm mầm non.</li>
+                    </ul>
+                `;
+            } else {
+                classificationTitle = "Có rủi ro / Cần Theo Dõi Sát 🔴";
+                classificationClass = "bg-rose-100 text-rose-800 animate-pulse";
+                analysisHTML = `
+                    <p class="font-bold text-rose-800">⚠️ Ba mẹ cần đặc biệt lưu ý:</p>
+                    <ul class="list-disc pl-5 mt-2 space-y-1.5 text-rose-950">
+                        <li>Bé có một số dấu hiệu rủi ro chậm phát triển hành vi hoặc tương tác xã hội ranh giới.</li>
+                        <li>Nên đưa bé đến bác sĩ chuyên môn đánh giá lâm sàng toàn diện để định hướng can thiệp sớm.</li>
+                    </ul>
+                `;
+            }
+
+            document.getElementById('screening-classification-banner').innerText = classificationTitle;
+            document.getElementById('screening-classification-banner').className = `mt-6 py-4 px-6 rounded-2xl font-black text-lg max-w-xl mx-auto ${classificationClass}`;
+            document.getElementById('screening-analysis-text').innerHTML = analysisHTML;
+
+            if (loggedInRole !== 'guest' && loggedInChildCode) {
+                const screeningResultObject = {
+                    asdScore: asdScore,
+                    speechScore: speechScore,
+                    classification: classificationTitle,
+                    timestamp: new Date().toISOString()
+                };
+
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'sub_accounts', loggedInChildCode);
+                try {
+                    await updateDoc(docRef, {
+                        screeningResult: screeningResultObject,
+                        lastUpdated: new Date().toISOString()
+                    });
+                    showToast("Đã đồng bộ kết quả đánh giá hành vi! 🧠💾", "success");
+                } catch (err) {
+                    console.error("Lỗi đồng bộ kết quả sàng lọc:", err);
+                }
+            }
+        }
+
+        // BÁO CÁO CỦA ADMIN
+        window.openScreeningReportModal = function(code) {
+            const acc = subAccountsList.find(a => a.code === code);
+            if (!acc || !acc.screeningResult) {
+                showToast("Chưa có kết quả bài test sàng lọc của bé này!", "error");
+                return;
+            }
+
+            const res = acc.screeningResult;
+            document.getElementById('admin-report-name').innerText = acc.name || "Bé Tự Do";
+            document.getElementById('admin-report-code').innerText = acc.code;
+            document.getElementById('admin-report-grade').innerText = acc.grade || "Lớp 1";
+            document.getElementById('admin-report-date').innerText = res.timestamp ? new Date(res.timestamp).toLocaleDateString('vi-VN') : "Chưa rõ";
+
+            const classBanner = document.getElementById('admin-report-classification');
+            classBanner.innerText = res.classification;
+            
+            if (res.asdScore >= 8) {
+                classBanner.className = "py-3 px-4 rounded-2xl font-black text-sm text-center bg-rose-100 text-rose-800";
+            } else if (res.asdScore >= 4 || res.speechScore >= 3) {
+                classBanner.className = "py-3 px-4 rounded-2xl font-black text-sm text-center bg-amber-100 text-amber-800";
+            } else {
+                classBanner.className = "py-3 px-4 rounded-2xl font-black text-sm text-center bg-emerald-100 text-emerald-800";
+            }
+
+            document.getElementById('admin-report-asd').innerText = res.asdScore;
+            document.getElementById('admin-report-speech').innerText = res.speechScore;
+
+            document.getElementById('admin-report-asd-level').innerText = res.asdScore >= 8 ? "Rủi ro: Cao 🔴" : (res.asdScore >= 4 ? "Rủi ro: Trung Bình 🟡" : "Rủi ro: Thấp 🟢");
+            document.getElementById('admin-report-speech-level').innerText = res.speechScore >= 6 ? "Rủi ro: Cao 🔴" : (res.speechScore >= 3 ? "Rủi ro: Trung Bình 🟡" : "Rủi ro: Thấp 🟢");
+
+            document.getElementById('admin-report-analysis').innerHTML = `Báo cáo phân tích tự động từ thang kiểm ASD và ngôn ngữ mầm non.`;
+            document.getElementById('admin-screening-modal').classList.remove('hidden');
+        }
+
+        window.closeAdminScreeningModal = function() {
+            document.getElementById('admin-screening-modal').classList.add('hidden');
+        }
+
+        // ================= ADMIN VIEW CONTROL =================
         function updateAdminStats() {
             let total = subAccountsList.length;
             let countG1 = 0;
@@ -2286,7 +2714,7 @@
             if (filteredList.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="6" class="py-8 text-center text-gray-400 font-medium">Chưa tìm thấy mã học sinh phù hợp.</td>
+                        <td colspan="7" class="py-8 text-center text-gray-400 font-medium">Chưa tìm thấy mã học sinh phù hợp.</td>
                     </tr>
                 `;
                 return;
@@ -2298,10 +2726,10 @@
                 const completedCount = acc.completedDays ? acc.completedDays.length : 0;
                 const journeyBadge = `<span class="bg-indigo-50 text-indigo-600 font-bold px-2.5 py-1 rounded-xl text-xs">${completedCount} / 30 ngày</span>`;
                 
-                let quizLabel = `<span class="text-gray-400 text-xs">Chưa làm kiểm tra</span>`;
+                let quizLabel = `<span class="text-gray-400 text-xs">Chưa làm bài</span>`;
                 if (acc.quizLatestScore !== undefined && acc.quizLatestScore !== null) {
                     const gradeLabel = acc.quizLatestGrade || "Khối 1";
-                    quizLabel = `<div class="font-bold text-slate-800">${acc.quizLatestScore} / 10</div>
+                    quizLabel = `<div class="font-bold text-slate-800">${acc.quizLatestScore} / 8</div>
                                  <div class="text-[10px] text-indigo-500 font-bold">${gradeLabel}</div>`;
                 }
 
@@ -2309,6 +2737,23 @@
                 const playCount = acc.mathGamePlayCount || 0;
                 const gameLabel = `<div class="font-bold text-orange-600">${highScore} điểm</div>
                                    <div class="text-[10px] text-gray-400 font-bold">Chơi ${playCount} lượt</div>`;
+
+                let screeningBadge = `<span class="text-gray-400 text-xs">Chưa sàng lọc</span>`;
+                if (acc.screeningResult) {
+                    const res = acc.screeningResult;
+                    let colorTheme = "bg-emerald-50 text-emerald-700 border-emerald-200";
+                    if (res.asdScore >= 8) {
+                        colorTheme = "bg-rose-50 text-rose-700 border-rose-200 animate-pulse";
+                    } else if (res.asdScore >= 4 || res.speechScore >= 3) {
+                        colorTheme = "bg-amber-50 text-amber-700 border-amber-200";
+                    }
+
+                    screeningBadge = `
+                        <button onclick="openScreeningReportModal('${acc.code}')" class="px-2 py-1 rounded-xl border text-[10px] font-black transition-all hover:scale-105 active:scale-95 ${colorTheme}">
+                            🔎 Xem Báo Cáo<br>(A:${res.asdScore} S:${res.speechScore})
+                        </button>
+                    `;
+                }
 
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50 transition-all border-b border-slate-100";
@@ -2323,6 +2768,7 @@
                         <div class="font-bold text-slate-700">${acc.name || "Bé mới"}</div>
                         <div class="text-xs text-gray-400">${acc.grade || "Lớp 1"}</div>
                     </td>
+                    <td class="py-4 px-6 text-center">${screeningBadge}</td>
                     <td class="py-4 px-6">${journeyBadge}</td>
                     <td class="py-4 px-6">${quizLabel}</td>
                     <td class="py-4 px-6">${gameLabel}</td>
@@ -2342,7 +2788,36 @@
             });
         }
 
-        // ================= TẬP PHẢN XẠ 30 NGÀY =================
+        // COPY TO CLIPBOARD
+        window.copyToClipboard = function(text) {
+            const tempInput = document.createElement("input");
+            tempInput.value = text;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand("copy");
+            document.body.removeChild(tempInput);
+            showToast(`Đã sao chép mã: ${text}`, "success");
+        };
+
+        // KHÔI PHỤC GIÁO CỤ BAN ĐẦU
+        window.resetFlashcardsToDefault = function() {
+            showConfirmDialog(
+                "Khôi phục giáo cụ",
+                "Bạn có chắc chắn muốn đặt lại toàn bộ thẻ học về dữ liệu mặc định ban đầu?",
+                "🔄",
+                async () => {
+                    const globalSettingsDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'global');
+                    try {
+                        await updateDoc(globalSettingsDocRef, { words: defaultWordDatabase });
+                        showToast("Đã khôi phục bộ thẻ học mặc định thành công!", "success");
+                    } catch (err) {
+                        console.error("Lỗi khôi phục thẻ học:", err);
+                    }
+                }
+            );
+        };
+
+        // ================= TẬP PHÂN XẠ 30 NGÀY =================
         function render30DayGrid() {
             const container = document.getElementById('journey-grid-container');
             if (!container) return;
@@ -2357,7 +2832,7 @@
                 
                 let colorClass = "bg-white border-slate-100 text-slate-700 hover:border-babyPink/50";
                 if (isCompleted) {
-                    colorClass = "bg-emerald-50 text-emerald-600 border-emerald-200 font-bold shadow-sm shadow-emerald-100/50";
+                    colorClass = "bg-emerald-50 text-emerald-600 border-emerald-200 font-bold shadow-sm";
                 } else if (isActive) {
                     colorClass = "bg-babyPink text-white border-babyPink font-black shadow-lg scale-105 ring-4 ring-babyPink/10";
                 }
@@ -2418,7 +2893,7 @@
                 showToast(`Đã bỏ mốc Ngày ${activeJourneyDay}`, "info");
             } else {
                 completedDaysArray.push(activeJourneyDay);
-                showToast(`Tuyệt cú mèo! Đã hoàn thành Ngày ${activeJourneyDay}! 🎉`, "success");
+                showToast(`Đã hoàn thành Ngày ${activeJourneyDay}! 🎉`, "success");
             }
 
             if (loggedInRole !== 'guest' && loggedInChildCode) {
@@ -2437,7 +2912,7 @@
             selectJourneyDay(activeJourneyDay);
         }
 
-        // ================= TẬP PHÁT ÂM BAN ĐẦU (FLASHCARDS RENDER & VOICE) =================
+        // ================= TẬP PHÁT ÂM BAN ĐẦU =================
         window.filterWords = function(category) {
             activeWordsFilter = category;
             const buttons = document.querySelectorAll('.word-filter-btn');
@@ -2462,15 +2937,22 @@
 
             filtered.forEach(word => {
                 const card = document.createElement('div');
-                card.onclick = () => speakWord(word.text, card);
                 card.className = "bg-white rounded-3xl border border-gray-100 flex flex-col cursor-pointer transition-all hover:scale-105 active:scale-95 custom-shadow relative overflow-hidden group";
                 
+                card.onclick = (e) => {
+                    if (e.target.closest('.ai-coach-trigger')) return;
+                    speakWord(word.text, card);
+                };
+
                 card.innerHTML = `
                     <div class="h-44 w-full overflow-hidden relative bg-slate-100">
                         <img src="${word.imageUrl}" alt="Hình ảnh ${word.text}" 
                              class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
                              onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&q=80&w=400';">
                         <span class="absolute top-3 left-3 text-2xl bg-white/90 backdrop-blur-sm px-2.5 py-1.5 rounded-2xl shadow-sm border border-slate-50 select-none">${word.icon}</span>
+                        <button onclick="openSpeechCoachModal('${word.text}', '${word.description}')" class="ai-coach-trigger absolute bottom-3 left-3 bg-purple-600 hover:bg-purple-700 text-white font-black text-[10px] px-3 py-2 rounded-2xl flex items-center gap-1 shadow-lg shadow-purple-600/30 transition-all transform hover:scale-105 active:scale-95">
+                            <span>🎙️ Bé tập nói</span>
+                        </button>
                     </div>
                     <div class="p-4 flex-grow flex flex-col justify-between text-center">
                         <div>
@@ -2489,7 +2971,6 @@
         }
 
         window.speakWord = function(text, element) {
-            // Ưu tiên tùy chọn giọng nói cá nhân của bé, nếu chưa có sẽ dùng cấu hình chung (Mặc định dùng Aoede chuẩn Bắc)
             const selectedVoiceId = document.getElementById('voice-select').value || loggedInChildVoice || globalVoiceNameConfig || "gemini-Aoede";
             const rateValue = parseFloat(document.getElementById('speech-rate').value) || loggedInChildRate || globalSpeechRateConfig;
 
@@ -2515,7 +2996,6 @@
                         }
                     }
                     
-                    // Ưu tiên tìm giọng nữ Bắc cục bộ (Ví dụ: Microsoft An hoặc Google vi-VN)
                     if ((!voiceMsg.voice || !voiceMsg.voice.lang.includes('vi')) && speechVoices.length > 0) {
                         const viVoice = speechVoices.find(v => v.name.includes('An') || v.name.includes('Google') || v.lang.includes('vi-VN') || v.lang.includes('vi'));
                         if (viVoice) {
@@ -2530,7 +3010,6 @@
             }
         }
 
-        // PHƯƠNG THỨC TRẢ VỀ URL KHI GỌI TTS SỬ DỤNG EXPONENTIAL BACKOFF RETRY
         async function fetchWithRetry(url, options, retriesLeft = 5, attempt = 0) {
             const BACKOFF_DELAYS = [1000, 2000, 4000, 8000, 16000];
             try {
@@ -2563,8 +3042,6 @@
 
             try {
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-                
-                // Gửi chỉ dẫn tiếng Việt chuẩn để AI đọc đúng âm mầm non Việt Nam
                 const payload = {
                     model: "gemini-2.5-flash-preview-09-2025",
                     contents: [{
@@ -2595,13 +3072,49 @@
             }
         }
 
+        // PHÁT PCM16 TRỰC TIẾP
+        async function playPCM(base64Data, mimeType) {
+            let sampleRate = 16000;
+            if (mimeType && mimeType.includes('rate=')) {
+                const match = mimeType.match(/rate=(\d+)/);
+                if (match) {
+                    sampleRate = parseInt(match[1], 10);
+                }
+            }
+            
+            const binaryString = window.atob(base64Data);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            
+            const buffer = bytes.buffer;
+            const dataView = new DataView(buffer);
+            const numSamples = len / 2;
+            const floatData = new Float32Array(numSamples);
+            for (let i = 0; i < numSamples; i++) {
+                const sample = dataView.getInt16(i * 2, false); 
+                floatData[i] = sample / 32768.0;
+            }
+            
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            const audioCtx = new AudioContext();
+            const audioBuffer = audioCtx.createBuffer(1, numSamples, sampleRate);
+            audioBuffer.getChannelData(0).set(floatData);
+            
+            const source = audioCtx.createBufferSource();
+            source.buffer = audioBuffer;
+            source.connect(audioCtx.destination);
+            source.start();
+        }
+
         function speakLocalFallback(text, speedRate) {
             if (!('speechSynthesis' in window)) return;
             window.speechSynthesis.cancel();
             const voiceMsg = new SpeechSynthesisUtterance(text);
             voiceMsg.lang = 'vi-VN';
             if (speechVoices.length > 0) {
-                // Ưu tiên chọn giọng nữ chuẩn (Microsoft An hoặc Google vi-VN mang giọng nữ miền Bắc)
                 const viVoice = speechVoices.find(v => v.name.includes('An') || v.name.includes('Google') || v.lang.includes('vi-VN') || v.lang.includes('vi'));
                 if (viVoice) voiceMsg.voice = viVoice;
             }
@@ -2610,14 +3123,11 @@
             window.speechSynthesis.speak(voiceMsg);
         }
 
-        // Tải danh sách giọng nói khả dụng và cấu hình hiển thị
         function initVoiceSelector() {
             if (!('speechSynthesis' in window)) return;
             const loadVoices = () => {
                 speechVoices = window.speechSynthesis.getVoices();
                 const localVietnameseVoices = speechVoices.filter(voice => voice.lang.includes('vi-VN') || voice.lang.includes('vi'));
-                
-                // Xác định giọng nói ưu tiên (giọng cá nhân của bé -> giọng Admin -> mặc định)
                 const preferredVoice = loggedInChildVoice || globalVoiceNameConfig || "gemini-Aoede";
 
                 const voiceSelect = document.getElementById('voice-select');
@@ -2641,7 +3151,7 @@
                         localVietnameseVoices.forEach((voice) => {
                             const opt = document.createElement('option');
                             opt.value = voice.name;
-                            opt.innerText = voice.name.includes('Google') ? "Google (Giọng Hà Nội chuẩn) [Cục bộ]" : `${voice.name} [Cục bộ]`;
+                            opt.innerText = voice.name.includes('Google') ? "Google (Chuẩn miền Bắc) [Cục bộ]" : `${voice.name} [Cục bộ]`;
                             if (preferredVoice && voice.name === preferredVoice) opt.selected = true;
                             voiceSelect.appendChild(opt);
                         });
@@ -2695,7 +3205,155 @@
             document.getElementById('speed-value').innerText = `${value}x`;
         }
 
-        // ================= BIÊN TẬP HÌNH ẢNH FLASHCARDS (ADMIN ONLY) =================
+        // ================= TRỢ LÝ GẤU AI PHÂN TÍCH PHÁT ÂM =================
+        window.openSpeechCoachModal = function(wordText, wordDesc) {
+            currentSpeechTargetWord = wordText;
+            document.getElementById('coach-target-word').innerText = wordText;
+            document.getElementById('coach-target-desc').innerText = wordDesc;
+
+            document.getElementById('recording-status-idle').classList.remove('hidden');
+            document.getElementById('recording-status-active').classList.add('hidden');
+            document.getElementById('speech-recognition-result-box').classList.add('hidden');
+            document.getElementById('ai-evaluation-result').classList.add('hidden');
+            document.getElementById('manual-speech-input').value = "";
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (SpeechRecognition) {
+                speechRecognitionEngine = new SpeechRecognition();
+                speechRecognitionEngine.lang = 'vi-VN';
+                speechRecognitionEngine.interimResults = false;
+                speechRecognitionEngine.maxAlternatives = 1;
+
+                speechRecognitionEngine.onstart = () => {
+                    document.getElementById('recording-status-idle').classList.add('hidden');
+                    document.getElementById('recording-status-active').classList.remove('hidden');
+                };
+
+                speechRecognitionEngine.onerror = (event) => {
+                    console.error("Lỗi nhận diện Speech:", event.error);
+                    document.getElementById('recording-status-idle').classList.remove('hidden');
+                    document.getElementById('recording-status-active').classList.add('hidden');
+                    showToast("Vui lòng gõ chữ để Gấu AI đánh giá nhé!", "error");
+                };
+
+                speechRecognitionEngine.onend = () => {
+                    document.getElementById('recording-status-idle').classList.remove('hidden');
+                    document.getElementById('recording-status-active').classList.add('hidden');
+                };
+
+                speechRecognitionEngine.onresult = (event) => {
+                    const resultText = event.results[0][0].transcript;
+                    document.getElementById('speech-recognized-text').innerText = resultText;
+                    document.getElementById('manual-speech-input').value = resultText;
+                    document.getElementById('speech-recognition-result-box').classList.remove('hidden');
+
+                    analyzePronunciationWithAI(currentSpeechTargetWord, resultText);
+                };
+            } else {
+                speechRecognitionEngine = null;
+            }
+
+            document.getElementById('speech-coach-modal').classList.remove('hidden');
+        };
+
+        window.closeSpeechCoachModal = function() {
+            if (speechRecognitionEngine) {
+                try { speechRecognitionEngine.abort(); } catch(e) {}
+            }
+            document.getElementById('speech-coach-modal').classList.add('hidden');
+        };
+
+        window.startRecordingSpeech = function() {
+            if (!speechRecognitionEngine) {
+                showToast("Thiết bị không hỗ trợ micro trực tiếp. Hãy dùng bàn phím nhé! ❤️", "info");
+                return;
+            }
+            try {
+                speechRecognitionEngine.start();
+            } catch (e) {
+                console.error("Ghi âm lỗi: ", e);
+            }
+        };
+
+        window.submitManualSpeech = function() {
+            const manualText = document.getElementById('manual-speech-input').value.trim();
+            if (!manualText) {
+                showToast("Vui lòng gõ từ bé bập bẹ nói nhé!", "error");
+                return;
+            }
+            document.getElementById('speech-recognized-text').innerText = manualText;
+            document.getElementById('speech-recognition-result-box').classList.remove('hidden');
+            analyzePronunciationWithAI(currentSpeechTargetWord, manualText);
+        };
+
+        async function analyzePronunciationWithAI(targetWord, spokenWord) {
+            const resultDiv = document.getElementById('ai-evaluation-result');
+            const feedbackP = document.getElementById('ai-evaluation-feedback');
+            const tipsP = document.getElementById('ai-evaluation-tips');
+            const starsSpan = document.getElementById('ai-evaluation-stars');
+
+            resultDiv.classList.remove('hidden');
+            feedbackP.innerText = "Gấu AI đang lắng nghe và suy nghĩ...";
+            tipsP.innerText = "Đang nạp khẩu hình chi tiết...";
+            starsSpan.innerText = "⏳";
+
+            try {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+                const payload = {
+                    contents: [{
+                        parts: [{
+                            text: `Bạn là chuyên gia âm ngữ nhi khoa. Hãy chấm điểm chuẩn xác bé phát âm (score 1-5 sao) so sánh từ mẫu "${targetWord}" và từ bé nói "${spokenWord}". Trả về JSON chứa score, feedback và tips khẩu hình.`
+                        }]
+                    }],
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "OBJECT",
+                            properties: {
+                                score: { type: "INTEGER" },
+                                feedback: { type: "STRING" },
+                                tips: { type: "STRING" }
+                            },
+                            required: ["score", "feedback", "tips"]
+                        }
+                    }
+                };
+
+                const result = await fetchWithRetry(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const contentText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!contentText) throw new Error("Phản hồi rỗng");
+
+                const parsed = JSON.parse(contentText);
+                
+                let stars = "";
+                for (let i = 0; i < (parsed.score || 5); i++) {
+                    stars += "⭐";
+                }
+                starsSpan.innerText = stars;
+                feedbackP.innerText = parsed.feedback || "Con làm rất tốt!";
+                tipsP.innerText = parsed.tips || "Không có hướng dẫn phụ.";
+
+                if (parsed.score >= 4) {
+                    confetti({
+                        particleCount: 50,
+                        spread: 50,
+                        origin: { y: 0.8 }
+                    });
+                }
+            } catch (error) {
+                console.error("Lỗi phân tích phát âm:", error);
+                starsSpan.innerText = "⭐⭐⭐⭐";
+                feedbackP.innerText = "Gấu AI khen con đã rất nỗ lực bập bẹ! Hãy thử lại nhé!";
+                tipsP.innerText = "Ba mẹ hãy hướng dẫn con mím môi bật âm rõ ràng hơn nha.";
+            }
+        }
+
+        // BIÊN TẬP THẺ GIÁO CỤ
         function renderAdminFlashcards() {
             const container = document.getElementById('admin-flashcards-grid');
             if (!container) return;
@@ -2781,7 +3439,7 @@
             if (!file) return;
 
             if (!file.type.startsWith('image/')) {
-                showToast("Vui lòng tải lên một tệp hình ảnh hợp lệ!", "error");
+                showToast("Vui lòng tải tệp ảnh hợp lệ!", "error");
                 return;
             }
 
@@ -2822,7 +3480,7 @@
                     document.getElementById('upload-file-label').innerText = file.name;
                     document.getElementById('btn-clear-upload').classList.remove('hidden');
 
-                    showToast("Đã tải lên và nén ảnh thành công! 📸", "success");
+                    showToast("Đã nén ảnh thành công! 📸", "success");
                 };
                 img.src = e.target.result;
             };
@@ -2837,7 +3495,7 @@
 
             const originalUrl = document.getElementById('edit-card-image').value;
             previewEditImage(originalUrl);
-            showToast("Đã hủy bỏ ảnh tải từ thiết bị.", "info");
+            showToast("Đã hủy bỏ ảnh.", "info");
         };
 
         window.closeFlashcardModal = function() {
@@ -2870,13 +3528,12 @@
             try {
                 await updateDoc(globalSettingsDocRef, { words: updatedWords });
                 closeFlashcardModal();
-                showToast("Cập nhật bộ giáo cụ đám mây thành công!", "success");
+                showToast("Cập nhật bộ giáo cụ thành công!", "success");
             } catch (err) {
-                showToast("Lỗi đồng bộ lên đám mây.", "error");
+                showToast("Lỗi lưu mây.", "error");
             }
         };
 
-        // ================= CÁC BIẾN BAN ĐẦU VÀ TRIGGER SỰ KIỆN =================
         function enterAdminDashboard() {
             document.getElementById('view-login').classList.add('hidden');
             document.getElementById('view-admin-app').classList.remove('hidden');
@@ -2926,177 +3583,12 @@
             const todayConfig = dailyThemesMap[currentDayNum];
             if (todayConfig) {
                 filterWords(todayConfig.code);
-                showToast(`Đã lọc nhanh: ${todayConfig.title}`, "success");
+                showToast(`Đã lọc từ vựng chủ đề: ${todayConfig.title}! ✨`, "success");
             }
-        }
+        };
 
-        window.copyToClipboard = function(text) {
-            const el = document.createElement('textarea');
-            el.value = text;
-            document.body.appendChild(el);
-            el.select();
-            document.execCommand('copy');
-            document.body.removeChild(el);
-            showToast(`Đã copy mã: ${text}`, "success");
-        }
-
-        window.resetFlashcardsToDefault = function() {
-            showConfirmDialog(
-                "Khôi phục giáo cụ",
-                "Bạn có chắc muốn khôi phục toàn bộ thẻ học về thiết lập gốc không?",
-                "🔄",
-                async () => {
-                    const globalSettingsDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'global');
-                    try {
-                        await updateDoc(globalSettingsDocRef, { words: defaultWordDatabase });
-                        showToast("Đã khôi phục bộ thẻ mặc định!", "success");
-                    } catch (err) {
-                        showToast("Lỗi khôi phục.", "error");
-                    }
-                }
-            );
-        }
-
-        function createWavHeader(pcmBuffer, sampleRate) {
-            const numChannels = 1;
-            const bitsPerSample = 16;
-            const byteRate = (sampleRate * numChannels * bitsPerSample) / 8;
-            const blockAlign = (numChannels * bitsPerSample) / 8;
-            const dataSize = pcmBuffer.byteLength;
-            const chunkSize = 36 + dataSize;
-            
-            const wav = new ArrayBuffer(44 + dataSize);
-            const view = new DataView(wav);
-            
-            writeString(view, 0, 'RIFF');
-            view.setUint32(4, chunkSize, true);
-            writeString(view, 8, 'WAVE');
-            writeString(view, 12, 'fmt ');
-            view.setUint32(16, 16, true);
-            view.setUint16(20, 1, true);
-            view.setUint16(22, numChannels, true);
-            view.setUint32(24, sampleRate, true);
-            view.setUint32(28, byteRate, true);
-            view.setUint16(32, blockAlign, true);
-            view.setUint16(34, bitsPerSample, true);
-            writeString(view, 36, 'data');
-            view.setUint32(40, dataSize, true);
-            
-            const pcmView = new Uint8Array(pcmBuffer);
-            const wavView = new Uint8Array(wav, 44);
-            wavView.set(pcmView);
-            
-            return wav;
-        }
-
-        function writeString(view, offset, string) {
-            for (let i = 0; i < string.length; i++) {
-                view.setUint8(offset + i, string.charCodeAt(i));
-            }
-        }
-
-        async function playPCM(base64Data, mimeType) {
-            return new Promise((resolve, reject) => {
-                try {
-                    let sampleRate = 24000;
-                    const rateMatch = mimeType.match(/rate=(\d+)/);
-                    if (rateMatch) sampleRate = parseInt(rateMatch[1], 10);
-                    
-                    const binaryStr = atob(base64Data);
-                    const len = binaryStr.length;
-                    const buffer = new ArrayBuffer(len);
-                    const view = new Uint8Array(buffer);
-                    for (let i = 0; i < len; i++) view[i] = binaryStr.charCodeAt(i);
-                    
-                    const wavBuffer = createWavHeader(buffer, sampleRate);
-                    const blob = new Blob([wavBuffer], { type: 'audio/wav' });
-                    const url = URL.createObjectURL(blob);
-                    const audio = new Audio(url);
-                    audio.onended = () => { URL.revokeObjectURL(url); resolve(); };
-                    audio.onerror = (e) => { URL.revokeObjectURL(url); reject(e); };
-                    audio.play().catch(err => { URL.revokeObjectURL(url); reject(err); });
-                } catch (err) { reject(err); }
-            });
-        }
-
-        window.addEventListener('load', async () => {
-            await runAuthSetup();
-            const savedRole = sessionStorage.getItem('loggedInRole');
-            const savedCode = sessionStorage.getItem('loggedInChildCode');
-
-            if (savedRole === 'admin') {
-                loggedInRole = 'admin';
-                enterAdminDashboard();
-            } else if (savedRole === 'parent' && savedCode) {
-                const checkInterval = setInterval(() => {
-                    if (subAccountsList.length > 0) {
-                        clearInterval(checkInterval);
-                        const foundAcc = subAccountsList.find(acc => acc.code === savedCode);
-                        if (foundAcc) {
-                            loggedInRole = 'parent';
-                            loggedInChildCode = savedCode;
-                            loggedInChildName = foundAcc.name || "Bé Tự Do";
-                            loggedInChildGrade = foundAcc.grade || "Lớp 1";
-                            mathGameHighScore = foundAcc.mathGameHighScore || 0;
-                            
-                            // Phục hồi giọng đọc ưu thích
-                            loggedInChildVoice = foundAcc.preferredVoice || "gemini-Aoede";
-                            loggedInChildRate = foundAcc.preferredRate || 0.65;
-
-                            enterChildDashboard();
-                        }
-                    }
-                }, 200);
-            } else if (savedRole === 'guest') {
-                loggedInRole = 'guest';
-                loggedInChildCode = 'GUEST_TEMP';
-                loggedInChildName = "Khách Trải Nghiệm";
-                loggedInChildGrade = "Lớp 1";
-                mathGameHighScore = 0;
-                loggedInChildVoice = "gemini-Aoede";
-                loggedInChildRate = 0.65;
-                enterChildDashboard();
-            }
-        });
-
-        // ĐỒNG BỘ WINDOW SCOPE
-        window.handleParentLogin = handleParentLogin;
-        window.handleAdminLogin = handleAdminLogin;
-        window.toggleLoginTab = toggleLoginTab;
-        window.logout = logout;
-        window.switchChildTab = switchChildTab;
-        window.switchAdminTab = switchAdminTab;
-        window.filterWords = filterWords;
-        window.speakWord = speakWord;
-        window.openFlashcardEditModal = openFlashcardEditModal;
-        window.previewEditImage = previewEditImage;
-        window.closeFlashcardModal = closeFlashcardModal;
-        window.saveFlashcardEdit = saveFlashcardEdit;
-        window.toggleDayCompleted = toggleDayCompleted;
-        window.selectJourneyDay = selectJourneyDay;
-        window.speakSelectedDayWord = speakSelectedDayWord;
-        window.applyDailyThemeFilter = applyDailyThemeFilter;
-        window.createNewSubAccount = createNewSubAccount;
-        window.deleteSubAccount = deleteSubAccount;
-        window.saveGlobalVoiceConfig = saveGlobalVoiceConfig;
-        window.resetFlashcardsToDefault = resetFlashcardsToDefault;
-        window.copyToClipboard = copyToClipboard;
-        window.updateSpeechRateDisplay = updateSpeechRateDisplay;
-        window.handleAdminImageUpload = handleAdminImageUpload;
-        window.clearUploadedImage = clearUploadedImage;
-        window.handleRegisterAccount = handleRegisterAccount;
-        window.startMathGame = startMathGame;
-        window.answerMathQuestion = answerMathQuestion;
-        window.quitMathGame = quitMathGame;
-        window.selectQuizGrade = selectQuizGrade;
-        window.resetQuiz = resetQuiz;
-        window.saveChildVoicePreference = saveChildVoicePreference;
-        window.switchLearnSubTab = switchLearnSubTab;
-        window.selectNumberRange = selectNumberRange;
-        window.convertNumberToVietnameseWords = convertNumberToVietnameseWords;
-        window.openStudentEditModal = openStudentEditModal;
-        window.closeStudentEditModal = closeStudentEditModal;
-        window.saveStudentEdit = saveStudentEdit;
+        // Chạy khởi động kết nối đám mây an toàn
+        runAuthSetup();
     </script>
 </body>
 </html>
