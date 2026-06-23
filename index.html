@@ -951,8 +951,28 @@
                     <input type="text" id="edit-card-desc" class="w-full px-4 py-2.5 border rounded-2xl focus:outline-none">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-400 mb-1">URL hình ảnh (Unsplash/Google)</label>
-                    <input type="text" id="edit-card-image" oninput="previewEditImage(this.value)" class="w-full px-4 py-2.5 border rounded-2xl text-xs font-mono focus:outline-none">
+                    <label class="block text-xs font-bold text-gray-400 mb-1">Hình ảnh giáo cụ</label>
+                    <!-- Tabs chọn phương thức nhập ảnh -->
+                    <div class="flex bg-slate-100 p-1 rounded-xl mb-2 text-xs">
+                        <button type="button" onclick="switchImageSourceTab('url')" id="img-tab-url" class="flex-1 py-1.5 font-bold rounded-lg bg-white text-slate-800 shadow-sm transition-all">Nhập Link URL</button>
+                        <button type="button" onclick="switchImageSourceTab('file')" id="img-tab-file" class="flex-1 py-1.5 font-bold rounded-lg text-slate-500 transition-all font-quicksand">Tải File Trực Tiếp 📁</button>
+                    </div>
+                    
+                    <!-- Nhập link URL -->
+                    <div id="image-url-container">
+                        <input type="text" id="edit-card-image" oninput="previewEditImage(this.value)" class="w-full px-4 py-2.5 border rounded-2xl text-xs font-mono focus:outline-none" placeholder="Nhập URL hình ảnh (Unsplash/Google)...">
+                    </div>
+                    
+                    <!-- Kéo thả / Tải file trực tiếp -->
+                    <div id="image-file-container" class="hidden">
+                        <div class="border-2 border-dashed border-slate-200 hover:border-purple-400 rounded-2xl p-4 text-center transition-all cursor-pointer relative bg-slate-50/50" onclick="document.getElementById('edit-card-file-input').click()">
+                            <span class="text-3xl">🖼️</span>
+                            <p class="text-xs font-bold text-slate-600 mt-1">Nhấp hoặc kéo thả để tải ảnh lên</p>
+                            <p class="text-[10px] text-gray-400 mt-0.5">Khuyên dùng JPG, PNG dưới 1MB</p>
+                            <input type="file" id="edit-card-file-input" accept="image/*" class="hidden" onchange="handleAdminImageUpload(event)">
+                        </div>
+                        <div id="upload-status" class="text-[10px] font-bold text-purple-600 mt-1.5 text-center hidden"></div>
+                    </div>
                 </div>
                 <div class="h-32 bg-slate-50 border rounded-2xl flex items-center justify-center overflow-hidden">
                     <img id="edit-image-preview" src="" alt="Preview" class="w-full h-full object-cover hidden">
@@ -2826,6 +2846,61 @@
             });
         }
 
+        window.switchImageSourceTab = function(type) {
+            const tabUrl = document.getElementById('img-tab-url');
+            const tabFile = document.getElementById('img-tab-file');
+            const urlContainer = document.getElementById('image-url-container');
+            const fileContainer = document.getElementById('image-file-container');
+            const status = document.getElementById('upload-status');
+
+            if (type === 'url') {
+                tabUrl.className = "flex-1 py-1.5 font-bold rounded-lg bg-white text-slate-800 shadow-sm transition-all";
+                tabFile.className = "flex-1 py-1.5 font-bold rounded-lg text-slate-500 transition-all";
+                urlContainer.classList.remove('hidden');
+                fileContainer.classList.add('hidden');
+            } else {
+                tabFile.className = "flex-1 py-1.5 font-bold rounded-lg bg-white text-slate-800 shadow-sm transition-all";
+                tabUrl.className = "flex-1 py-1.5 font-bold rounded-lg text-slate-500 transition-all";
+                fileContainer.classList.remove('hidden');
+                urlContainer.classList.add('hidden');
+                if (status) status.classList.add('hidden');
+            }
+        };
+
+        window.handleAdminImageUpload = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Kiểm soát kích thước file (Tối đa 1MB để bảo mật & hiệu năng lưu trữ)
+            if (file.size > 1024 * 1024) {
+                showToast("Vui lòng tải lên ảnh dưới 1MB để lưu trữ đám mây mượt mà hơn!", "error");
+                return;
+            }
+
+            const status = document.getElementById('upload-status');
+            if (status) {
+                status.innerText = "Đang xử lý và tải tệp... ⏳";
+                status.classList.remove('hidden');
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64Data = e.target.result;
+                document.getElementById('edit-card-image').value = base64Data;
+                previewEditImage(base64Data);
+                
+                if (status) {
+                    status.innerText = "✨ Đã tải lên ảnh thành công!";
+                }
+                showToast("Nạp ảnh trực tiếp thành công!", "success");
+            };
+            reader.onerror = function() {
+                showToast("Lỗi đọc file ảnh!", "error");
+                if (status) status.classList.add('hidden');
+            };
+            reader.readAsDataURL(file);
+        };
+
         window.openFlashcardEditModal = function(id) {
             const word = currentWordDatabase.find(w => w.id === id);
             if (!word) return;
@@ -2837,6 +2912,9 @@
             document.getElementById('edit-card-desc').value = word.description;
             document.getElementById('edit-card-image').value = word.imageUrl || "";
 
+            // Khởi động mặc định tab ảnh về URL khi mở modal
+            switchImageSourceTab('url');
+
             previewEditImage(word.imageUrl);
             document.getElementById('flashcard-edit-modal').classList.remove('hidden');
         };
@@ -2844,7 +2922,7 @@
         window.previewEditImage = function(url) {
             const preview = document.getElementById('edit-image-preview');
             const placeholder = document.getElementById('edit-image-placeholder');
-            if (url && url.startsWith('http')) {
+            if (url && (url.startsWith('http') || url.startsWith('data:image'))) {
                 preview.src = url;
                 preview.classList.remove('hidden');
                 placeholder.classList.add('hidden');
