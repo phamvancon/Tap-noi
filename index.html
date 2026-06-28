@@ -748,41 +748,79 @@
                         <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 max-w-md mx-auto text-left text-xs text-amber-700"><strong>⚠️ LƯU Ý QUAN TRỌNG:</strong> Công cụ sàng lọc chỉ mang giá trị tham khảo hành vi định hướng hỗ trợ can thiệp, không có giá trị thay thế kết luận chẩn đoán lâm sàng của bác sĩ nhi khoa.</div>
                         <div><button onclick="startScreeningTest()" class="bg-babyPurple text-white font-black px-10 py-4 rounded-2xl shadow-xl shadow-babyPurple/10">Bắt đầu khảo sát hành vi ➔</button></div>
                     </div>
-                    <div id="screening-workspace" class="hidden bg-white p-6 md:p-8 rounded-3xl custom-shadow border-2 border-slate-100">
-                        <div class="flex justify-between items-center mb-4">
-                            <span class="text-xs font-bold text-babyPurple uppercase">Ba mẹ tích chọn đáp án sát nhất với biểu hiện hằng ngày của con</span>
-                            <span id="screening-counter" class="text-sm font-black text-babyPurple"></span>
+                    
+                    <div id="screening-workspace" class="hidden bg-white p-6 md:p-8 rounded-3xl custom-shadow border-4 border-purple-100 relative">
+                        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-4 border-b pb-3 border-slate-100">
+                            <span class="text-xs font-black text-purple-600 uppercase flex items-center gap-1">✨ Khảo sát chuẩn hóa M-CHAT-R cải tiến</span>
+                            <span id="screening-counter" class="text-xs font-black bg-purple-100 text-purple-700 px-3 py-1 rounded-full"></span>
                         </div>
-                        <div class="w-full bg-slate-100 h-3 rounded-full mb-8 overflow-hidden">
-                            <div id="screening-progress-bar" class="bg-babyPurple h-full rounded-full transition-all duration-300"></div>
+                        <div class="w-full bg-slate-100 h-2.5 rounded-full mb-6 overflow-hidden">
+                            <div id="screening-progress-bar" class="bg-gradient-to-r from-purple-500 to-indigo-600 h-full rounded-full transition-all duration-300"></div>
                         </div>
-                        <div class="min-h-[140px] flex flex-col justify-center text-center space-y-3">
-                            <span class="text-5xl">📋</span>
-                            <p id="screening-question-text" class="text-lg md:text-xl font-extrabold text-slate-800 max-w-2xl mx-auto font-quicksand"></p>
-                            <p id="screening-significance-text" class="text-xs text-slate-400 font-bold italic"></p>
+                        <div class="min-h-[160px] flex flex-col justify-center space-y-4">
+                            <div class="flex items-center gap-3">
+                                <span class="text-4xl p-2 bg-purple-50 rounded-2xl">📋</span>
+                                <div class="text-left">
+                                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1" id="screening-significance-text">Mục đích chuyên sâu: ...</span>
+                                    <p id="screening-question-text" class="text-base md:text-lg font-black text-slate-800 leading-snug font-quicksand"></p>
+                                </div>
+                            </div>
+                            
+                            <!-- Hộp gợi ý thực tế hữu ích cho ba mẹ -->
+                            <div class="bg-indigo-50 border-l-4 border-indigo-500 rounded-r-2xl p-4 text-left space-y-1">
+                                <span class="text-[10px] font-black text-indigo-700 uppercase tracking-wider flex items-center gap-1">💡 HƯỚNG DẪN BA MẸ QUAN SÁT THỰC TẾ:</span>
+                                <p id="screening-example-text" class="text-xs text-slate-600 leading-relaxed font-semibold"></p>
+                            </div>
                         </div>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8" id="screening-options-container"></div>
+                        <div class="grid grid-cols-1 gap-3 mt-6" id="screening-options-container"></div>
                     </div>
+
                     <div id="screening-results" class="hidden space-y-6">
-                        <div class="bg-white p-6 md:p-8 rounded-3xl custom-shadow text-center">
-                            <span class="text-6xl">📊</span>
-                            <h3 class="text-2xl font-black mt-3 text-slate-800 font-quicksand">Biểu Đồ Đánh Giá Sàng Lọc Phát Triển</h3>
-                            <div id="screening-classification-banner" class="mt-6 py-4 px-6 rounded-2xl font-black text-lg max-w-xl mx-auto"></div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-8 max-w-2xl mx-auto">
-                                <div class="bg-indigo-50/50 p-5 rounded-3xl border flex flex-col justify-between">
-                                    <div><span class="text-xs font-bold text-indigo-500 uppercase">Chỉ số nguy cơ Phổ Tự Kỷ (ASD)</span><div class="text-4xl font-black text-indigo-700 mt-2"><span id="asd-score-display">0</span> / 4</div></div>
-                                    <div class="w-full bg-indigo-100 h-2.5 rounded-full mt-4 overflow-hidden"><div id="asd-progress" class="bg-indigo-500 h-full rounded-full transition-all" style="width: 0%"></div></div>
+                        <div class="bg-white p-6 md:p-8 rounded-3xl custom-shadow border-4 border-emerald-100 text-center relative overflow-hidden">
+                            <span class="text-6xl animate-bounce inline-block">📊</span>
+                            <h3 class="text-2xl font-black mt-3 text-slate-800 font-quicksand">Kết Quả Đánh Giá Sàng Lọc Phát Triển</h3>
+                            
+                            <div id="screening-classification-banner" class="mt-4 py-4 px-6 rounded-2xl font-black text-base max-w-xl mx-auto shadow-sm"></div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 my-6 max-w-2xl mx-auto">
+                                <div class="bg-indigo-50/50 p-5 rounded-3xl border border-indigo-100 flex flex-col justify-between">
+                                    <div>
+                                        <span class="text-[10px] font-black text-indigo-500 uppercase">Chỉ số nguy cơ Phổ Tự Kỷ (ASD)</span>
+                                        <div class="text-3xl font-black text-indigo-700 mt-1"><span id="asd-score-display">0</span> / 12</div>
+                                    </div>
+                                    <div class="w-full bg-indigo-100 h-2 rounded-full mt-3 overflow-hidden">
+                                        <div id="asd-progress" class="bg-indigo-500 h-full rounded-full transition-all" style="width: 0%"></div>
+                                    </div>
+                                    <span class="text-[10px] text-indigo-400 font-bold mt-1.5" id="asd-risk-comment">Ngưỡng bình thường</span>
                                 </div>
-                                <div class="bg-pink-50/50 p-5 rounded-3xl border flex flex-col justify-between">
-                                    <div><span class="text-xs font-bold text-pink-500 uppercase">Chỉ số nguy cơ Chậm Nói (Speech)</span><div class="text-4xl font-black text-pink-700 mt-2"><span id="speech-score-display">0</span> / 4</div></div>
-                                    <div class="w-full bg-pink-100 h-2.5 rounded-full mt-4 overflow-hidden"><div id="speech-progress" class="bg-pink-500 h-full rounded-full transition-all" style="width: 0%"></div></div>
+                                <div class="bg-pink-50/50 p-5 rounded-3xl border border-pink-100 flex flex-col justify-between">
+                                    <div>
+                                        <span class="text-[10px] font-black text-pink-500 uppercase">Chỉ số nguy cơ Chậm Nói (Speech)</span>
+                                        <div class="text-3xl font-black text-pink-700 mt-1"><span id="speech-score-display">0</span> / 8</div>
+                                    </div>
+                                    <div class="w-full bg-pink-100 h-2 rounded-full mt-3 overflow-hidden">
+                                        <div id="speech-progress" class="bg-pink-500 h-full rounded-full transition-all" style="width: 0%"></div>
+                                    </div>
+                                    <span class="text-[10px] text-pink-400 font-bold mt-1.5" id="speech-risk-comment">Phát âm tốt</span>
                                 </div>
                             </div>
-                            <div class="bg-slate-50 border rounded-3xl p-6 text-left max-w-3xl mx-auto space-y-4">
-                                <h4 class="font-extrabold text-base text-slate-800 border-b pb-2 flex items-center gap-1.5"><span>💡</span> Phân Tích Hành Vi & Hướng Can Thiệp Can Hệ</h4>
-                                <div id="screening-analysis-text" class="text-xs text-slate-600 leading-relaxed font-medium space-y-2"></div>
+
+                            <div class="bg-slate-50 border rounded-2xl p-5 text-left max-w-3xl mx-auto space-y-4 shadow-inner">
+                                <h4 class="font-extrabold text-sm text-slate-800 border-b pb-2 flex items-center gap-1.5">
+                                    <span>🩺</span> Phân Tích Hành Vi & Hướng Can Thiệp Từ Chuyên Gia
+                                </h4>
+                                <div id="screening-analysis-text" class="text-xs text-slate-600 leading-relaxed font-semibold space-y-2"></div>
                             </div>
-                            <div class="flex justify-center mt-8"><button onclick="startScreeningTest()" class="bg-babyPurple text-white font-black px-8 py-3.5 rounded-2xl text-sm shadow-md">Thực hiện lại sàng lọc 🔄</button></div>
+
+                            <!-- Tính năng sao chép báo cáo gửi bác sĩ can thiệp -->
+                            <div class="mt-6 flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
+                                <button onclick="copyScreeningReportToClipboard()" class="flex-1 py-3 px-6 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs uppercase tracking-wider transition-all shadow-md flex items-center justify-center gap-2">
+                                    <span>📋</span> Sao chép báo cáo gửi Bác sĩ
+                                </button>
+                                <button onclick="startScreeningTest()" class="flex-1 py-3 px-6 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs uppercase tracking-wider transition-all">
+                                    🔄 Thực hiện lại bài đo
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1091,15 +1129,139 @@
             ]
         };
 
-        /* SÀNG LỌC HÀNH VI M-CHAT-R KHÁCH QUAN */
         const screeningQuestions = [
-            { id: 1, category: "asd", text: "Khi ba mẹ gọi tên bé (ví dụ: quay sang gọi con thật to), con có quay đầu lại nhìn tương tác không?", options: ["Luôn luôn quay lại 🌱", "Chỉ quay lại khi gọi nhiều lần 🟡", "Hờ hững, dường như không nghe thấy 🔴"], riskMapping: [0, 1, 2], significance: "Đáp ứng định hướng âm thanh xã hội ban đầu." },
-            { id: 2, category: "asd", text: "Bé có nhìn thẳng trực tiếp vào mắt ba mẹ khi trò chuyện, chơi đùa hoặc khi đòi ăn uống không?", options: ["Tương tác rất tốt 🌱", "Thỉnh thoảng mới nhìn, hay nhìn lảng 🟡", "Hoàn toàn không nhìn mắt ba mẹ 🔴"], riskMapping: [0, 1, 2], significance: "Khảo sát giao tiếp tương tác mắt phi ngôn ngữ." },
-            { id: 3, category: "speech", text: "Khả năng phát âm biểu đạt nhu cầu hiện tại của bé ở mức nào?", options: ["Phát âm từ đơn/từ ghép rõ nghĩa 🌱", "Chỉ biết e a vô nghĩa, dắt tay chỉ trỏ 🟡", "Im lặng, không phát tiếng bập bẹ 🔴"], riskMapping: [0, 1, 2], significance: "Xác định ranh giới chậm nói nhi khoa mầm non." },
-            { id: 4, category: "asd", text: "Bé có các hành vi khác thường lặp đi lặp lại không (ví dụ: đi nhón chân, vẫy vẫy hai bàn tay liên tục trước mắt, thích xoay tròn bánh xe)?", options: ["Không có, bé chơi bình thường 🌱", "Thỉnh thoảng có xuất hiện 🟡", "Xuất hiện rập khuôn liên tục hằng ngày 🔴"], riskMapping: [0, 1, 2], significance: "Hành vi lặp đi lặp lại rập khuôn ranh giới sớm." }
+            {
+                id: 1,
+                category: "asd",
+                text: "Con có thường nhìn thẳng vào mắt ba mẹ khi nói chuyện, chơi đùa hoặc khi muốn ba mẹ lấy đồ ăn thức uống không?",
+                options: [
+                    "Thường xuyên và tự nhiên (Con chủ động nhìn trao đổi ánh mắt) 🌱",
+                    "Thỉnh thoảng (Chỉ nhìn thoáng qua rồi nhìn lảng tránh chỗ khác) 🟡",
+                    "Không bao giờ hoặc rất hiếm khi (Hầu như lơ đãng tránh giao tiếp mắt) 🔴"
+                ],
+                riskMapping: [0, 1, 2],
+                significance: "Tương tác giao tiếp mắt xã hội chủ động phi ngôn ngữ",
+                example: "Khi ba mẹ nói 'Đưa mẹ xem nào!', bé chủ động nhìn thẳng vào mắt mẹ để trao đổi thông điệp, không phải nhìn chăm chăm vào đồ vật."
+            },
+            {
+                id: 2,
+                category: "asd",
+                text: "Khi ba mẹ dùng ngón tay chỉ vào món đồ chơi ở xa trong phòng, con có hướng mắt nhìn theo ngón tay chỉ của bạn không?",
+                options: [
+                    "Bé lập tức nhìn theo hướng tay chỉ một cách nhanh nhạy 🌱",
+                    "Thỉnh thoảng, phải vỗ tay hoặc gọi to con mới nhìn theo 🟡",
+                    "Không nhìn theo hoặc chỉ nhìn chằm chằm vào bàn tay của bạn 🔴"
+                ],
+                riskMapping: [0, 1, 2],
+                significance: "Khả năng thiết lập chú ý chung (Joint Attention)",
+                example: "Bạn chỉ tay lên bầu trời và bảo 'Ồ nhìn kìa, máy bay bay!', bé lập tức ngước mắt tìm kiếm chiếc máy bay theo hướng bạn chỉ."
+            },
+            {
+                id: 3,
+                category: "speech",
+                text: "Khi muốn lấy món đồ chơi trên cao hoặc xin đồ ăn, con biểu đạt ý muốn bằng cách nào?",
+                options: [
+                    "Bé phát âm từ đơn/từ ghép (như 'măm', 'bế', 'lấy') kết hợp chỉ tay 🌱",
+                    "Con kéo tay ba mẹ đến vị trí đồ vật hoặc khóc la vô nghĩa 🟡",
+                    "Con im lặng đứng nhìn, không hề tìm cách chỉ trỏ biểu đạt nhu cầu 🔴"
+                ],
+                riskMapping: [0, 1, 2],
+                significance: "Mức độ chậm nói và biểu thị nhu cầu mầm non",
+                example: "Thay vì tự khóc quấy, con tiến lại gần chỉ tay lên quả bóng trên tủ và bập bẹ nói 'bóng' để gọi ba mẹ trợ giúp."
+            },
+            {
+                id: 4,
+                category: "asd",
+                text: "Khi gọi to biệt danh hoặc họ tên của bé (lúc bé không ngủ và không bận xem tivi điện thoại), con phản ứng như thế nào?",
+                options: [
+                    "Con ngay lập tức quay đầu lại nhìn ba mẹ phản hồi cười nói 🌱",
+                    "Thỉnh thoảng, phải gọi nhiều lần liên tục con mới đáp lại 🟡",
+                    "Hờ hững hoàn toàn, giống như con không nghe thấy hoặc bị điếc 🔴"
+                ],
+                riskMapping: [0, 1, 2],
+                significance: "Đáp ứng phản xạ định hướng âm thanh xã hội sớm",
+                example: "Đang chơi lego, nghe tiếng mẹ gọi 'Bắp ơi!', bé lập tức dừng tay quay lại mỉm cười hoặc nói dạ."
+            },
+            {
+                id: 5,
+                category: "asd",
+                text: "Con có biết chơi giả vờ hoặc đóng vai các hoạt động hằng ngày không?",
+                options: [
+                    "Bé thường xuyên chơi đóng vai rất sáng tạo và vui vẻ 🌱",
+                    "Thỉnh thoảng chơi vài thao tác đơn giản, mau chán 🟡",
+                    "Hoàn toàn không biết chơi đóng vai (Chỉ thích gõ, ngậm hoặc ném đồ chơi) 🔴"
+                ],
+                riskMapping: [0, 1, 2],
+                significance: "Tư duy biểu trưng và chơi đóng vai (Pretend Play)",
+                example: "Bé cầm chiếc lược chải đầu cho búp bê, giả vờ cầm cốc rỗng uống nước hoặc áp điện thoại đồ chơi lên tai nói chuyện ríu rít."
+            },
+            {
+                id: 6,
+                category: "asd",
+                text: "Bé có biết dùng ngón trỏ chỉ vào món đồ con thích để khoe hay lôi kéo sự chú ý của ba mẹ không?",
+                options: [
+                    "Bé thường xuyên chỉ trỏ để khoe điều thú vị 🌱",
+                    "Bé chỉ tay khi đòi ăn uống, ít khi chỉ tay để chia sẻ niềm vui 🟡",
+                    "Không bao giờ chỉ tay để chia sẻ, chỉ dắt tay ba mẹ bắt ép 🔴"
+                ],
+                riskMapping: [0, 1, 2],
+                significance: "Hành vi chỉ trỏ chia sẻ cảm xúc tương tác sớm",
+                example: "Thấy chú chó chạy qua sân, con cười phấn khích chỉ ngón trỏ về phía chú chó rồi quay đầu nhìn ba mẹ cười như muốn nói: 'Ba mẹ nhìn chú chó kìa!'."
+            },
+            {
+                id: 7,
+                category: "speech",
+                text: "Mức độ ê a hoặc nói bập bẹ của bé ở nhà hàng ngày phát triển như thế nào?",
+                options: [
+                    "Con đã nói được các từ rõ nghĩa, biết nhắc lại từ ba mẹ dạy 🌱",
+                    "Con chỉ nói được từ đơn lẻ tẻ, phát âm ngọng líu lo khó hiểu 🟡",
+                    "Con chỉ ê a các nguyên âm (a, o, u) hoặc hoàn toàn giữ im lặng 🔴"
+                ],
+                riskMapping: [0, 1, 2],
+                significance: "Sự phát triển âm vị học và vốn từ ngữ",
+                example: "Con tự nói được các từ ghép đơn giản: 'ba ba', 'bà ơi', 'đi chơi', 'ăn cơm' hoặc tích cực bắt chước học vần khi được dạy."
+            },
+            {
+                id: 8,
+                category: "asd",
+                text: "Con có thích thú hoặc để ý chơi chung, quan tâm khi thấy các em bé cùng trang lứa khác ở sân chơi hay công viên không?",
+                options: [
+                    "Bé thích đến gần, mỉm cười và muốn chơi đùa cùng bạn 🌱",
+                    "Bé chỉ đứng nhìn từ xa, rụt rè không dám lại gần 🟡",
+                    "Bé hoàn toàn phớt lờ, xem như không có sự hiện diện của bạn khác 🔴"
+                ],
+                riskMapping: [0, 1, 2],
+                significance: "Ý thức cộng đồng và tương tác nhóm xã hội đồng trang lứa",
+                example: "Khi thấy các bạn đang chơi đu quay, bé chủ động tiến tới cười đùa, cố gắng chen vào hoặc chia sẻ đồ chơi cùng bạn."
+            },
+            {
+                id: 9,
+                category: "asd",
+                text: "Bé có các động tác cơ thể lặp đi lặp lại bất thường (như xoay tròn người, đi nhón chân, vẫy vẩy hai tay liên tục trước mắt khi phấn khích) không?",
+                options: [
+                    "Hầu như không có, cơ thể bé phát triển vận động bình thường 🌱",
+                    "Thỉnh thoảng có xuất hiện khi con quá phấn khích hoặc lo lắng 🟡",
+                    "Xuất hiện liên tục, lặp đi lặp lại hằng ngày khó ngắt cơn 🔴"
+                ],
+                riskMapping: [0, 1, 2],
+                significance: "Các hành vi rập khuôn tự kích thích giác quan",
+                example: "Bé không chạy nhảy bình thường mà thường xuyên đi bằng đầu ngón chân (đi nhón gót) hoặc nhìn chằm chằm vào các đồ vật xoay tròn hàng tiếng đồng hồ."
+            },
+            {
+                id: 10,
+                category: "speech",
+                text: "Khi ba mẹ yêu cầu con thực hiện một mệnh lệnh đơn giản không kèm điệu bộ chỉ trỏ, con hiểu và làm đúng không?",
+                options: [
+                    "Con hiểu ngay và vui vẻ làm đúng yêu cầu 🌱",
+                    "Chỉ làm đúng khi ba mẹ kèm hành động chỉ trỏ hoặc nhắc đi nhắc lại 🟡",
+                    "Bé không hiểu hoặc phớt lờ, không có phản xạ tuân theo 🔴"
+                ],
+                riskMapping: [0, 1, 2],
+                significance: "Khả năng thấu hiểu ngôn ngữ thính giác thụ nhận",
+                example: "Mẹ ngồi trên ghế và nói: 'Con đi lấy đôi dép lại đây cho mẹ nào!', bé hiểu ý tự giác đi tìm và mang dép lại mà mẹ không cần chỉ tay hướng dẫn."
+            }
         ];
 
-        /* LỘ TRÌNH 30 NGÀY BẬT ÂM MẦM NON */
         const thirtyDayCurriculum = [
             { day: 1, stage: "Giai Đoạn 1: Bật âm đơn", word: "Ba", icon: "👨", guide: "Mẹ mím nhẹ hai vành môi hướng sự chú ý của bé rồi bật âm Ba dứt khoát.", img: "" },
             { day: 2, stage: "Giai Đoạn 1: Bật âm đơn", word: "Mẹ", icon: "👩", guide: "Uốn nhẹ họng khép môi bật hơi êm dịu kéo âm Mẹ ngọt ngào.", img: "" },
@@ -1560,46 +1722,165 @@
             document.getElementById('screening-workspace').classList.remove('hidden');
             renderScreeningQuestion();
         };
+
         function renderScreeningQuestion() {
             if (currentScreeningIndex >= screeningQuestions.length) { calculateScreeningResults(); return; }
             const q = screeningQuestions[currentScreeningIndex];
-            document.getElementById('screening-counter').innerText = `Khảo sát Câu ${currentScreeningIndex + 1} / ${screeningQuestions.length}`;
+            
+            // Cập nhật mốc câu hỏi và tiến trình
+            document.getElementById('screening-counter').innerText = `Câu khảo sát ${currentScreeningIndex + 1} / ${screeningQuestions.length}`;
             document.getElementById('screening-progress-bar').style.width = `${((currentScreeningIndex + 1) / screeningQuestions.length) * 100}%`;
+            
+            // Cập nhật nội dung câu hỏi, mục đích và ví dụ
             document.getElementById('screening-question-text').innerText = q.text;
-            document.getElementById('screening-significance-text').innerText = `Mục đích: ${q.significance}`;
+            document.getElementById('screening-significance-text').innerText = `Lĩnh vực đánh giá: ${q.significance}`;
+            document.getElementById('screening-example-text').innerText = q.example;
+            
+            // Kết xuất danh sách đáp án dạng nút bấm tiện lợi
             const container = document.getElementById('screening-options-container'); container.innerHTML = "";
             q.options.forEach((opt, idx) => {
-                const btn = document.createElement('button'); btn.className = "py-3 border rounded-xl hover:bg-purple-50 text-xs"; btn.innerText = opt;
-                btn.onclick = () => { tempScreeningAnswers.push({ cat: q.category, score: q.riskMapping[idx] }); currentScreeningIndex++; renderScreeningQuestion(); };
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-4 rounded-2xl border-2 border-slate-100 bg-white hover:border-purple-300 hover:bg-purple-50/50 transition-all text-xs font-black text-slate-700 custom-shadow flex items-center justify-between";
+                btn.innerHTML = `<span>${opt}</span> <span class="text-purple-400 text-lg">➔</span>`;
+                btn.onclick = () => {
+                    tempScreeningAnswers.push({ cat: q.category, score: q.riskMapping[idx], questionText: q.text, chosenAnswer: opt });
+                    currentScreeningIndex++;
+                    renderScreeningQuestion();
+                };
                 container.appendChild(btn);
             });
         }
+
         async function calculateScreeningResults() {
             document.getElementById('screening-workspace').classList.add('hidden');
             document.getElementById('screening-results').classList.remove('hidden');
+            
             let asd = 0, speech = 0;
-            tempScreeningAnswers.forEach(a => { if (a.cat === 'asd') asd += a.score; else speech += a.score; });
+            tempScreeningAnswers.forEach(a => {
+                if (a.cat === 'asd') asd += a.score;
+                else speech += a.score;
+            });
+            
+            // Cập nhật chỉ số lên biểu đồ
             document.getElementById('asd-score-display').innerText = asd;
             document.getElementById('speech-score-display').innerText = speech;
-            document.getElementById('asd-progress').style.width = `${(asd / 4) * 100}%`;
-            document.getElementById('speech-progress').style.width = `${(speech / 4) * 100}%`;
+            
+            // Tính toán thanh tiến trình phần trăm nguy cơ
+            const asdPercentage = Math.min((asd / 12) * 100, 100);
+            const speechPercentage = Math.min((speech / 8) * 100, 100);
+            document.getElementById('asd-progress').style.width = `${asdPercentage}%`;
+            document.getElementById('speech-progress').style.width = `${speechPercentage}%`;
 
-            let cl = "Mốc phát triển rực rỡ bình thường 🌱";
-            let desc = "Chúc mừng ba mẹ, các mốc giao tiếp mắt phi ngôn ngữ và phản xạ của con rất khỏe mạnh. Hãy tiếp tục cho bé học tập rèn luyện hằng ngày nhé!";
-            if (asd >= 3 || speech >= 2) { 
-                cl = "Có một vài nguy cơ hành vi - Khuyên can thiệp sớm 🔴"; 
-                desc = "Hệ thống ghi nhận một số biểu hiện chậm bộc lộ ngôn ngữ thụ nhận xã hội. Ba mẹ hãy đồng hành cùng con rèn luyện lộ trình 30 ngày bật âm, và đưa con đến kiểm định y tế lâm sàng tại bệnh viện nhi khoa gần nhất."; 
+            // Định dạng màu sắc nhận diện mức nguy cơ
+            let asdRiskText = "Nguy cơ thấp 🌱";
+            let asdColorClass = "text-emerald-500";
+            if (asd >= 7) {
+                asdRiskText = "Nguy cơ cao 🔴";
+                asdColorClass = "text-rose-500 font-extrabold";
+            } else if (asd >= 3) {
+                asdRiskText = "Nguy cơ trung bình 🟡";
+                asdColorClass = "text-amber-500 font-extrabold";
+            }
+            document.getElementById('asd-risk-comment').className = `text-[10px] ${asdColorClass} font-bold mt-1.5`;
+            document.getElementById('asd-risk-comment').innerText = asdRiskText;
+
+            let speechRiskText = "Phát âm đạt mốc phát triển 🌱";
+            let speechColorClass = "text-emerald-500";
+            if (speech >= 5) {
+                speechRiskText = "Chậm ngôn ngữ mức độ rõ rệt 🔴";
+                speechColorClass = "text-rose-500 font-extrabold";
+            } else if (speech >= 2) {
+                speechRiskText = "Chậm nói ranh giới 🟡";
+                speechColorClass = "text-amber-500 font-extrabold";
+            }
+            document.getElementById('speech-risk-comment').className = `text-[10px] ${speechColorClass} font-bold mt-1.5`;
+            document.getElementById('speech-risk-comment').innerText = speechRiskText;
+
+            // Đưa ra phân loại tổng hợp
+            let cl = "Nhóm 1: Phát triển ổn định rực rỡ 🌱";
+            let bannerBg = "bg-emerald-100 text-emerald-800 border-2 border-emerald-300";
+            let analysisHtml = `
+                <p><strong>Kết luận tổng quát:</strong> Hệ thống ghi nhận các phản xạ tương tác mắt xã hội, chú ý chung và mức độ nói biểu đạt của con hoàn toàn nằm trong ngưỡng phát triển ổn định.</p>
+                <p class="mt-2"><strong>Lời khuyên trị liệu mầm non:</strong> Ba mẹ hãy tiếp tục trò chuyện cùng bé, hạn chế cho bé xem các thiết bị tivi điện thoại quá 1 tiếng mỗi ngày. Hãy tích cực cùng con vui học với Bảng chữ cái, tập từ ghép và Trò chơi Toán Dino mầm non trong ứng dụng này!</p>
+            `;
+
+            if (asd >= 7 || speech >= 5) {
+                cl = "Nhóm 3: Có nguy cơ phát triển hành vi & Chậm nói rõ rệt 🔴";
+                bannerBg = "bg-rose-100 text-rose-800 border-2 border-rose-300 animate-pulse";
+                analysisHtml = `
+                    <p class="text-rose-700 font-extrabold"><strong>Cảnh báo can thiệp đặc biệt:</strong> Điểm số biểu hiện hành vi và ngôn ngữ có những dấu hiệu chậm trễ tích lũy so với mốc tuổi nhi khoa.</p>
+                    <p class="mt-2"><strong>Hướng can thiệp quan trọng của ba mẹ:</strong></p>
+                    <ul class="list-disc list-inside mt-1 space-y-1 text-slate-600">
+                        <li>Dành tối thiểu 2-3 tiếng mỗi ngày giao tiếp tương tác mắt trực diện với bé ở tầm ngang mắt.</li>
+                        <li><strong>Cai tuyệt đối điện thoại, iPad, tivi</strong> để kích hoạt nhu cầu phản xạ thính giác hai chiều.</li>
+                        <li>Đưa con đến các bệnh viện nhi khoa tuyến trung ương hoặc trung tâm can thiệp sớm uy tín để được đánh giá lâm sàng chi tiết bởi các chuyên gia âm ngữ trị liệu chuyên sâu.</li>
+                    </ul>
+                `;
+            } else if (asd >= 3 || speech >= 2) {
+                cl = "Nhóm 2: Nguy cơ ranh giới - Cần theo dõi can thiệp sớm sát sao 🟡";
+                bannerBg = "bg-amber-100 text-amber-800 border-2 border-amber-300";
+                analysisHtml = `
+                    <p class="text-amber-700 font-bold"><strong>Nhận định lâm sàng sơ bộ:</strong> Bé có một vài biểu hiện chậm phản xạ giao tiếp hai chiều hoặc chậm nói ranh giới nhẹ.</p>
+                    <p class="mt-2"><strong>Hướng hành động của ba mẹ:</strong></p>
+                    <ul class="list-disc list-inside mt-1 space-y-1 text-slate-600">
+                        <li>Đồng hành liên tục cùng con rèn luyện <strong>Lộ trình 30 ngày bật âm</strong> tích hợp trong ứng dụng hàng ngày.</li>
+                        <li>Dạy con cách chỉ tay bằng ngón trỏ để thể hiện mong muốn của mình trước khi đáp ứng nhu cầu ăn uống của con.</li>
+                        <li>Kiểm tra lại sau 3 tháng để xem các mốc nguy cơ có giảm xuống ngưỡng an toàn hay không.</li>
+                    </ul>
+                `;
             }
 
             document.getElementById('screening-classification-banner').innerText = cl;
-            document.getElementById('screening-analysis-text').innerText = desc;
+            document.getElementById('screening-classification-banner').className = `mt-4 py-4 px-6 rounded-2xl font-black text-sm max-w-xl mx-auto shadow-sm ${bannerBg}`;
+            document.getElementById('screening-analysis-text').innerHTML = analysisHtml;
 
+            // Cập nhật kết quả lên Firestore nếu đang sử dụng tài khoản bé
             if (loggedInRole !== 'guest') {
-                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'sub_accounts', loggedInChildCode), {
-                    screeningResult: { asdScore: asd, speechScore: speech, classification: cl, timestamp: new Date().toISOString() }
-                });
+                try {
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'sub_accounts', loggedInChildCode), {
+                        screeningResult: {
+                            asdScore: asd,
+                            speechScore: speech,
+                            classification: cl,
+                            answersLog: tempScreeningAnswers,
+                            timestamp: new Date().toISOString()
+                        }
+                    });
+                } catch (e) {
+                    console.warn("Chưa đồng bộ lên đám mây, lưu tạm thời gian hoạt động.");
+                }
             }
         }
+
+        window.copyScreeningReportToClipboard = function() {
+            let logText = `BÁO CÁO KHẢO SÁT SÀNG LỌC HÀNH VI & PHÁT ÂM TRẺ EM (M-CHAT-R CẢI TIẾN)
+----------------------------------------
+Tên học viên: ${loggedInChildName}
+Mã học sinh: ${loggedInChildCode}
+Cấp lớp: ${loggedInChildGrade}
+Ngày đo đánh giá: ${new Date().toLocaleString('vi-VN')}
+
+KẾT QUẢ ĐO CHỈ SỐ:
+1. Chỉ số Nguy cơ Phổ tự kỷ (ASD): ${document.getElementById('asd-score-display').innerText} / 12 điểm
+   -> Kết luận ASD: ${document.getElementById('asd-risk-comment').innerText}
+
+2. Chỉ số Nguy cơ Chậm nói (Speech): ${document.getElementById('speech-score-display').innerText} / 8 điểm
+   -> Kết luận Chậm nói: ${document.getElementById('speech-risk-comment').innerText}
+
+Phân loại tổng hợp: ${document.getElementById('screening-classification-banner').innerText}
+
+CHI TIẾT PHẢN HỒI KHẢO SÁT:
+`;
+
+            tempScreeningAnswers.forEach((ans, idx) => {
+                logText += `\nCâu ${idx + 1}: ${ans.questionText}\n  => Ba mẹ tích chọn: ${ans.chosenAnswer}\n`;
+            });
+
+            logText += `\n----------------------------------------\nBáo cáo tự động trích xuất từ phần mềm giáo cụ trực quan EduKids Smart.`;
+            
+            copyToClipboard(logText);
+            showToast("Đã sao chép báo cáo chi tiết vào khay nhớ tạm! Giờ ba mẹ có thể dán để gửi Zalo cho Bác sĩ nhi khoa ngay nhé! 📋✨", "success");
+        };
 
         /* LỘ TRÌNH 30 NGÀY BẬT ÂM */
         window.render30DayGrid = function() {
