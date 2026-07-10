@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EduKids Smart - Hỗ trợ phát âm & Phản xạ Toán học (v3.1.0)</title>
+    <title>EduKids Smart - Hỗ trợ phát âm & Phản xạ Toán học (v3.2.0)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -74,7 +74,6 @@
             50% { transform: scaleY(2.5); }
         }
 
-        /* Định nghĩa xoay chong chóng */
         @keyframes spin-windmill {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
@@ -83,7 +82,6 @@
             animation: spin-windmill var(--spin-duration, 2s) linear infinite;
         }
         
-        /* Bong bóng xà phòng cho mini game */
         .bubble-pop {
             position: absolute;
             border-radius: 50%;
@@ -96,11 +94,18 @@
             0% { transform: translate(0, 0) scale(0.5); opacity: 1; }
             100% { transform: translate(var(--dx), var(--dy)) scale(1.5); opacity: 0; }
         }
+        
+        /* Highlight animation for auto reading math table */
+        .math-highlight {
+            background-color: #FFE66D !important;
+            border-color: #FF6B6B !important;
+            transform: scale(1.05);
+            box-shadow: 0 10px 15px -3px rgba(255, 107, 107, 0.2);
+        }
     </style>
 </head>
 <body class="text-darkText min-h-screen flex flex-col pb-24 md:pb-0 relative overflow-x-hidden font-vietnam bg-sky-50/50">
 
-    <!-- TOAST THÔNG BÁO TỰ DỰNG -->
     <div id="custom-toast" class="fixed top-5 left-1/2 transform -translate-x-1/2 z-50 hidden px-6 py-3 rounded-full text-white font-bold shadow-2xl transition-all duration-300"></div>
 
     <!-- HỘP THOẠI XÁC NHẬN TÙY BIẾN -->
@@ -165,13 +170,13 @@
                 </div>
             </div>
 
-            <button onclick="closeOfflineGuideModal()" class="w-full mt-6 py-3.5 rounded-2xl bg-babyBlue text-white font-black text-sm transition-all shadow-md">Đã Hiểu ➔</button>
+            <button onclick="closeOfflineGuideModal()" class="w-full mt-6 py-3.5 rounded-2xl bg-babyBlue text-white font-black text-sm transition-all shadow-md font-vietnam">Đã Hiểu ➔</button>
         </div>
     </div>
 
     <!-- MODAL TRỢ LÝ LUYỆN NÓI AI -->
     <div id="speech-coach-modal" class="fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4 hidden backdrop-blur-sm">
-        <div class="bg-white rounded-[2.5rem] max-w-lg w-full p-6 md:p-8 shadow-2xl max-h-[90vh] overflow-y-auto border border-purple-100 relative">
+        <div class="bg-white rounded-[2.5rem] max-w-lg w-full p-6 md:p-8 shadow-2xl max-h-[90vh] overflow-y-auto border border-purple-100 relative font-vietnam">
             <button onclick="closeSpeechCoachModal()" class="absolute top-5 right-5 text-gray-400 hover:text-slate-600 font-bold text-2xl transition-all">&times;</button>
             
             <div class="text-center space-y-3 mb-6">
@@ -187,7 +192,7 @@
                 <span class="text-xs font-black text-purple-600 uppercase tracking-widest">Từ vựng cần nói:</span>
                 <h4 id="coach-target-word" class="text-3xl font-black text-slate-800 tracking-wider">Mẹ</h4>
                 <p id="coach-target-desc" class="text-xs text-slate-500 italic font-medium"></p>
-                <button onclick="speakSelectedWordFromCoach()" class="bg-white hover:bg-slate-50 px-4 py-1.5 rounded-full border border-purple-200 text-xs font-bold text-purple-700 transition-all flex items-center gap-1 mx-auto mt-2">
+                <button onclick="speakSelectedWordFromCoach()" class="bg-white hover:bg-slate-50 px-4 py-1.5 rounded-full border border-purple-200 text-xs font-bold text-purple-700 transition-all flex items-center gap-1 mx-auto mt-2 font-vietnam">
                     🗣️ Nghe phát âm mẫu
                 </button>
             </div>
@@ -218,7 +223,7 @@
                 </div>
 
                 <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex items-center gap-2">
-                    <input type="text" id="manual-speech-input" placeholder="Hoặc ba mẹ chấm giùm từ con nói tại đây..." class="flex-grow bg-white px-4 py-2.5 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-purple-300 font-bold">
+                    <input type="text" id="manual-speech-input" placeholder="Hoặc ba mẹ chấm giùm từ con nói tại đây..." class="flex-grow bg-white px-4 py-2.5 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-purple-300 font-bold font-vietnam">
                     <button onclick="submitManualSpeech()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shrink-0 transition-all font-vietnam">Đánh Giá ➔</button>
                 </div>
             </div>
@@ -249,8 +254,7 @@
 
     <!-- MODAL MINI GAME LUYỆN HƠI THỔI CHONG CHÓNG -->
     <div id="windmill-game-modal" class="fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4 hidden backdrop-blur-sm">
-        <div class="bg-gradient-to-b from-sky-100 to-indigo-50 rounded-[2.5rem] max-w-lg w-full p-6 md:p-8 shadow-2xl relative border-4 border-white overflow-hidden">
-            <!-- Background bay bổng -->
+        <div class="bg-gradient-to-b from-sky-100 to-indigo-50 rounded-[2.5rem] max-w-lg w-full p-6 md:p-8 shadow-2xl relative border-4 border-white overflow-hidden font-vietnam">
             <div id="windmill-bubbles-container" class="absolute inset-0 pointer-events-none overflow-hidden"></div>
             
             <button onclick="closeWindmillGame()" class="absolute top-5 right-5 text-slate-500 hover:text-slate-800 font-bold text-2xl transition-all z-10">&times;</button>
@@ -261,28 +265,19 @@
                 <p class="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">Giúp con luyện tập cột hơi dài, bổ trợ đắc lực cho việc phát âm tròn vành rõ tiếng!</p>
             </div>
 
-            <!-- CHONG CHÓNG SVG ĐỒ HỌA HOẠT HÌNH ĐẸP MẮT -->
             <div class="flex justify-center items-center my-8 relative z-10 h-48">
                 <div id="windmill-svg-wrapper" class="w-40 h-40 flex items-center justify-center cursor-pointer">
-                    <!-- SVG Chong chóng 4 cánh đầy màu sắc -->
                     <svg id="windmill-propeller" class="w-full h-full spinning" style="--spin-duration: 0s;" viewBox="0 0 100 100">
-                        <!-- Cánh 1: Hồng -->
                         <path d="M50 50 C50 20, 35 20, 35 35 C35 50, 50 50, 50 50" fill="#FF6B6B" />
-                        <!-- Cánh 2: Xanh dương -->
                         <path d="M50 50 C80 50, 80 35, 65 35 C50 35, 50 50, 50 50" fill="#4ECDC4" />
-                        <!-- Cánh 3: Vàng -->
                         <path d="M50 50 C50 80, 65 80, 65 65 C65 50, 50 50, 50 50" fill="#FFE66D" />
-                        <!-- Cánh 4: Tím -->
                         <path d="M50 50 C20 50, 20 65, 35 65 C50 65, 50 50, 50 50" fill="#9D4EDD" />
-                        <!-- Tâm trục chong chóng -->
                         <circle cx="50" cy="50" r="6" fill="#FFFFFF" stroke="#2F3E46" stroke-width="2" />
                     </svg>
                 </div>
-                <!-- Cán chong chóng -->
                 <div class="absolute bottom-0 w-3 h-16 bg-amber-700/80 rounded-b-full" style="left: calc(50% - 6px); transform: translateY(12px);"></div>
             </div>
 
-            <!-- THANH ĐO CƯỜNG ĐỘ THỔI -->
             <div class="space-y-4 relative z-10">
                 <div class="bg-white/80 p-4 rounded-2xl border border-slate-200/50 shadow-sm text-center">
                     <span id="windmill-mic-status" class="text-xs font-bold text-slate-500">Đang bật cảm biến hơi thổi...</span>
@@ -292,16 +287,71 @@
                 </div>
 
                 <div class="flex flex-col gap-2 items-center">
-                    <!-- Nút bấm giữ dự phòng cho các thiết bị không nhận diện mic -->
-                    <button id="windmill-touch-trigger" class="w-full py-4 rounded-2xl bg-babyPink text-white font-black text-sm uppercase tracking-wider transition-all shadow-md active:scale-95 cursor-pointer touch-none select-none">
+                    <button id="windmill-touch-trigger" class="w-full py-4 rounded-2xl bg-babyPink text-white font-black text-sm uppercase tracking-wider transition-all shadow-md active:scale-95 cursor-pointer touch-none select-none font-vietnam">
                         Ấn Giữ Để Giả Lập Thổi 🌬️
                     </button>
-                    <p class="text-[10px] text-slate-400 italic">Mẹo: Con có thể thổi thật vào micro điện thoại hoặc nhấn giữ nút trên!</p>
+                    <p class="text-[10px] text-slate-400 italic text-center">Mẹo: Con có thể thổi thật vào micro điện thoại hoặc nhấn giữ nút trên!</p>
                 </div>
             </div>
 
             <div class="mt-6 flex justify-end">
                 <button onclick="closeWindmillGame()" class="py-3 px-6 rounded-2xl bg-slate-200 hover:bg-slate-300 text-slate-600 font-extrabold text-xs uppercase tracking-wider transition-all font-vietnam">Hoàn Thành</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL SỬA GIAO CỤ CHO ADMIN -->
+    <div id="admin-word-modal" class="fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4 hidden backdrop-blur-sm">
+        <div class="bg-white rounded-[2.5rem] max-w-lg w-full p-6 md:p-8 shadow-2xl max-h-[90vh] overflow-y-auto border border-indigo-100 relative font-vietnam">
+            <button onclick="closeAdminWordModal()" class="absolute top-5 right-5 text-gray-400 hover:text-slate-600 font-bold text-2xl transition-all">&times;</button>
+            <h3 id="admin-word-modal-title" class="text-2xl font-black text-slate-800 mb-6 text-center">Thêm Giáo Cụ Mới</h3>
+            
+            <input type="hidden" id="edit-word-id">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Từ vựng cần luyện nói</label>
+                    <input type="text" id="edit-word-text" placeholder="Ví dụ: Ba ba, Mẹ ơi, Quả cam..." class="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 focus:border-babyPink focus:outline-none font-bold">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Biểu tượng (Emoji)</label>
+                        <input type="text" id="edit-word-icon" placeholder="Ví dụ: 👨, 👩, 🐶" class="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 focus:border-babyPink focus:outline-none font-bold text-center">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Chủ đề (Phân loại)</label>
+                        <select id="edit-word-category" class="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 focus:border-babyPink focus:outline-none font-bold bg-white">
+                            <option value="family">Gia đình 🏡</option>
+                            <option value="demand">Nhu cầu 🍚</option>
+                            <option value="animals">Động vật 🐶</option>
+                            <option value="fruits">Trái cây 🍎</option>
+                            <option value="vehicles">Giao thông 🚗</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Mô tả khẩu hình, hướng dẫn</label>
+                    <input type="text" id="edit-word-desc" placeholder="Ví dụ: Mím hai môi chặt rồi bật ra..." class="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 focus:border-babyPink focus:outline-none font-bold">
+                </div>
+                <div class="border-t pt-4">
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-2">Hình ảnh minh họa trực quan</label>
+                    <div class="flex flex-col gap-3">
+                        <input type="text" id="edit-word-url" placeholder="Nhập đường dẫn URL ảnh (Unsplash,...)" class="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 focus:border-babyPink focus:outline-none text-xs font-semibold">
+                        <div class="flex items-center gap-3">
+                            <label class="bg-pink-50 hover:bg-pink-100 text-pink-700 px-4 py-3 rounded-2xl border border-pink-200 text-xs font-bold cursor-pointer text-center flex-1 transition-all">
+                                📤 Tải ảnh trực tiếp lên
+                                <input type="file" id="edit-word-file" accept="image/*" onchange="handleWordPhotoUpload(event)" class="hidden">
+                            </label>
+                            <div class="w-16 h-16 bg-slate-100 rounded-2xl border overflow-hidden flex items-center justify-center shrink-0">
+                                <img id="edit-word-preview" src="https://placehold.co/100" class="w-full h-full object-cover">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-6">
+                <button onclick="closeAdminWordModal()" class="flex-grow py-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold text-sm font-vietnam">Hủy</button>
+                <button onclick="saveAdminWord()" class="flex-grow py-3.5 rounded-2xl bg-babyPurple text-white font-black text-sm shadow-md font-vietnam">Đồng Ý Lưu ➔</button>
             </div>
         </div>
     </div>
@@ -320,21 +370,20 @@
             <div class="bubble" style="width: 50px; height: 50px; left: 85%; animation-delay: 2s;"></div>
         </div>
 
-        <div class="bg-white p-8 rounded-3xl w-full max-w-lg custom-shadow border-4 border-babyBlue/20 relative z-20">
-            <div class="text-center mb-6">
-                <span class="text-6xl animate-pulse inline-block">🚀</span>
-                <h1 class="text-3xl font-black text-babyPink mt-3">EduKids Smart VIP</h1>
-                <p class="text-xs bg-slate-100 text-slate-500 px-3 py-1 rounded-full inline-block mt-1 font-bold">Phiên bản v3.1.0</p>
-                <p class="text-gray-500 text-sm mt-2 font-bold">Công nghệ tương tác dứt khoát cho trẻ chậm phát triển</p>
+        <div class="bg-white p-8 rounded-3xl w-full max-w-lg custom-shadow border-4 border-babyBlue/20 relative z-20 font-vietnam">
+            <div class="text-center mb-6 font-vietnam">
+                <span class="text-6xl animate-pulse inline-block font-vietnam">🚀</span>
+                <h1 class="text-3xl font-black text-babyPink mt-3 font-vietnam">EduKids Smart VIP</h1>
+                <p class="text-xs bg-slate-100 text-slate-500 px-3 py-1 rounded-full inline-block mt-1 font-bold">Phiên bản v3.2.0</p>
+                <p class="text-gray-500 text-sm mt-2 font-bold font-vietnam">Công nghệ tương tác dứt khoát cho trẻ chậm phát triển</p>
             </div>
 
-            <div class="flex bg-slate-100 p-1.5 rounded-2xl mb-6">
-                <button onclick="toggleLoginTab('parent')" id="btn-tab-parent" class="flex-1 py-2.5 text-xs font-black rounded-xl bg-white text-babyPink shadow-sm transition-all font-vietnam">Đăng Nhập</button>
+            <div class="flex bg-slate-100 p-1.5 rounded-2xl mb-6 font-vietnam">
+                <button onclick="toggleLoginTab('parent')" id="btn-tab-parent" class="flex-1 py-2.5 text-xs font-black rounded-xl bg-white text-babyPink shadow-sm transition-all">Đăng Nhập</button>
                 <button onclick="toggleLoginTab('register')" id="btn-tab-register" class="flex-1 py-2.5 text-xs font-black rounded-xl text-gray-500 transition-all font-vietnam">Đăng Ký 🎒</button>
                 <button onclick="toggleLoginTab('admin')" id="btn-tab-admin" class="flex-1 py-2.5 text-xs font-black rounded-xl text-gray-500 transition-all font-vietnam">Quản Trị</button>
             </div>
 
-            <!-- Khối đăng nhập -->
             <div id="form-parent" class="space-y-4">
                 <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Mã học tập của bé</label>
@@ -347,18 +396,17 @@
                 </div>
 
                 <button onclick="handleParentLogin()" class="w-full bg-babyBlue text-white font-black py-4 rounded-2xl shadow-lg text-lg transform active:scale-95 transition-all font-vietnam">Bắt đầu học ngay con ơi ➔</button>
-                <div class="flex items-center my-3"><div class="flex-grow border-t border-slate-100"></div><span class="mx-3 text-xs text-gray-400 font-bold">HỌC THỬ TRẢI NGHIỆM</span><div class="flex-grow border-t border-slate-100"></div></div>
+                <div class="flex items-center my-3"><div class="flex-grow border-t border-slate-100"></div><span class="mx-3 text-xs text-gray-400 font-bold font-vietnam">HỌC THỬ TRẢI NGHIỆM</span><div class="flex-grow border-t border-slate-100"></div></div>
                 <button onclick="enterAsGuest()" class="w-full bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold py-3.5 rounded-2xl text-sm transition-all font-vietnam">Bắt đầu trải nghiệm ngay 🎠</button>
             </div>
 
-            <!-- Khối Đăng ký -->
             <div id="form-register" class="space-y-4 hidden">
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Biệt danh của bé</label>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2 font-vietnam">Biệt danh của bé</label>
                     <input type="text" id="register-name-input" placeholder="Ví dụ: Bắp, Tôm, Đậu Đậu..." class="w-full px-4 py-3.5 rounded-2xl border-2 border-slate-200 focus:border-babyPink focus:outline-none font-bold text-slate-700 font-vietnam">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Lớp / Giai đoạn của bé</label>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2 font-vietnam">Lớp / Giai đoạn của bé</label>
                     <select id="register-grade-input" class="w-full px-4 py-3.5 rounded-2xl border-2 border-slate-200 focus:border-babyPink focus:outline-none font-bold text-slate-700 bg-white font-vietnam">
                         <option value="Mầm Non">Mầm non / Khởi đầu 🐥</option>
                         <option value="Chậm Nói">Chậm nói / Can thiệp 🦊</option>
@@ -368,7 +416,6 @@
                 <button onclick="handleRegisterAccount()" class="w-full bg-babyPink text-white font-black py-4 rounded-2xl shadow-lg text-lg flex items-center justify-center gap-2 font-vietnam">Tạo tài khoản học tập ✨</button>
             </div>
 
-            <!-- Khối Admin -->
             <div id="form-admin" class="space-y-4 hidden">
                 <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Mật mã quản trị hệ thống</label>
@@ -380,12 +427,12 @@
     </section>
 
     <section id="view-child-app" class="hidden flex-grow flex flex-col relative z-10">
-        <header class="bg-gradient-to-r from-babyPink via-babyPurple to-[#FF8E8E] text-white px-6 py-6 rounded-b-[2.5rem] shadow-xl">
+        <header class="bg-gradient-to-r from-babyPink via-babyPurple to-[#FF8E8E] text-white px-6 py-6 rounded-b-[2.5rem] shadow-xl font-vietnam">
             <div class="max-w-5xl mx-auto flex items-center justify-between">
                 <div>
                     <div class="flex items-center gap-2">
                         <span id="child-grade-badge" class="text-[10px] font-black uppercase tracking-widest bg-white/20 px-3 py-1 rounded-full">Mầm Non</span>
-                        <span id="vip-badge" class="hidden text-[10px] font-black uppercase tracking-widest bg-yellow-400 text-slate-900 px-3 py-1 rounded-full">✨ VIP SPECIAL</span>
+                        <span id="vip-badge" class="hidden text-[10px] font-black uppercase tracking-widest bg-yellow-400 text-slate-900 px-3 py-1 rounded-full font-vietnam">✨ VIP SPECIAL</span>
                     </div>
                     <h2 class="text-xl sm:text-2xl font-black mt-1 flex items-center gap-2">
                         <span>👋 Lớp học của:</span> <span id="display-child-name" class="underline decoration-babyYellow">Bé Học Thử</span>
@@ -398,7 +445,7 @@
 
         <!-- THANH CHUYỂN TAB CHÍNH -->
         <div class="max-w-5xl w-full mx-auto px-4 mt-6">
-            <div class="flex gap-2 bg-white p-2 rounded-2xl custom-shadow border border-slate-50 overflow-x-auto scrollbar-none">
+            <div class="flex gap-2 bg-white p-2 rounded-2xl custom-shadow border border-slate-50 overflow-x-auto scrollbar-none font-vietnam">
                 <button onclick="switchChildTab('practice')" id="tab-btn-practice" class="flex-1 shrink-0 py-3.5 px-4 rounded-xl font-black text-sm flex items-center justify-center gap-1.5 bg-babyPink text-white shadow-md font-vietnam">🗣️ Luyện Nói</button>
                 <button onclick="switchChildTab('learn')" id="tab-btn-learn" class="flex-1 shrink-0 py-3.5 px-4 rounded-xl font-black text-sm flex items-center justify-center gap-1.5 text-slate-500 hover:bg-slate-50 font-vietnam">🔤 Chữ & Số</button>
                 <button onclick="switchChildTab('mathgame')" id="tab-btn-mathgame" class="flex-1 shrink-0 py-3.5 px-4 rounded-xl font-black text-sm flex items-center justify-center gap-1.5 text-slate-500 hover:bg-slate-50 font-vietnam">🧮 Game Toán</button>
@@ -408,11 +455,10 @@
         </div>
 
         <main class="max-w-5xl w-full mx-auto px-4 py-6 flex-grow">
-            <!-- TAB 1: LUYỆN NÓI TIẾNG VIỆT -->
+            <!-- TAB: LUYỆN NÓI -->
             <div id="child-tab-practice" class="space-y-6">
 
-                <!-- MODAL HOẶC BANNER LUYỆN HƠI CHONG CHÓNG -->
-                <div class="bg-gradient-to-r from-teal-500 to-emerald-400 text-white p-6 rounded-[2rem] shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
+                <div class="bg-gradient-to-r from-teal-500 to-emerald-400 text-white p-6 rounded-[2rem] shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6 font-vietnam">
                     <div class="flex items-center gap-4 text-center md:text-left flex-col md:flex-row">
                         <span class="text-6xl animate-bounce">🌬️🎏</span>
                         <div>
@@ -425,10 +471,10 @@
                     </button>
                 </div>
 
-                <div class="bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 text-white p-6 rounded-[2rem] shadow-xl relative overflow-hidden">
+                <div class="bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 text-white p-6 rounded-[2rem] shadow-xl relative overflow-hidden font-vietnam">
                     <div class="flex flex-col md:flex-row items-center justify-between gap-4">
                         <div class="flex items-center gap-4 text-center md:text-left flex-col md:flex-row">
-                            <span class="text-6xl animate-pulse">👩‍🏫</span>
+                            <span class="text-6xl animate-pulse font-vietnam">👩‍🏫</span>
                             <div>
                                 <h3 class="text-xl font-black">Phòng học âm thanh chuẩn sư phạm</h3>
                                 <p id="demo-text-v3-display" class="text-xs text-indigo-100 mt-1.5 max-w-xl italic leading-relaxed"></p>
@@ -440,12 +486,11 @@
                     </div>
                 </div>
 
-                <!-- Lựa chọn giọng nói -->
-                <div class="bg-white p-5 rounded-3xl border border-gray-100 custom-shadow grid grid-cols-1 md:grid-cols-2 gap-4 items-center relative">
+                <div class="bg-white p-5 rounded-3xl border border-gray-100 custom-shadow grid grid-cols-1 md:grid-cols-2 gap-4 items-center relative font-vietnam">
                     <div>
                         <div class="flex justify-between items-center mb-1">
                             <label class="block text-xs font-bold uppercase text-gray-400 tracking-wider font-vietnam">👩 Giọng đọc mẫu phát âm</label>
-                            <span id="network-status-badge" class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-600 border border-emerald-300">Đang trực tuyến 🟢</span>
+                            <span id="network-status-badge" class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-600 border border-emerald-300 font-vietnam">Đang trực tuyến 🟢</span>
                         </div>
                         <select id="voice-select" onchange="saveChildVoicePreference()" class="w-full bg-slate-50 border py-2.5 px-4 rounded-2xl font-semibold text-sm focus:ring-2 focus:ring-babyPink focus:outline-none font-vietnam"></select>
                     </div>
@@ -459,12 +504,11 @@
                 </div>
 
                 <!-- KHU VỰC QUYÊN GÓP / ĐỒNG HÀNH TRỰC QUAN -->
-                <div id="user-donate-card" class="hidden bg-gradient-to-br from-indigo-900 via-indigo-950 to-slate-900 text-white p-6 rounded-[2.5rem] custom-shadow border-4 border-indigo-500/30 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+                <div id="user-donate-card" class="hidden bg-gradient-to-br from-indigo-900 via-indigo-950 to-slate-900 text-white p-6 rounded-[2.5rem] custom-shadow border-4 border-indigo-500/30 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden font-vietnam">
                     <div class="absolute -right-16 -bottom-16 w-48 h-48 bg-indigo-500 rounded-full opacity-10 blur-3xl pointer-events-none"></div>
                     
                     <div class="flex flex-col md:flex-row items-center gap-6 w-full">
-                        <!-- MÔ PHỎNG THẺ NGÂN HÀNG VIP ĐỒNG HÀNH -->
-                        <div class="w-full md:w-80 bg-gradient-to-tr from-rose-500 via-purple-600 to-indigo-600 rounded-3xl p-5 shadow-2xl relative overflow-hidden aspect-[1.58/1] flex flex-col justify-between text-left shrink-0 border border-white/20">
+                        <div class="w-full md:w-80 bg-gradient-to-tr from-rose-500 via-purple-600 to-indigo-600 rounded-3xl p-5 shadow-2xl relative overflow-hidden aspect-[1.58/1] flex flex-col justify-between text-left shrink-0 border border-white/20 font-vietnam">
                             <div class="flex justify-between items-start">
                                 <span class="bg-white/20 text-white font-black text-[9px] px-2.5 py-0.5 rounded-full uppercase tracking-wider font-vietnam">Đồng hành phát triển 💖</span>
                                 <span class="text-xl">💳</span>
@@ -479,24 +523,23 @@
                                     <p id="user-donate-holder" class="text-xs font-black uppercase text-white tracking-wider">CHỦ TÀI KHOẢN</p>
                                 </div>
                                 <div class="text-right">
-                                    <p class="text-[9px] text-white/60 uppercase">Ngân hàng</p>
+                                    <p class="text-[9px] text-white/60 uppercase font-vietnam">Ngân hàng</p>
                                     <p id="user-donate-bank" class="text-xs font-bold text-white uppercase"></p>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- KHU VỰC THÔNG ĐIỆP & NÚT TRỰC QUAN -->
                         <div class="flex-grow w-full space-y-3.5">
                             <div class="space-y-1">
-                                <h3 class="text-xl font-black text-yellow-300">Gieo Mầm Tri Thức Cùng EduKids Smart 🌟</h3>
+                                <h3 class="text-xl font-black text-yellow-300 font-vietnam">Gieo Mầm Tri Thức Cùng EduKids Smart 🌟</h3>
                                 <p id="user-donate-msg" class="text-xs text-indigo-100 leading-relaxed font-medium"></p>
                             </div>
 
                             <div class="flex flex-wrap gap-2 pt-1 font-vietnam">
-                                <button onclick="copyDonationAccount()" class="text-xs bg-white text-indigo-900 font-extrabold px-4 py-2.5 rounded-xl hover:bg-indigo-50 transition-all flex items-center justify-center gap-1">
+                                <button onclick="copyDonationAccount()" class="text-xs bg-white text-indigo-900 font-extrabold px-4 py-2.5 rounded-xl hover:bg-indigo-50 transition-all flex items-center justify-center gap-1 font-vietnam">
                                     Sao chép STK 📋
                                 </button>
-                                <button onclick="openZoomQrModal()" class="text-xs bg-indigo-500/30 hover:bg-indigo-500/40 text-white font-extrabold px-4 py-2.5 rounded-xl border border-indigo-400/40 transition-all flex items-center justify-center gap-1">
+                                <button onclick="openZoomQrModal()" class="text-xs bg-indigo-500/30 hover:bg-indigo-500/40 text-white font-extrabold px-4 py-2.5 rounded-xl border border-indigo-400/40 transition-all flex items-center justify-center gap-1 font-vietnam">
                                     Xem mã QR giao dịch 🔍
                                 </button>
                             </div>
@@ -504,8 +547,8 @@
                     </div>
                 </div>
 
-                <!-- LỘC GIÁO CỤ -->
-                <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+                <!-- LỌC GIÁO CỤ -->
+                <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-none font-vietnam">
                     <button onclick="filterWords('all')" class="word-filter-btn px-5 py-2.5 rounded-full font-bold text-sm bg-babyPink text-white shrink-0 font-vietnam">Tất cả giáo cụ</button>
                     <button onclick="filterWords('family')" class="word-filter-btn px-5 py-2.5 rounded-full font-bold text-sm bg-white border text-gray-600 shrink-0 font-vietnam">Gia đình 🏡</button>
                     <button onclick="filterWords('demand')" class="word-filter-btn px-5 py-2.5 rounded-full font-bold text-sm bg-white border text-gray-600 shrink-0 font-vietnam">Nhu cầu 🍚</button>
@@ -517,9 +560,9 @@
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-6" id="word-grid-container"></div>
             </div>
 
-            <!-- TAB 2: CHỮ & SỐ -->
+            <!-- TAB: CHỮ & SỐ -->
             <div id="child-tab-learn" class="hidden space-y-6">
-                <div class="flex bg-white p-2 rounded-2xl custom-shadow border border-slate-100 max-w-xl mx-auto overflow-x-auto scrollbar-none">
+                <div class="flex bg-white p-2 rounded-2xl custom-shadow border border-slate-100 max-w-xl mx-auto overflow-x-auto scrollbar-none font-vietnam">
                     <button onclick="switchLearnSubTab('alphabet')" id="learn-subtab-btn-alphabet" class="flex-1 shrink-0 py-3 text-center rounded-xl font-black text-sm bg-babyPink text-white px-3 font-vietnam">🔤 Học Chữ Cái</button>
                     <button onclick="switchLearnSubTab('compounds')" id="learn-subtab-btn-compounds" class="flex-1 shrink-0 py-3 text-center rounded-xl font-black text-sm text-gray-500 px-3 font-vietnam">🌟 Tập Từ Ghép</button>
                     <button onclick="switchLearnSubTab('spelling')" id="learn-subtab-btn-spelling" class="flex-1 shrink-0 py-3 text-center rounded-xl font-black text-sm text-gray-500 px-3 font-vietnam">✏️ Thử Thách Chính Tả</button>
@@ -528,18 +571,17 @@
 
                 <!-- Bảng chữ cái kèm Trình chiếu sinh động tích hợp -->
                 <div id="learn-section-alphabet" class="space-y-6">
-                    <!-- Trình Chiếu Sinh Động Chữ Cái -->
-                    <div class="bg-white p-6 rounded-[2.5rem] border-4 border-babyPurple/20 custom-shadow">
+                    <div class="bg-white p-6 rounded-[2.5rem] border-4 border-babyPurple/20 custom-shadow font-vietnam">
                         <div class="text-center mb-4">
                             <span class="text-xs font-black uppercase tracking-widest bg-purple-50 text-purple-600 px-3 py-1 rounded-full font-vietnam">Trình Chiếu Sinh Động Chữ Cái 🌟</span>
                         </div>
                         <div id="showcase-box" class="flex flex-col md:flex-row items-center justify-around gap-6 py-4">
                             <div class="text-center md:text-left space-y-2">
-                                <span id="showcase-letter" class="text-8xl font-black text-babyPink animate-bounce inline-block">A</span>
+                                <span id="showcase-letter" class="text-8xl font-black text-babyPink animate-bounce inline-block font-vietnam">A</span>
                                 <div class="text-5xl" id="showcase-emoji">🍎</div>
                             </div>
                             <div class="space-y-3 max-w-sm">
-                                <h4 id="showcase-title" class="text-2xl font-black text-slate-800">Chữ A</h4>
+                                <h4 id="showcase-title" class="text-2xl font-black text-slate-800 font-vietnam">Chữ A</h4>
                                 <p id="showcase-guideline" class="text-sm text-slate-600 leading-relaxed font-medium">Khẩu hình: Mở rộng khoang miệng tự nhiên, đặt đầu lưỡi thấp rồi bật hơi tròn âm.</p>
                                 <button id="showcase-play-btn" class="bg-babyPink hover:bg-opacity-95 text-white font-black text-xs px-6 py-3 rounded-2xl shadow-md font-vietnam flex items-center gap-1">
                                     <span>🔊</span> Nghe phát âm sư phạm
@@ -551,20 +593,17 @@
                     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4" id="alphabet-grid-container"></div>
                 </div>
 
-                <!-- Từ ghép -->
                 <div id="learn-section-compounds" class="hidden space-y-4">
                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4" id="compounds-grid-container"></div>
                 </div>
 
-                <!-- Thách Thức Chính Tả & Cẩm Nang -->
                 <div id="learn-section-spelling" class="hidden space-y-6">
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                        <!-- Cẩm nang chính tả bên trái -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 font-vietnam">
                         <div class="lg:col-span-7 bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm space-y-4">
                             <div class="flex items-center gap-2 border-b pb-3">
                                 <span class="text-2xl">📖</span>
                                 <div>
-                                    <h4 class="font-black text-lg text-slate-800">Cẩm Nang Quy Tắc Chính Tả Tiếng Việt</h4>
+                                    <h4 class="font-black text-lg text-slate-800 font-vietnam">Cẩm Nang Quy Tắc Chính Tả Tiếng Việt</h4>
                                     <p class="text-xs text-slate-400">Sử dụng font Be Vietnam Pro chuẩn, kết hợp phát âm trực quan</p>
                                 </div>
                             </div>
@@ -572,10 +611,10 @@
                             <div class="space-y-3.5 max-h-[500px] overflow-y-auto pr-1">
                                 <div class="p-4 bg-rose-50/70 hover:bg-rose-50 rounded-2xl border border-rose-100 transition-all">
                                     <div class="flex justify-between items-center mb-1">
-                                        <strong class="text-rose-900 text-sm flex items-center gap-1"><span>1.</span> Luật viết Gờ Đơn (g) / Gờ Kép (gh):</strong>
+                                        <strong class="text-rose-900 text-sm flex items-center gap-1 font-vietnam">1. Luật viết Gờ Đơn (g) / Gờ Kép (gh):</strong>
                                         <button onclick="speakWord('Chữ ghờ kép chỉ đứng trước i, e, ê', null)" class="text-xs bg-rose-200 text-rose-800 font-bold px-2 py-1 rounded-lg">🔊 Nghe</button>
                                     </div>
-                                    <p class="text-xs text-slate-600 leading-relaxed">
+                                    <p class="text-xs text-slate-600 leading-relaxed font-vietnam">
                                         Viết là <strong class="text-rose-600">gh</strong> khi đứng ngay trước các nguyên âm <strong class="text-rose-600">i, e, ê</strong>.<br>
                                         Các trường hợp nguyên âm khác viết là <strong class="text-slate-800">g</strong>.
                                     </p>
@@ -583,10 +622,10 @@
 
                                 <div class="p-4 bg-blue-50/70 hover:bg-blue-50 rounded-2xl border border-blue-100 transition-all">
                                     <div class="flex justify-between items-center mb-1">
-                                        <strong class="text-blue-900 text-sm flex items-center gap-1"><span>2.</span> Luật viết Ngờ Đơn (ng) / Ngờ Kép (ngh):</strong>
+                                        <strong class="text-blue-900 text-sm flex items-center gap-1 font-vietnam">2. Luật viết Ngờ Đơn (ng) / Ngờ Kép (ngh):</strong>
                                         <button onclick="speakWord('Chữ nghờ kép chỉ đứng trước i, e, ê', null)" class="text-xs bg-blue-200 text-blue-800 font-bold px-2 py-1 rounded-lg font-vietnam">🔊 Nghe</button>
                                     </div>
-                                    <p class="text-xs text-slate-600 leading-relaxed">
+                                    <p class="text-xs text-slate-600 leading-relaxed font-vietnam">
                                         Chỉ viết chữ <strong class="text-blue-600">ngh</strong> đứng trước nguyên âm <strong class="text-blue-600">i, e, ê</strong>.<br>
                                         Ngược lại, viết là <strong class="text-slate-800">ng</strong> đơn.
                                     </p>
@@ -594,101 +633,270 @@
 
                                 <div class="p-4 bg-emerald-50/70 hover:bg-emerald-50 rounded-2xl border border-emerald-100 transition-all">
                                     <div class="flex justify-between items-center mb-1">
-                                        <strong class="text-emerald-900 text-sm flex items-center gap-1"><span>3.</span> Luật viết Cờ (c), Ka (k) hay Quờ (q):</strong>
+                                        <strong class="text-emerald-900 text-sm flex items-center gap-1 font-vietnam">3. Luật viết Cờ (c), Ka (k) hay Quờ (q):</strong>
                                         <button onclick="speakWord('Âm cờ viết là k khi trước i, e, ê. Viết là q trước u', null)" class="text-xs bg-emerald-200 text-emerald-800 font-bold px-2 py-1 rounded-lg font-vietnam">🔊 Nghe</button>
                                     </div>
-                                    <p class="text-xs text-slate-600 leading-relaxed">
-                                        • Viết là <strong class="text-emerald-600">k</strong> trước nguyên âm <strong class="text-emerald-600">i, e, ê</strong>.<br>
-                                        • Viết là <strong class="text-emerald-600">q</strong> khi đứng trước âm đệm <strong class="text-emerald-600">u</strong>.<br>
-                                        • Các nguyên âm còn lại đều viết là <strong class="text-slate-800">c</strong>.
+                                    <p class="text-xs text-slate-600 leading-relaxed font-medium font-vietnam">
+                                        • Viết là <strong class="text-emerald-600 font-vietnam">k</strong> trước nguyên âm <strong class="text-emerald-600 font-vietnam">i, e, ê</strong>.<br>
+                                        • Viết là <strong class="text-emerald-600 font-vietnam">q</strong> khi đứng trước âm đệm <strong class="text-emerald-600 font-vietnam">u</strong>.<br>
+                                        • Các nguyên âm còn lại đều viết là <strong class="text-slate-800 font-vietnam">c</strong>.
                                     </p>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Trò chơi trắc nghiệm chính tả bên phải -->
-                        <div class="lg:col-span-5 bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col justify-between">
+                        <div class="lg:col-span-5 bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col justify-between font-vietnam">
                             <div>
-                                <div class="flex justify-between items-center mb-4">
+                                <div class="flex justify-between items-center mb-4 font-vietnam">
                                     <span class="text-[10px] font-black uppercase text-purple-600 tracking-wider font-vietnam">Luyện Chính Tả</span>
-                                    <span id="spelling-score-badge" class="bg-purple-100 text-purple-700 text-xs px-3 py-1 rounded-full font-bold">Điểm số: 0</span>
+                                    <span id="spelling-score-badge" class="bg-purple-100 text-purple-700 text-xs px-3 py-1 rounded-full font-bold font-vietnam">Điểm số: 0</span>
                                 </div>
                                 <div class="text-center py-6 space-y-4">
                                     <div class="text-6xl animate-bounce">✏️🦉</div>
-                                    <h4 class="text-xl font-black text-slate-800 leading-relaxed" id="spelling-question-text">Đang tải...</h4>
-                                    <p class="text-xs text-gray-400 italic font-medium" id="spelling-question-tip"></p>
+                                    <h4 class="text-xl font-black text-slate-800 leading-relaxed font-vietnam" id="spelling-question-text">Đang tải...</h4>
+                                    <p class="text-xs text-gray-400 italic font-medium font-vietnam" id="spelling-question-tip"></p>
                                 </div>
                             </div>
                             <div>
-                                <div class="grid grid-cols-2 gap-3" id="spelling-options-box"></div>
+                                <div class="grid grid-cols-2 gap-3 font-vietnam" id="spelling-options-box"></div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Đếm số -->
                 <div id="learn-section-numbers" class="hidden space-y-6">
-                    <div class="flex gap-2 overflow-x-auto pb-1 justify-center scrollbar-none">
+                    <div class="flex gap-2 overflow-x-auto pb-1 justify-center scrollbar-none font-vietnam">
                         <button onclick="selectNumberRange(1, 20)" class="num-range-btn px-5 py-2.5 rounded-full font-bold text-xs bg-babyBlue text-white shrink-0 font-vietnam">Số 1 - 20</button>
                         <button onclick="selectNumberRange(21, 40)" class="num-range-btn px-5 py-2.5 rounded-full font-bold text-xs bg-white border text-gray-600 shrink-0 font-vietnam">Số 21 - 40</button>
                         <button onclick="selectNumberRange(41, 60)" class="num-range-btn px-5 py-2.5 rounded-full font-bold text-xs bg-white border text-gray-600 shrink-0 font-vietnam">Số 41 - 60</button>
                         <button onclick="selectNumberRange(61, 80)" class="num-range-btn px-5 py-2.5 rounded-full font-bold text-xs bg-white border text-gray-600 shrink-0 font-vietnam">Số 61 - 80</button>
                         <button onclick="selectNumberRange(81, 100)" class="num-range-btn px-5 py-2.5 rounded-full font-bold text-xs bg-white border text-gray-600 shrink-0 font-vietnam">Số 81 - 100</button>
                     </div>
-                    <div class="bg-white p-6 rounded-3xl custom-shadow">
+                    <div class="bg-white p-6 rounded-3xl custom-shadow font-vietnam">
                         <div class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-10 gap-4 font-vietnam" id="numbers-grid-container"></div>
                     </div>
                 </div>
             </div>
 
+            <!-- TAB: GAME TOÁN -->
             <div id="child-tab-mathgame" class="hidden space-y-6">
-                <div id="math-game-intro" class="bg-gradient-to-r from-amber-400 to-orange-500 text-white p-8 rounded-3xl custom-shadow text-center space-y-4">
-                    <span class="text-7xl">🏰🦖</span>
-                    <h3 class="text-2xl font-black">Khủng Long Qua Sông - Phản Xạ Toán Học</h3>
-                    <p class="text-sm text-white/90 max-w-xl mx-auto leading-relaxed">Giúp chú khủng long qua sông bằng cách giải nhanh các phép toán trong 60 giây nhé!</p>
-                    <div class="bg-white/20 inline-block px-6 py-2.5 rounded-full font-bold text-sm font-vietnam">🏆 Kỷ lục của con: <span id="math-high-score-display" class="text-babyYellow font-black text-lg">0</span> điểm</div>
-                    <div><button onclick="startMathGame()" class="bg-white text-orange-600 font-black px-10 py-4 rounded-2xl shadow-xl hover:scale-105 transition-all text-lg font-vietnam">CHƠI NGAY 🎮</button></div>
+                <!-- Thanh Subtab Toán Học Tinh Gọn -->
+                <div class="flex bg-white p-2 rounded-2xl custom-shadow border border-slate-100 max-w-md mx-auto overflow-x-auto scrollbar-none font-vietnam">
+                    <button onclick="switchMathSubTab('dino')" id="math-subtab-btn-dino" class="flex-1 shrink-0 py-3 text-center rounded-xl font-black text-sm bg-babyPink text-white px-3 font-vietnam">🦖 Khủng Long Qua Sông</button>
+                    <button onclick="switchMathSubTab('tables')" id="math-subtab-btn-tables" class="flex-1 shrink-0 py-3 text-center rounded-xl font-black text-sm text-gray-500 px-3 font-vietnam">🧮 Bảng Cửu Chương</button>
                 </div>
 
-                <div id="math-game-active" class="hidden bg-white p-6 md:p-8 rounded-3xl border-4 border-orange-200 custom-shadow relative">
-                    <div class="flex justify-between items-center mb-6">
-                        <div class="flex items-center gap-2">
-                            <span class="text-2xl">⏳</span>
-                            <span class="text-lg font-bold text-slate-500 font-vietnam">Thời gian:</span>
-                            <span id="math-timer" class="text-2xl font-black text-rose-500">60</span>s
+                <!-- SUBTAB 1: KHỦNG LONG QUA SÔNG -->
+                <div id="math-section-dino" class="space-y-6 font-vietnam">
+                    <div id="math-game-intro" class="bg-gradient-to-r from-amber-400 to-orange-500 text-white p-8 rounded-3xl custom-shadow text-center space-y-4">
+                        <span class="text-7xl">🦖🏰</span>
+                        <h3 class="text-2xl font-black">Khủng Long Qua Sông - Phản Xạ Toán Học</h3>
+                        <p class="text-sm text-white/90 max-w-xl mx-auto leading-relaxed">Giúp chú khủng long qua sông bằng cách giải nhanh các phép toán trong 60 giây nhé!</p>
+                        <div class="bg-white/20 inline-block px-6 py-2.5 rounded-full font-bold text-sm font-vietnam">🏆 Kỷ lục của con: <span id="math-high-score-display" class="text-babyYellow font-black text-lg font-vietnam">0</span> điểm</div>
+                        <div><button onclick="startMathGame()" class="bg-white text-orange-600 font-black px-10 py-4 rounded-2xl shadow-xl hover:scale-105 transition-all text-lg font-vietnam">CHƠI NGAY 🎮</button></div>
+                    </div>
+
+                    <div id="math-game-active" class="hidden bg-white p-6 md:p-8 rounded-3xl border-4 border-orange-200 custom-shadow relative font-vietnam">
+                        <div class="flex justify-between items-center mb-6 font-vietnam">
+                            <div class="flex items-center gap-2">
+                                <span class="text-2xl">⏳</span>
+                                <span class="text-lg font-bold text-slate-500 font-vietnam">Thời gian:</span>
+                                <span id="math-timer" class="text-2xl font-black text-rose-500 font-vietnam">60</span>s
+                            </div>
+                            <div class="bg-orange-100 text-orange-700 px-4 py-2 rounded-2xl font-black text-lg font-vietnam">⭐ Điểm: <span id="math-score">0</span></div>
                         </div>
-                        <div class="bg-orange-100 text-orange-700 px-4 py-2 rounded-2xl font-black text-lg font-vietnam">⭐ Điểm: <span id="math-score">0</span></div>
+                        <div class="bg-sky-50 h-32 rounded-2xl flex items-center justify-between px-10 relative overflow-hidden mb-6 font-vietnam">
+                            <div class="text-6xl animate-bounce" id="game-dino">🦖</div>
+                            <div class="flex gap-2"><span class="text-3xl opacity-20">🌊</span><span class="text-3xl opacity-20">🌊</span></div>
+                            <div class="text-6xl" id="game-castle">🏰</div>
+                        </div>
+                        <div class="text-center py-6 font-vietnam">
+                            <div class="text-xs font-bold text-orange-500 uppercase tracking-widest mb-1">Tính phản xạ nhanh:</div>
+                            <div id="math-question-text" class="text-5xl font-black text-slate-800 tracking-wider"></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 mt-6 font-vietnam">
+                            <button onclick="answerMathQuestion(0)" id="math-opt-0" class="py-5 bg-slate-50 hover:bg-orange-50 font-black text-2xl rounded-2xl border-2 transition-all shadow-md"></button>
+                            <button onclick="answerMathQuestion(1)" id="math-opt-1" class="py-5 bg-slate-50 hover:bg-orange-50 font-black text-2xl rounded-2xl border-2 transition-all shadow-md"></button>
+                            <button onclick="answerMathQuestion(2)" id="math-opt-2" class="py-5 bg-slate-50 hover:bg-orange-50 font-black text-2xl rounded-2xl border-2 transition-all shadow-md"></button>
+                            <button onclick="answerMathQuestion(3)" id="math-opt-3" class="py-5 bg-slate-50 hover:bg-orange-50 font-black text-2xl rounded-2xl border-2 transition-all shadow-md"></button>
+                        </div>
+                        <div class="flex justify-center mt-6"><button onclick="quitMathGame()" class="text-slate-400 hover:text-rose-500 font-bold text-xs uppercase tracking-wider font-vietnam">Thoát lưu điểm số 🏳️</button></div>
                     </div>
-                    <div class="bg-sky-50 h-32 rounded-2xl flex items-center justify-between px-10 relative overflow-hidden mb-6">
-                        <div class="text-6xl animate-bounce" id="game-dino">🦖</div>
-                        <div class="flex gap-2"><span class="text-3xl opacity-20">🌊</span><span class="text-3xl opacity-20">🌊</span></div>
-                        <div class="text-6xl" id="game-castle">🏰</div>
+                </div>
+
+                <!-- SUBTAB 2: HỌC & LUYỆN TẬP BẢNG CỬU CHƯƠNG -->
+                <div id="math-section-tables" class="hidden space-y-6">
+                    <!-- Premium Header Card for Bảng Cửu Chương -->
+                    <div class="bg-gradient-to-r from-emerald-500 to-teal-600 text-white p-6 rounded-3xl custom-shadow flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <div class="flex items-center gap-3">
+                            <span class="text-4xl">📊</span>
+                            <div>
+                                <h2 class="text-xl font-black font-vietnam">Học & Luyện Tập Bảng Cửu Chương</h2>
+                                <span class="text-xs text-emerald-100 font-extrabold bg-white/20 px-2.5 py-0.5 rounded-full font-vietnam">Bảng Nhân và Bảng Chia (2 đến 9)</span>
+                            </div>
+                        </div>
+                        <div class="flex bg-white/20 p-1 rounded-xl font-vietnam">
+                            <button id="times-table-btn-learn" onclick="switchTimesTableTab('learn')" class="px-4 py-1.5 rounded-lg text-xs font-black bg-white text-emerald-800 shadow transition-all">📖 Tra Cứu</button>
+                            <button id="times-table-btn-practice" onclick="switchTimesTableTab('practice')" class="px-4 py-1.5 rounded-lg text-xs font-black text-white transition-all">🎯 Luyện Tập</button>
+                        </div>
                     </div>
-                    <div class="text-center py-6">
-                        <div class="text-xs font-bold text-orange-500 uppercase tracking-widest mb-1 font-vietnam">Tính phản xạ nhanh:</div>
-                        <div id="math-question-text" class="text-5xl font-black text-slate-800 tracking-wider"></div>
+
+                    <!-- TAB 1: TRA CỨU BẢNG CỬU CHƯƠNG -->
+                    <div id="times-table-learn-area" class="space-y-6">
+                        <!-- Select table number -->
+                        <div class="bg-white p-5 rounded-3xl border-2 border-emerald-100 shadow-sm">
+                            <h3 class="font-black text-slate-700 mb-3 text-center sm:text-left text-sm uppercase tracking-wider font-vietnam">Chọn Bảng Cửu Chương Con Muốn Học:</h3>
+                            <div id="times-table-selector-box" class="grid grid-cols-4 sm:grid-cols-8 gap-2 font-vietnam">
+                                <!-- Injected dynamically: Bảng 2 to 9 -->
+                            </div>
+                        </div>
+
+                        <!-- Display table contents -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch font-vietnam">
+                            <!-- Multiplication table card -->
+                            <div class="bg-white rounded-3xl border-4 border-emerald-300 p-6 shadow-md flex flex-col">
+                                <div class="flex items-center justify-between border-b-2 border-emerald-100 pb-3 mb-4 font-vietnam">
+                                    <h4 class="font-black text-emerald-800 text-lg flex items-center gap-1.5 font-vietnam">
+                                        ✖️ Bảng Nhân <span id="times-table-multi-num" class="text-2xl font-black text-emerald-500">2</span>
+                                    </h4>
+                                    <div class="flex items-center gap-2">
+                                        <button id="auto-read-multi-btn" onclick="toggleAutoReadTable('multi')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition-all shadow-sm flex items-center gap-1 font-vietnam">
+                                            <span>📢</span> Đọc Bảng Nhân
+                                        </button>
+                                        <span class="text-[10px] font-bold text-slate-400 font-vietnam hidden sm:inline">Nghe đọc 🔊</span>
+                                    </div>
+                                </div>
+                                <div id="times-table-multi-list" class="space-y-2 flex-grow flex flex-col justify-center font-vietnam">
+                                    <!-- Injected rows of multiplication -->
+                                </div>
+                            </div>
+
+                            <!-- Division table card -->
+                            <div class="bg-white rounded-3xl border-4 border-teal-300 p-6 shadow-md flex flex-col">
+                                <div class="flex items-center justify-between border-b-2 border-teal-100 pb-3 mb-4 font-vietnam">
+                                    <h4 class="font-black text-teal-800 text-lg flex items-center gap-1.5 font-vietnam">
+                                        ➗ Bảng Chia <span id="times-table-div-num" class="text-2xl font-black text-teal-500">2</span>
+                                    </h4>
+                                    <div class="flex items-center gap-2">
+                                        <button id="auto-read-div-btn" onclick="toggleAutoReadTable('div')" class="bg-teal-600 hover:bg-teal-700 text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition-all shadow-sm flex items-center gap-1 font-vietnam">
+                                            <span>📢</span> Đọc Bảng Chia
+                                        </button>
+                                        <span class="text-[10px] font-bold text-slate-400 font-vietnam hidden sm:inline">Nghe đọc 🔊</span>
+                                    </div>
+                                </div>
+                                <div id="times-table-div-list" class="space-y-2 flex-grow flex flex-col justify-center font-vietnam">
+                                    <!-- Injected rows of division -->
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="grid grid-cols-2 gap-4 mt-6">
-                        <button onclick="answerMathQuestion(0)" id="math-opt-0" class="py-5 bg-slate-50 hover:bg-orange-50 font-black text-2xl rounded-2xl border-2 transition-all shadow-md"></button>
-                        <button onclick="answerMathQuestion(1)" id="math-opt-1" class="py-5 bg-slate-50 hover:bg-orange-50 font-black text-2xl rounded-2xl border-2 transition-all shadow-md"></button>
-                        <button onclick="answerMathQuestion(2)" id="math-opt-2" class="py-5 bg-slate-50 hover:bg-orange-50 font-black text-2xl rounded-2xl border-2 transition-all shadow-md"></button>
-                        <button onclick="answerMathQuestion(3)" id="math-opt-3" class="py-5 bg-slate-50 hover:bg-orange-50 font-black text-2xl rounded-2xl border-2 transition-all shadow-md"></button>
+
+                    <!-- TAB 2: LUYỆN TẬP CỬU CHƯƠNG -->
+                    <div id="times-table-practice-area" class="hidden space-y-6">
+                        <!-- Settings View -->
+                        <div id="times-table-practice-settings" class="bg-white rounded-3xl border-2 border-emerald-100 p-6 shadow-md space-y-6 max-w-2xl mx-auto">
+                            <div class="text-center space-y-2">
+                                <span class="text-5xl inline-block bouncy">🎯⚡</span>
+                                <h3 class="font-black text-xl text-slate-800 font-vietnam">Thử Thách Luyện Tập Trực Tuyến</h3>
+                                <p class="text-xs text-slate-400 font-bold font-vietnam">Luyện phản xạ nhanh giúp con tính toán thần tốc trên lớp!</p>
+                            </div>
+
+                            <div class="space-y-4 font-vietnam">
+                                <!-- Select Mode -->
+                                <div>
+                                    <label class="block text-xs font-black text-slate-500 uppercase tracking-wider mb-2 font-vietnam">1. Chọn Phép Tính:</label>
+                                    <div class="grid grid-cols-3 gap-2">
+                                        <button onclick="setTimesTablePracticeType('multi')" id="btn-practice-type-multi" class="practice-type-btn py-3 rounded-xl border-2 font-black text-xs sm:text-sm border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm transition-all font-vietnam font-vietnam">✖️ Phép Nhân</button>
+                                        <button onclick="setTimesTablePracticeType('div')" id="btn-practice-type-div" class="practice-type-btn py-3 rounded-xl border-2 font-black text-xs sm:text-sm border-slate-100 bg-slate-50 text-slate-600 transition-all font-vietnam">➗ Phép Chia</button>
+                                        <button onclick="setTimesTablePracticeType('both')" id="btn-practice-type-both" class="practice-type-btn py-3 rounded-xl border-2 font-black text-xs sm:text-sm border-slate-100 bg-slate-50 text-slate-600 transition-all font-vietnam">🔄 Trộn Cả Hai</button>
+                                    </div>
+                                </div>
+
+                                <!-- Choose tables -->
+                                <div>
+                                    <label class="block text-xs font-black text-slate-500 uppercase tracking-wider mb-2 font-vietnam">2. Chọn Các Bảng Muốn Luyện (Bấm để bật/tắt):</label>
+                                    <div id="times-table-practice-selection-box" class="grid grid-cols-4 sm:grid-cols-8 gap-2 font-vietnam">
+                                        <!-- Injected dynamically: Bảng 2 to 9 -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="pt-4 border-t border-slate-100 text-center font-vietnam">
+                                <button onclick="generateTimesTableQuiz()" class="px-8 py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-lg rounded-2xl shadow-md hover:shadow-lg transform hover:scale-[1.03] transition-all flex items-center gap-2 mx-auto font-vietnam">
+                                    ⚡ Bắt Đầu Thử Thách Ngay
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Active Arena View -->
+                        <div id="times-table-practice-arena" class="hidden max-w-xl mx-auto bg-white rounded-3xl border-4 border-emerald-400 p-6 shadow-xl space-y-6 relative font-vietnam">
+                            <!-- Progress meter -->
+                            <div class="flex items-center justify-between text-xs text-slate-400 font-extrabold uppercase font-vietnam">
+                                <span>Tiến Độ Luyện Tập</span>
+                                <span id="times-table-q-progress">1 / 10</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                                <div id="times-table-q-progress-bar" class="bg-emerald-500 h-full transition-all" style="width: 10%"></div>
+                            </div>
+
+                            <!-- Question box -->
+                            <div id="times-table-q-box" class="text-center py-6 space-y-4 font-vietnam">
+                                <!-- Dynamic Equation -->
+                            </div>
+
+                            <!-- Options -->
+                            <div id="times-table-options-grid" class="grid grid-cols-2 gap-3 font-vietnam">
+                                <!-- Injected buttons -->
+                            </div>
+
+                            <!-- Voice assistant correction panel -->
+                            <div id="times-table-corr-box" class="hidden p-4 rounded-2xl bg-teal-50 border border-teal-200 text-slate-700 text-sm space-y-1 font-vietnam">
+                                <p class="font-black text-teal-800 flex items-center gap-1">🔊 AI Voice Giải Thích:</p>
+                                <p id="times-table-corr-text" class="font-bold leading-relaxed"></p>
+                            </div>
+
+                            <!-- Footer actions -->
+                            <div class="flex justify-end pt-4 border-t border-slate-100 font-vietnam">
+                                <button id="times-table-btn-next" onclick="nextTimesTableQuestion()" class="hidden px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-xl transition-all shadow font-vietnam">
+                                    Câu Tiếp Theo ➡️
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Summary Result View -->
+                        <div id="times-table-practice-summary" class="hidden max-w-sm mx-auto bg-white rounded-3xl border-4 border-emerald-400 p-6 shadow-xl text-center space-y-6 font-vietnam">
+                            <span id="times-table-summary-medal" class="text-6xl bouncy inline-block">🎉</span>
+                            <h3 class="font-black text-2xl text-slate-800 font-vietnam">KẾT QUẢ THỬ THÁCH</h3>
+                            <p id="times-table-summary-msg" class="text-xs text-slate-500 font-bold leading-relaxed">Con đã rèn luyện phản xạ cửu chương xuất sắc!</p>
+
+                            <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100 text-center font-vietnam">
+                                <div class="border-r border-slate-200">
+                                    <span class="block text-[10px] text-slate-400 font-extrabold uppercase">Đúng</span>
+                                    <span id="times-table-summary-correct" class="text-2xl font-black text-emerald-500 font-vietnam">10 / 10</span>
+                                </div>
+                                <div>
+                                    <span class="block text-[10px] text-slate-400 font-extrabold uppercase font-vietnam">Thưởng Sao</span>
+                                    <span id="times-table-summary-stars" class="text-2xl font-black text-yellow-500">+10 ⭐</span>
+                                </div>
+                            </div>
+                            
+                            <button onclick="restartTimesTablePractice()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-3 rounded-2xl shadow transition-all font-vietnam">Luyện tập lại 🔄</button>
+                        </div>
                     </div>
-                    <div class="flex justify-center mt-6"><button onclick="quitMathGame()" class="text-slate-400 hover:text-rose-500 font-bold text-xs uppercase tracking-wider font-vietnam">Thoát lưu điểm số 🏳️</button></div>
                 </div>
             </div>
 
-            <!-- TAB 4: SÀNG LỌC PHÁT TRIỂN M-CHAT-R/F -->
+            <!-- TAB: SÀNG LỌC HÀNH VI -->
             <div id="child-tab-quiz" class="hidden space-y-6">
-                <div id="screening-intro" class="bg-white p-6 md:p-8 rounded-[2.5rem] custom-shadow text-center space-y-4 border border-slate-100">
+                <div id="screening-intro" class="bg-white p-6 md:p-8 rounded-[2.5rem] custom-shadow text-center space-y-4 border border-slate-100 font-vietnam">
                     <span class="text-7xl">🧠👶📋</span>
                     <h3 class="text-2xl font-black text-slate-800">Sàng Lọc Chậm Phát Triển & Ngôn Ngữ M-CHAT-R/F</h3>
                     <p class="text-sm text-gray-500 max-w-xl mx-auto leading-relaxed">Công cụ sàng lọc dựa theo bảng kiểm hành vi quốc tế M-CHAT-R/F giúp phát hiện sớm nguy cơ tự kỷ và chậm ngôn ngữ ở trẻ từ 16 - 30 tháng tuổi.</p>
-                    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 max-w-md mx-auto text-left text-xs text-amber-700"><strong>⚠️ LƯU Ý QUAN TRỌNG:</strong> Đây chỉ là bảng kiểm sàng lọc hành vi hỗ trợ cha mẹ tham khảo để can thiệp sớm, không thay thế hoàn toàn chẩn đoán lâm sàng của bác sĩ nhi khoa.</div>
+                    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 max-w-md mx-auto text-left text-xs text-amber-700 font-vietnam"><strong>⚠️ LƯU Ý QUAN TRỌNG:</strong> Đây chỉ là bảng kiểm sàng lọc hành vi hỗ trợ cha mẹ tham khảo để can thiệp sớm, không thay thế hoàn toàn chẩn đoán lâm sàng của bác sĩ nhi khoa.</div>
                     <div><button onclick="startScreeningTest()" class="bg-babyPurple text-white font-black px-10 py-4 rounded-2xl shadow-xl shadow-babyPurple/10 font-vietnam">Bắt đầu khảo sát hành vi ➔</button></div>
                 </div>
                 
-                <div id="screening-workspace" class="hidden bg-white p-6 md:p-8 rounded-3xl custom-shadow border-2 border-slate-100">
+                <div id="screening-workspace" class="hidden bg-white p-6 md:p-8 rounded-3xl custom-shadow border-2 border-slate-100 font-vietnam">
                     <div class="flex justify-between items-center mb-4">
                         <span class="text-xs font-bold text-babyPurple uppercase font-vietnam">Hãy chọn phản xạ sát nhất với con hằng ngày</span>
                         <span id="screening-counter" class="text-sm font-black text-babyPurple font-vietnam"></span>
@@ -696,7 +904,7 @@
                     <div class="w-full bg-slate-100 h-3 rounded-full mb-8 overflow-hidden">
                         <div id="screening-progress-bar" class="bg-babyPurple h-full rounded-full transition-all duration-300"></div>
                     </div>
-                    <div class="min-h-[140px] flex flex-col justify-center text-center space-y-3">
+                    <div class="min-h-[140px] flex flex-col justify-center text-center space-y-3 font-vietnam">
                         <span class="text-5xl">📋</span>
                         <p id="screening-question-text" class="text-lg md:text-xl font-extrabold text-slate-800 max-w-2xl mx-auto"></p>
                         <p id="screening-significance-text" class="text-xs text-slate-400 font-bold italic"></p>
@@ -704,14 +912,14 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8" id="screening-options-container"></div>
                 </div>
 
-                <div id="screening-results" class="hidden space-y-6">
-                    <div class="bg-white p-6 md:p-8 rounded-3xl custom-shadow text-center">
+                <div id="screening-results" class="hidden space-y-6 font-vietnam">
+                    <div class="bg-white p-6 md:p-8 rounded-3xl custom-shadow text-center font-vietnam">
                         <span class="text-6xl">📊</span>
                         <h3 class="text-2xl font-black mt-3 text-slate-800">Kết Quả Đánh Giá Biểu Hiện</h3>
                         <div id="screening-classification-banner" class="mt-6 py-4 px-6 rounded-2xl font-black text-lg max-w-xl mx-auto"></div>
                         
                         <div class="my-4">
-                            <span class="text-slate-500 font-bold">Điểm rủi ro hành vi:</span>
+                            <span class="text-slate-500 font-bold font-vietnam">Điểm rủi ro hành vi:</span>
                             <span id="asd-score-display" class="text-2xl font-black text-rose-500 ml-1">0</span>/40
                             <div class="w-48 bg-slate-100 h-3 rounded-full mx-auto mt-2 overflow-hidden border">
                                 <div id="asd-progress" class="bg-rose-500 h-full rounded-full" style="width: 0%"></div>
@@ -720,7 +928,7 @@
                         
                         <div class="grid grid-cols-1 max-w-xl mx-auto my-6 bg-slate-50 p-6 rounded-2xl border text-left">
                             <h4 class="font-extrabold text-slate-800 flex items-center gap-2 mb-3"><span>💡</span> Phân Tích Hành Vi & Định Hướng</h4>
-                            <div id="screening-analysis-text" class="text-xs text-slate-600 leading-relaxed font-medium space-y-2"></div>
+                            <div id="screening-analysis-text" class="text-xs text-slate-600 leading-relaxed font-medium space-y-2 font-vietnam"></div>
                         </div>
                         
                         <div class="flex justify-center mt-8"><button onclick="startScreeningTest()" class="bg-babyPurple text-white font-black px-8 py-3.5 rounded-2xl text-sm shadow-md font-vietnam">Làm lại bài khảo sát 🔄</button></div>
@@ -728,26 +936,23 @@
                 </div>
             </div>
 
-            <!-- TAB 5: LỘ TRÌNH 30 NGÀY BẬT ÂM -->
+            <!-- TAB: LỘ TRÌNH 30 NGÀY -->
             <div id="child-tab-journey" class="hidden space-y-6">
-                <!-- Tiến độ hành trình -->
-                <div class="bg-white p-6 rounded-[2rem] custom-shadow border border-slate-50 flex flex-col md:flex-row items-center justify-between gap-6">
+                <div class="bg-white p-6 rounded-[2rem] custom-shadow border border-slate-50 flex flex-col md:flex-row items-center justify-between gap-6 font-vietnam">
                     <div class="text-center md:text-left">
-                        <h3 class="text-2xl font-black text-slate-800">Hành trình tích lũy: <span id="journey-progress-text" class="text-babyPink font-bold">0 / 30 ngày</span></h3>
-                        <p class="text-xs text-gray-400 mt-1">Ba mẹ rèn luyện cùng con đạt tối thiểu 1 ngôi sao vàng phát âm mỗi ngày nhé!</p>
+                        <h3 class="text-2xl font-black text-slate-800 font-vietnam">Hành trình tích lũy: <span id="journey-progress-text" class="text-babyPink font-bold">0 / 30 ngày</span></h3>
+                        <p class="text-xs text-gray-400 mt-1 font-vietnam">Ba mẹ rèn luyện cùng con đạt tối thiểu 1 ngôi sao vàng phát âm mỗi ngày nhé!</p>
                     </div>
                     <div class="w-full md:w-56 bg-slate-100 h-4 rounded-full overflow-hidden border shadow-inner"><div id="journey-progress-bar" class="bg-babyBlue h-full rounded-full transition-all" style="width: 0%"></div></div>
                 </div>
 
-                <!-- Bảng Bản Đồ Lộ Trình 30 Ngày -->
                 <div class="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-10 gap-3.5 font-vietnam" id="journey-grid-container"></div>
                 
-                <!-- Hộp Chi Tiết Nhiệm Vụ Ngày -->
-                <div id="journey-detail-box" class="bg-white p-6 md:p-8 rounded-[2.5rem] custom-shadow border-2 border-babyPink/20 space-y-5 hidden">
+                <div id="journey-detail-box" class="bg-white p-6 md:p-8 rounded-[2.5rem] custom-shadow border-2 border-babyPink/20 space-y-5 hidden font-vietnam">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4">
                         <div>
                             <span class="bg-babyPink/10 text-babyPink text-xs font-black px-3 py-1 rounded-full uppercase font-vietnam" id="selected-day-stage">Giai đoạn 1</span>
-                            <h4 class="text-2xl font-black text-slate-800 mt-1" id="selected-day-title">Nhiệm vụ Ngày 1</h4>
+                            <h4 class="text-2xl font-black text-slate-800 mt-1 font-vietnam" id="selected-day-title">Nhiệm vụ Ngày 1</h4>
                         </div>
                         <button onclick="toggleDayCompleted()" id="btn-complete-day" class="bg-babyBlue text-white font-extrabold px-6 py-3 rounded-2xl shadow-lg flex items-center justify-center gap-2 font-vietnam"><span>✅</span> Đánh dấu hoàn thành</button>
                     </div>
@@ -764,7 +969,7 @@
                             </div>
                             <div>
                                 <span class="text-xs font-bold uppercase text-gray-400 tracking-wider">Cẩm nang hướng dẫn cho ba mẹ</span>
-                                <p id="selected-day-guide" class="text-sm text-slate-600 leading-relaxed mt-1 font-medium"></p>
+                                <p id="selected-day-guide" class="text-sm text-slate-600 leading-relaxed mt-1 font-medium font-vietnam"></p>
                             </div>
                         </div>
                     </div>
@@ -773,21 +978,22 @@
         </main>
     </section>
 
-    <!-- BẢNG ĐIỀU KHIỂN QUẢN TRỊ ADMIN -->
+    <!-- ADMIN VIEW -->
     <section id="view-admin-app" class="hidden flex-grow flex flex-col relative z-10">
         <header class="bg-slate-900 text-white px-6 py-8 rounded-b-[2.5rem] shadow-2xl font-vietnam">
             <div class="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h2 class="text-3xl font-black text-white">Quản Trị Viên EduKids</h2>
-                    <p class="text-gray-400 text-xs mt-1 font-bold font-vietnam">Quản lý lớp học sinh, cấu hình kết nối API Viettel AI và quyên góp</p>
+                    <p class="text-gray-400 text-xs mt-1 font-bold font-vietnam">Quản lý lớp học sinh, giáo cụ từ vựng, cấu hình kết nối API Viettel AI</p>
                 </div>
-                <button onclick="logout()" class="bg-white/15 hover:bg-white/20 px-5 py-2.5 rounded-xl text-sm font-bold transition-all">Đóng Phiên</button>
+                <button onclick="logout()" class="bg-white/15 hover:bg-white/20 px-5 py-2.5 rounded-xl text-sm font-bold transition-all font-vietnam">Đóng Phiên</button>
             </div>
         </header>
 
         <div class="max-w-6xl w-full mx-auto px-4 mt-6">
             <div class="flex bg-slate-100 p-1.5 rounded-2xl">
                 <button onclick="switchAdminTab('students')" id="admin-tab-btn-students" class="flex-1 py-3 px-4 rounded-xl font-bold text-sm bg-white text-slate-800 shadow-sm transition-all font-vietnam">👥 Học Viên & VIP</button>
+                <button onclick="switchAdminTab('vocabulary')" id="admin-tab-btn-vocabulary" class="flex-1 py-3 px-4 rounded-xl font-bold text-sm text-gray-500 hover:text-slate-700 transition-all font-vietnam">📚 Quản Lý Giáo Cụ</button>
                 <button onclick="switchAdminTab('settings')" id="admin-tab-btn-settings" class="flex-1 py-3 px-4 rounded-xl font-bold text-sm text-gray-500 hover:text-slate-700 transition-all font-vietnam">⚙️ Hệ Thống & Quyên Góp</button>
             </div>
         </div>
@@ -795,41 +1001,41 @@
         <main class="max-w-6xl w-full mx-auto px-4 py-6 flex-grow space-y-6">
             <!-- ADMIN TAB 1: DANH SÁCH BÉ & VIP -->
             <div id="admin-tab-students" class="space-y-6">
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 font-vietnam">
                     <div class="bg-white p-4 rounded-2xl custom-shadow border text-center">
-                        <p class="text-xs text-gray-400 font-bold uppercase">Tổng học sinh</p>
+                        <p class="text-xs text-gray-400 font-bold uppercase font-vietnam">Tổng học sinh</p>
                         <p id="stat-total" class="text-2xl font-black text-slate-800">0</p>
                     </div>
-                    <div class="bg-white p-4 rounded-2xl custom-shadow border text-center">
+                    <div class="bg-white p-4 rounded-2xl custom-shadow border text-center font-vietnam">
                         <p class="text-xs text-gray-400 font-bold uppercase">Giai đoạn 1 (Mầm Non)</p>
                         <p id="stat-normal" class="text-2xl font-black text-emerald-500">0</p>
                     </div>
-                    <div class="bg-white p-4 rounded-2xl custom-shadow border text-center">
+                    <div class="bg-white p-4 rounded-2xl custom-shadow border text-center font-vietnam">
                         <p class="text-xs text-gray-400 font-bold uppercase">Giai đoạn 2 (Chậm Nói)</p>
                         <p id="stat-delay" class="text-2xl font-black text-amber-500">0</p>
                     </div>
-                    <div class="bg-white p-4 rounded-2xl custom-shadow border text-center">
+                    <div class="bg-white p-4 rounded-2xl custom-shadow border text-center font-vietnam">
                         <p class="text-xs text-gray-400 font-bold uppercase">Giai đoạn 3 (Nâng Cao)</p>
                         <p id="stat-autism" class="text-2xl font-black text-rose-500">0</p>
                     </div>
                 </div>
 
-                <div class="bg-white p-6 rounded-3xl custom-shadow flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="bg-white p-6 rounded-3xl custom-shadow flex flex-col md:flex-row justify-between items-center gap-4 font-vietnam">
                     <div>
                         <h3 class="text-xl font-extrabold text-slate-800">Mã Học Tập Đang Hoạt Động</h3>
-                        <p class="text-gray-500 text-sm mt-1">Dữ liệu theo dõi và kiểm soát tài khoản học viên.</p>
+                        <p class="text-gray-500 text-sm mt-1 font-vietnam">Dữ liệu theo dõi và kiểm soát tài khoản học viên.</p>
                     </div>
                     <div class="w-full md:w-72 relative">
                         <input type="text" id="admin-search-input" oninput="renderAdminList()" placeholder="Tìm kiếm tên / mã số..." class="w-full px-4 py-3 rounded-xl border text-sm font-semibold focus:outline-none font-vietnam">
                     </div>
-                    <div class="flex gap-2">
+                    <div class="flex gap-2 font-vietnam">
                         <button onclick="createNewSubAccount()" class="bg-babyBlue text-white font-bold px-4 py-3.5 rounded-xl text-xs font-vietnam">➕ Mã Thường</button>
                         <button onclick="createNewVipAccount()" class="bg-yellow-500 text-white font-bold px-4 py-3.5 rounded-xl text-xs shadow-md font-vietnam">✨ Tạo Mã VIP</button>
                     </div>
                 </div>
 
                 <div class="bg-white rounded-3xl custom-shadow border overflow-hidden font-vietnam">
-                    <div class="overflow-x-auto">
+                    <div class="overflow-x-auto font-vietnam">
                         <table class="w-full text-left border-collapse">
                             <thead>
                                 <tr class="bg-slate-50 text-slate-400 text-xs uppercase font-extrabold border-b">
@@ -847,10 +1053,38 @@
                 </div>
             </div>
 
-            <!-- ADMIN TAB 2: CẤU HÌNH HỆ THỐNG -->
+            <!-- ADMIN TAB 2: QUẢN LÝ TỪ VỰNG -->
+            <div id="admin-tab-vocabulary" class="hidden space-y-6">
+                <div class="bg-white p-6 rounded-3xl custom-shadow border flex flex-col md:flex-row justify-between items-center gap-4 font-vietnam">
+                    <div>
+                        <h3 class="text-xl font-extrabold text-slate-800">📚 Kho Từ Vựng Giáo Cụ Trực Quan</h3>
+                        <p class="text-gray-500 text-sm mt-1 font-vietnam">Tự do chỉnh sửa hình ảnh, biểu tượng emoji, mô tả khẩu hình dứt khoát.</p>
+                    </div>
+                    <button onclick="openAddWordModal()" class="bg-babyPurple text-white font-bold px-6 py-3.5 rounded-xl text-xs shadow-md font-vietnam font-vietnam">➕ Thêm Từ Vựng Mới</button>
+                </div>
+
+                <div class="bg-white rounded-3xl custom-shadow border overflow-hidden font-vietnam">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 text-slate-400 text-xs uppercase font-extrabold border-b">
+                                    <th class="py-4 px-6">Ảnh minh họa</th>
+                                    <th class="py-4 px-6">Từ Vựng</th>
+                                    <th class="py-4 px-6">Biểu tượng</th>
+                                    <th class="py-4 px-6">Phân loại</th>
+                                    <th class="py-4 px-6">Mô tả / Hướng dẫn</th>
+                                    <th class="py-4 px-6 text-right">Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-vocabulary-list-body" class="divide-y text-sm"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ADMIN TAB 3: CẤU HÌNH HỆ THỐNG -->
             <div id="admin-tab-settings" class="hidden space-y-6">
-                <!-- API Viettel AI -->
-                <div class="bg-white p-6 rounded-3xl custom-shadow border space-y-6">
+                <div class="bg-white p-6 rounded-3xl custom-shadow border space-y-6 font-vietnam">
                     <div>
                         <h3 class="text-xl font-extrabold text-slate-800">🌐 Cổng Kết Nối Viettel AI Speech Synthesis</h3>
                         <p class="text-gray-500 text-sm mt-1">Cấu hình khóa token Viettel AI giúp tái định hình luồng âm thanh.</p>
@@ -868,37 +1102,36 @@
                     <div class="flex justify-end"><button onclick="saveGlobalVoiceConfig()" class="bg-babyPink text-white font-extrabold px-8 py-3.5 rounded-2xl shadow-lg font-vietnam">Lưu cấu hình API 💾</button></div>
                 </div>
 
-                <!-- Quyên góp / Donate -->
                 <div class="bg-white p-6 rounded-3xl custom-shadow border space-y-6 font-vietnam">
                     <div>
-                        <h3 class="text-xl font-extrabold text-slate-800">🎁 Cấu Hình Quyên Góp & Đồng Hành</h3>
+                        <h3 class="text-xl font-extrabold text-slate-800 font-vietnam">🎁 Cấu Hình Quyên Góp & Đồng Hành</h3>
                         <p class="text-gray-500 text-sm mt-1">Quản lý hiển thị thông tin ủng hộ duy trì máy chủ hệ thống.</p>
                     </div>
-                    <div class="flex items-center gap-3 bg-slate-50 p-4 rounded-2xl border">
+                    <div class="flex items-center gap-3 bg-slate-50 p-4 rounded-2xl border font-vietnam">
                         <input type="checkbox" id="admin-donate-enabled" class="w-5 h-5 accent-babyPink rounded cursor-pointer">
                         <label for="admin-donate-enabled" class="text-sm font-bold text-slate-700 cursor-pointer select-none font-vietnam">Hiển thị khung quyên góp ở ngoài màn hình của Phụ huynh</label>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
-                            <label class="block text-xs font-bold text-gray-400 uppercase mb-1.5">Tên Ngân Hàng (Ví dụ: MB, VCB, ICB)</label>
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-1.5 font-vietnam">Tên Ngân Hàng</label>
                             <input type="text" id="admin-donate-bank" placeholder="Ví dụ: MB, VCB..." class="w-full bg-slate-50 border py-2.5 px-4 rounded-xl text-sm font-semibold focus:outline-none">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-gray-400 uppercase mb-1.5">Số Tài Khoản</label>
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-1.5 font-vietnam">Số Tài Khoản</label>
                             <input type="text" id="admin-donate-no" placeholder="Nhập số tài khoản..." class="w-full bg-slate-50 border py-2.5 px-4 rounded-xl text-sm font-semibold focus:outline-none">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-gray-400 uppercase mb-1.5">Tên Chủ Tài Khoản</label>
-                            <input type="text" id="admin-donate-holder" placeholder="TÊN VIẾT HOA KHÔNG DẤU" class="w-full bg-slate-50 border py-2.5 px-4 rounded-xl text-sm font-semibold uppercase focus:outline-none">
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-1.5 font-vietnam">Tên Chủ Tài Khoản</label>
+                            <input type="text" id="admin-donate-holder" placeholder="TÊN VIẾT HOA KHÔNG DẤU" class="w-full bg-slate-50 border py-2.5 px-4 rounded-xl text-sm font-semibold uppercase focus:outline-none font-vietnam">
                         </div>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-400 uppercase mb-1.5">Thông điệp kêu gọi</label>
+                        <label class="block text-xs font-bold text-gray-400 uppercase mb-1.5 font-vietnam">Thông điệp kêu gọi</label>
                         <textarea id="admin-donate-msg" rows="3" placeholder="Lời cảm ơn chân thành gửi đến các bậc phụ huynh..." class="w-full bg-slate-50 border py-2.5 px-4 rounded-xl text-sm font-medium focus:outline-none"></textarea>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center bg-slate-50 p-4 rounded-2xl border">
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Tải ảnh QR giao dịch thủ công (Base64) - Để trống nếu muốn dùng QR Tự động</label>
+                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5 font-vietnam">Tải ảnh QR giao dịch thủ công (Để trống nếu dùng VietQR tự động)</label>
                             <input type="file" id="admin-donate-qr-input" accept="image/*" onchange="handleDonateQrUpload(event)" class="text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100 cursor-pointer w-full">
                         </div>
                         <div class="flex justify-center">
@@ -912,12 +1145,12 @@
     </section>
 
     <!-- THANH BOTTOM NAV DI ĐỘNG -->
-    <div id="child-mobile-nav" class="hidden md:hidden fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around items-center py-2.5 z-40 shadow-xl px-1">
-        <button onclick="switchChildTab('practice')" id="mobile-nav-practice" class="flex flex-col items-center gap-0.5 text-babyPink flex-1"><span class="text-lg">🗣️</span><span class="text-[9px] font-black font-vietnam">Luyện Nói</span></button>
-        <button onclick="switchChildTab('learn')" id="mobile-nav-learn" class="flex flex-col items-center gap-0.5 text-gray-400 flex-1"><span class="text-lg">🔤</span><span class="text-[9px] font-black font-vietnam">Chữ & Số</span></button>
-        <button onclick="switchChildTab('mathgame')" id="mobile-nav-mathgame" class="flex flex-col items-center gap-0.5 text-gray-400 flex-1"><span class="text-lg">🧮</span><span class="text-[9px] font-black font-vietnam">Game Toán</span></button>
-        <button onclick="switchChildTab('quiz')" id="mobile-nav-quiz" class="flex flex-col items-center gap-0.5 text-gray-400 flex-1"><span class="text-lg">🧠</span><span class="text-[9px] font-black font-vietnam">Sàng Lọc</span></button>
-        <button onclick="switchChildTab('journey')" id="mobile-nav-journey" class="flex flex-col items-center gap-0.5 text-gray-400 flex-1"><span class="text-lg">📅</span><span class="text-[9px] font-black font-vietnam">Lộ Trình</span></button>
+    <div id="child-mobile-nav" class="hidden md:hidden fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around items-center py-2.5 z-40 shadow-xl px-1 font-vietnam">
+        <button onclick="switchChildTab('practice')" id="mobile-nav-practice" class="flex flex-col items-center gap-0.5 text-babyPink flex-1"><span class="text-lg">🗣️</span><span class="text-[9px] font-black">Luyện Nói</span></button>
+        <button onclick="switchChildTab('learn')" id="mobile-nav-learn" class="flex flex-col items-center gap-0.5 text-gray-400 flex-1"><span class="text-lg">🔤</span><span class="text-[9px] font-black">Chữ & Số</span></button>
+        <button onclick="switchChildTab('mathgame')" id="mobile-nav-mathgame" class="flex flex-col items-center gap-0.5 text-gray-400 flex-1"><span class="text-lg">🧮</span><span class="text-[9px] font-black">Game Toán</span></button>
+        <button onclick="switchChildTab('quiz')" id="mobile-nav-quiz" class="flex flex-col items-center gap-0.5 text-gray-400 flex-1"><span class="text-lg">🧠</span><span class="text-[9px] font-black">Sàng Lọc</span></button>
+        <button onclick="switchChildTab('journey')" id="mobile-nav-journey" class="flex flex-col items-center gap-0.5 text-gray-400 flex-1"><span class="text-lg">📅</span><span class="text-[9px] font-black">Lộ Trình</span></button>
     </div>
 
     <script type="module">
@@ -985,28 +1218,27 @@
             }
         };
 
-        // Danh sách từ vựng giáo cụ mặc định (Nhiều từ & trực quan sắc nét hơn)
         const defaultWordDatabase = [
-            { id: 1, text: "Ba ba", icon: "👨", category: "family", description: "Mím hai môi chặt rồi bật ra âm Ba dứt khoát.", imageUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400" },
-            { id: 2, text: "Mẹ ơi", icon: "👩", category: "family", description: "Bật hơi nhẹ từ ngực kéo vần Mẹ trìu mến.", imageUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400" },
-            { id: 3, text: "Bà ơi", icon: "👵", category: "family", description: "Mở miệng tròn, hơi hạ giọng ấm áp trìu mến.", imageUrl: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&q=80&w=400" },
-            { id: 4, text: "Anh trai", icon: "👦", category: "family", description: "Luyện phát âm tròn chữ Anh dứt khoát.", imageUrl: "https://images.unsplash.com/photo-1488161628813-04466f872be2?auto=format&fit=crop&q=80&w=400" },
-            { id: 5, text: "Em bé", icon: "👶", category: "family", description: "Bật mím môi vần É bé bỏng dễ thương.", imageUrl: "https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&q=80&w=400" },
+            { id: 1, text: "Ba ba", icon: "👨", category: "family", description: "Mím hai môi chặt rồi bật ra âm Ba dứt khoát.", imageUrl: "https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?q=80&w=400" },
+            { id: 2, text: "Mẹ ơi", icon: "👩", category: "family", description: "Bật hơi nhẹ từ ngực kéo vần Mẹ trìu mến.", imageUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=400" },
+            { id: 3, text: "Bà ơi", icon: "👵", category: "family", description: "Mở miệng tròn, hơi hạ giọng ấm áp trìu mến.", imageUrl: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?q=80&w=400" },
+            { id: 4, text: "Anh trai", icon: "👦", category: "family", description: "Luyện phát âm tròn chữ Anh dứt khoát.", imageUrl: "https://images.unsplash.com/photo-1488161628813-04466f872be2?q=80&w=400" },
+            { id: 5, text: "Em bé", icon: "👶", category: "family", description: "Bật mím môi vần É bé bỏng dễ thương.", imageUrl: "https://images.unsplash.com/photo-1519689680058-324335c77eba?q=80&w=400" },
             
-            { id: 6, text: "Măm măm", icon: "🍚", category: "demand", description: "Luyện cơ hàm, động tác nhai ra hiệu đói bụng.", imageUrl: "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&q=80&w=400" },
-            { id: 7, text: "Bế con", icon: "👶", category: "demand", description: "Bật mở khẩu hình miệng, giơ hai tay đòi dắt.", imageUrl: "https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&q=80&w=400" },
-            { id: 8, text: "Uống nước", icon: "🥛", category: "demand", description: "Uốn nhẹ đầu lưỡi vần Uống dứt khoát rõ ràng.", imageUrl: "https://images.unsplash.com/photo-1548863227-3af567fc3b27?auto=format&fit=crop&q=80&w=400" },
-            { id: 9, text: "Ạ bà", icon: "🙇", category: "demand", description: "Cúi đầu chào lễ phép kết hợp mở to khẩu hình.", imageUrl: "https://images.unsplash.com/photo-1544717297-fa95b6ee9643?auto=format&fit=crop&q=80&w=400" },
+            { id: 6, text: "Măm măm", icon: "🍚", category: "demand", description: "Luyện cơ hàm, động tác nhai ra hiệu đói bụng.", imageUrl: "https://images.unsplash.com/photo-1512058564366-18510be2db19?q=80&w=400" },
+            { id: 7, text: "Bế con", icon: "👶", category: "demand", description: "Bật mở khẩu hình miệng, giơ hai tay đòi dắt.", imageUrl: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?q=80&w=400" },
+            { id: 8, text: "Uống nước", icon: "🥛", category: "demand", description: "Uốn nhẹ đầu lưỡi vần Uống dứt khoát rõ ràng.", imageUrl: "https://images.unsplash.com/photo-1548863227-3af567fc3b27?q=80&w=400" },
+            { id: 9, text: "Ạ bà", icon: "🙇", category: "demand", description: "Cúi đầu chào lễ phép kết hợp mở to khẩu hình.", imageUrl: "https://images.unsplash.com/photo-1544717297-fa95b6ee9643?q=80&w=400" },
 
-            { id: 10, text: "Con cún", icon: "🐶", category: "animals", description: "Uốn nhẹ đầu lưỡi bắt chước cún con sủa vui.", imageUrl: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&q=80&w=400" },
-            { id: 11, text: "Con mèo", icon: "🐈", category: "animals", description: "Phát âm dẹt môi vần Meo meo kéo dài hơi.", imageUrl: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&q=80&w=400" },
-            { id: 12, text: "Con cá", icon: "🐟", category: "animals", description: "Mở rộng khẩu hình, uốn cơ họng âm Cờ tròn trịa.", imageUrl: "https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?auto=format&fit=crop&q=80&w=400" },
+            { id: 10, text: "Con cún", icon: "🐶", category: "animals", description: "Uốn nhẹ đầu lưỡi bắt chước cún con sủa vui.", imageUrl: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=400" },
+            { id: 11, text: "Con mèo", icon: "🐈", category: "animals", description: "Phát âm dẹt môi vần Meo meo kéo dài hơi.", imageUrl: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?q=80&w=400" },
+            { id: 12, text: "Con cá", icon: "🐟", category: "animals", description: "Mở rộng khẩu hình, uốn cơ họng âm Cờ tròn trịa.", imageUrl: "https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?q=80&w=400" },
 
-            { id: 13, text: "Quả táo", icon: "🍎", category: "fruits", description: "Phát âm tròn môi kết hợp âm tơ.", imageUrl: "https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?auto=format&fit=crop&q=80&w=400" },
-            { id: 14, text: "Quả chuối", icon: "🍌", category: "fruits", description: "Uốn lưỡi nhẹ vần Chuối ngọt ngào ngon thơm.", imageUrl: "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?auto=format&fit=crop&q=80&w=400" },
+            { id: 13, text: "Quả táo", icon: "🍎", category: "fruits", description: "Phát âm tròn môi kết hợp âm tơ.", imageUrl: "https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?q=80&w=400" },
+            { id: 14, text: "Quả chuối", icon: "🍌", category: "fruits", description: "Uốn lưỡi nhẹ vần Chuối ngọt ngào ngon thơm.", imageUrl: "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?q=80&w=400" },
 
-            { id: 15, text: "Ô tô", icon: "🚗", category: "vehicles", description: "Chụm nhẹ hai môi bật hơi dứt khoát.", imageUrl: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=400" },
-            { id: 16, text: "Máy bay", icon: "✈️", category: "vehicles", description: "Bật căng cơ môi chữ Bay vút cao.", imageUrl: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&q=80&w=400" }
+            { id: 15, text: "Ô tô", icon: "🚗", category: "vehicles", description: "Chụm nhẹ hai môi bật hơi dứt khoát.", imageUrl: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?q=80&w=400" },
+            { id: 16, text: "Máy bay", icon: "✈️", category: "vehicles", description: "Bật căng cơ môi chữ Bay vút cao.", imageUrl: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=400" }
         ];
 
         /* BẢNG CHỮ CÁI TIẾNG VIỆT */
@@ -1076,19 +1308,12 @@
             { id: 7, text: "Bé điền chữ gì vào: quả ...uýt?", options: ["q", "k"], answer: "q", tip: "Trước âm đệm u ta viết âm q." },
             { id: 8, text: "Bé điền chữ gì vào khoảng trống: cây ...re?", options: ["tr", "ch"], answer: "tr", tip: "Cây tre uốn lưỡi dùng âm tr." },
             { id: 9, text: "Bé điền chữ gì vào khoảng trống: quả ...anh?", options: ["tr", "ch"], answer: "ch", tip: "Quả chanh không uốn lưỡi phát âm chờ nhẹ." },
-            { id: 10, text: "Bé điền chữ gì vào: ngôi ...ao?", options: ["s", "x"], answer: "s", tip: "Ngôi sao phát âm uốn lưỡi mạnh sờ." },
-            { id: 11, text: "Bé điền chữ gì vào: màu ...anh?", options: ["s", "x"], answer: "x", tip: "Màu xanh lá cây viết xờ nhẹ." },
-            { id: 12, text: "Bé điền chữ gì vào: củ ...ừng?", options: ["g", "gh"], answer: "g", tip: "Củ gừng dùng g đơn vì đứng trước ư." },
-            { id: 13, text: "Bé điền chữ gì vào: gạch ...ỉ?", options: ["g", "gh"], answer: "gh", tip: "Gạch chỉ/gạch xỉ, ở đây ta có chữ 'ghỉ' tức là nghỉ hoặc gạch ghi." },
-            { id: 14, text: "Bé điền chữ gì vào: ...e ngóng?", options: ["ng", "ngh"], answer: "ngh", tip: "Nghe ngóng dùng ngh trước e." },
-            { id: 15, text: "Bé điền chữ gì vào: ...êu gợi?", options: ["k", "c"], answer: "k", tip: "Kiêu gợi viết bằng chữ k trước iêu." }
+            { id: 10, text: "Bé điền chữ gì vào: ngôi ...ao?", options: ["s", "x"], answer: "s", tip: "Ngôi sao phát âm uốn lưỡi mạnh sờ." }
         ];
 
-        /* LỘ TRÌNH 30 NGÀY CAN THIỆP PHÁT ÂM CHI TIẾT */
         const thirtyDayCurriculum = [
-            // Giai đoạn 1: Bật âm đơn (Ngày 1 - 10)
-            { day: 1, stage: "Giai Đoạn 1: Bật âm đơn", word: "Ba", guide: "Âm môi-môi. Ba mẹ hướng dẫn bé mím nhẹ hai môi, ngưng thở trong tích tắc rồi dứt khoát đẩy luồng hơi bật ra để gọi 'Ba'." },
-            { day: 2, stage: "Giai Đoạn 1: Bật âm đơn", word: "Mẹ", guide: "Âm vang mũi. Hướng dẫn bé hé nhẹ môi, đẩy nhẹ luồng âm phát ra từ khoang mũi dạt dào cảm xúc để gọi 'Mẹ'." },
+            { day: 1, stage: "Giai Đoạn 1: Bật âm đơn", word: "Ba", guide: "Ba mẹ hướng dẫn bé mím nhẹ hai môi, ngưng thở trong tích tắc rồi dứt khoát đẩy luồng hơi bật ra để gọi 'Ba'." },
+            { day: 2, stage: "Giai Đoạn 1: Bật âm đơn", word: "Mẹ", guide: "Ba mẹ hướng dẫn bé hé nhẹ môi, đẩy nhẹ luồng âm phát ra từ khoang mũi dạt dào cảm xúc để gọi 'Mẹ'." },
             { day: 3, stage: "Giai Đoạn 1: Bật âm đơn", word: "Bà", guide: "Hạ trầm giọng. Luyện cơ hàm chuyển động nhịp nhàng, nhấn nhẹ giọng xuống ở cuối để gọi 'Bà' trìu mến." },
             { day: 4, stage: "Giai Đoạn 1: Bật âm đơn", word: "Măm", guide: "Nhu cầu ăn uống. Ba mẹ làm mẫu động tác nhai nhè nhẹ, lặp đi lặp lại để trẻ bập bẹ đòi ăn 'Măm măm'." },
             { day: 5, stage: "Giai Đoạn 1: Bật âm đơn", word: "Ạ", guide: "Mở rộng khẩu hình. Dạy bé thói quen cúi chào lễ phép, hạ cằm mở to miệng dứt khoát phát âm 'Ạ'." },
@@ -1098,8 +1323,7 @@
             { day: 9, stage: "Giai Đoạn 1: Bật âm đơn", word: "Hoa", guide: "Tròn dẹt liên tục. Chụm môi thổi hơi ra ngoài đồng thời mở dẹt môi sang bên tạo âm mở rộng 'Hoa'." },
             { day: 10, stage: "Giai Đoạn 1: Bật âm đơn", word: "Gà", guide: "Âm họng sâu. Ba mẹ chỉ vào chú gà trống, nhấc nhẹ cuống họng phát ra tiếng rung nhẹ gọi 'Gà'." },
             
-            // Giai đoạn 2: Ghép vần đôi (Ngày 11 - 20)
-            { day: 11, stage: "Giai Đoạn 2: Ghép vần đôi", word: "Bố ơi", guide: "Chuyển đổi khẩu hình liên mạch. Hướng dẫn bé bật âm 'Bố' tròn môi rồi chuyển sang âm mở rộng 'Ơi' liền hơi." },
+            { day: 11, stage: "Giai Đoạn 2: Ghép vần đôi", word: "Bố ơi", guide: "Chuyển đổi khẩu hình liền mạch. Hướng dẫn bé bật âm 'Bố' tròn môi rồi chuyển sang âm mở rộng 'Ơi' liền hơi." },
             { day: 12, stage: "Giai Đoạn 2: Ghép vần đôi", word: "Ăn cơm", guide: "Hợp âm khép hở. Luyện cho bé phát âm 'Ăn' dẹt môi rồi chuyển sang âm tròn mở hơi sâu 'Cơm'." },
             { day: 13, stage: "Giai Đoạn 2: Ghép vần đôi", word: "Uống sữa", guide: "Uốn hơi đầu lưỡi. Thổi luồng hơi qua kẽ răng uốn cong nhẹ đầu lưỡi để phát rõ vần sắc 'Uống sữa'." },
             { day: 14, stage: "Giai Đoạn 2: Ghép vần đôi", word: "Bế em", guide: "Tập trung chuyển đổi âm dẹt. Bật mím môi vần 'Bế' chuyển nhanh sang âm dẹt căng rộng sang hai bên 'Em'." },
@@ -1110,7 +1334,6 @@
             { day: 19, stage: "Giai Đoạn 2: Ghép vần đôi", word: "Mở ra", guide: "Mở rộng khoang miệng tối đa. Hé môi phát vần 'Mở' rồi kéo nhanh quai hàm dưới hạ thấp kêu từ 'Ra'." },
             { day: 20, stage: "Giai Đoạn 2: Ghép vần đôi", word: "Quả táo", guide: "Âm tròn bật hơi. Tròn căng cơ môi phát âm 'Quả', dẹp lưỡi bật dứt khoát luồng âm tiếp theo 'Táo'." },
             
-            // Giai đoạn 3: Từ phức & Câu ngắn (Ngày 21 - 30)
             { day: 21, stage: "Giai Đoạn 3: Từ phức & Câu ngắn", word: "Con yêu ba", guide: "Câu ghép 3 từ nền tảng. Ba mẹ chỉ vào bé rèn phát liền mạch 3 từ có ngữ điệu thăng trầm rành mạch." },
             { day: 22, stage: "Giai Đoạn 3: Từ phức & Câu ngắn", word: "Mẹ bế con", guide: "Biểu đạt cảm xúc và cử chỉ. Khuyến khích bé giơ tay ra phía trước kết hợp phát âm gọi dứt khoát." },
             { day: 23, stage: "Giai Đoạn 3: Từ phức & Câu ngắn", word: "Con đói rồi", guide: "Phản xạ bày tỏ nhu cầu cá nhân. Tập trung nhấn giọng mạnh ở từ cuối để định hình mục tiêu giao tiếp." },
@@ -1123,7 +1346,6 @@
             { day: 30, stage: "Giai Đoạn 3: Từ phức & Câu ngắn", word: "Con tự làm", guide: "Khẳng định tự lập cho trẻ. Bật dứt khoát từng từ rõ rành, không nói kéo dài dính vần dính âm." }
         ];
 
-        /* BỘ CÂU HỎI SÀNG LỌC HÀNH VI ASD M-CHAT-R/F ĐỦ 20 CÂU */
         const screeningQuestions = [
             { id: 1, text: "Nếu bạn chỉ vào cái gì đó ở trong phòng, con bạn có nhìn theo hướng bạn đang chỉ không?", example: "Ví dụ: Chỉ vào đồ chơi và nói 'Nhìn kìa!'", options: ["Có thường xuyên 🌱", "Thỉnh thoảng 🟡", "Không bao giờ 🔴"], riskMapping: [0, 1, 2] },
             { id: 2, text: "Bạn có bao giờ tự hỏi liệu con mình bị điếc hay không?", example: "Ví dụ: Gọi con nhiều lần nhưng con hờ hững bỏ lơ", options: ["Chưa bao giờ 🌱", "Đôi khi 🟡", "Rất thường xuyên 🔴"], riskMapping: [0, 1, 2] },
@@ -1140,7 +1362,7 @@
             { id: 13, text: "Con bạn có tự thăng bằng biết đi vững vàng không?", example: "Ví dụ: Đi đứng tự tin, ít bị ngã lảo đảo", options: ["Đi rất vững 🌱", "Còn lảo đảo dắt tay 🟡", "Chưa biết đi 🔴"], riskMapping: [0, 1, 2] },
             { id: 14, text: "Con có nhìn thẳng trực diện vào mắt bạn khi nói chuyện không?", example: "Ví dụ: Giao tiếp tương tác ánh mắt tự nhiên không trốn tránh", options: ["Nhìn rất tốt 🌱", "Hay nhìn lảng đi 🟡", "Hoàn toàn không nhìn mắt 🔴"], riskMapping: [0, 1, 2] },
             { id: 15, text: "Con có cố gắng bắt chước các hành động quen thuộc của bạn không?", example: "Ví dụ: Vỗ tay, vẫy chào tạm biệt", options: ["Bắt chước rất nhanh 🌱", "Hiếm khi làm theo 🟡", "Không bắt chước 🔴"], riskMapping: [0, 1, 2] },
-            { id: 16, text: "Nếu bạn quay đầu nhìn điều gì đó, con bạn có ngoảnh đầu nhìn theo không?", example: "Ví dụ: Nhìn theo hướng ba mẹ đang tò mò ngắm", options: ["Nhìn theo ngay 🌱", "Không để ý 🟡", "Bỏ qua dửng dưng 🔴"], riskMapping: [0, 1, 2] },
+            { id: 16, text: "If bạn quay đầu nhìn điều gì đó, con bạn có ngoảnh đầu nhìn theo không?", example: "Ví dụ: Nhìn theo hướng ba mẹ đang tò mò ngắm", options: ["Nhìn theo ngay 🌱", "Không để ý 🟡", "Bỏ qua dửng dưng 🔴"], riskMapping: [0, 1, 2] },
             { id: 17, text: "Con bạn có cố gắng lôi kéo sự chú ý của bạn vào việc con làm không?", example: "Ví dụ: Gọi 'Mẹ xem nè', dắt tay mẹ khoe thành phẩm", options: ["Rất thường xuyên 🌱", "Thỉnh thoảng 🟡", "Không bao giờ 🔴"], riskMapping: [0, 1, 2] },
             { id: 18, text: "Con bạn có hiểu khi bạn nói và yêu cầu con làm một hành động không?", example: "Ví dụ: Nhờ con mang hộ hộp sữa, lấy dép", options: ["Hiểu và làm đúng 🌱", "Chỉ hiểu lệnh cực đơn giản 🟡", "Hoàn toàn không hiểu 🔴"], riskMapping: [0, 1, 2] },
             { id: 19, text: "Khi có việc bất ngờ xảy ra, con có nhìn mặt bạn để xem phản ứng không?", example: "Ví dụ: Nghe tiếng động lớn, con nhìn mặt mẹ để tìm sự an tâm", options: ["Có nhìn ngay 🌱", "Ngơ ngác tự chơi 🟡", "Không nhìn mặt ai hoảng loạn 🔴"], riskMapping: [0, 1, 2] },
@@ -1156,7 +1378,7 @@
             { id: "viettel-hcm-minhquan", label: "Minh Quân [Viettel AI - Nam Nam dứt khoát]" }
         ];
 
-        const DEFAULT_TEXT_V3 = "Chào mừng ba mẹ và các bé yêu đã quay lại hành tinh trí tuệ EduKids Smart! Hệ thống đã nâng cấp toàn diện và áp dụng Token Viettel AI ổn định mượt mà. Hãy chọn giọng nói yêu thích để bắt đầu cuộc hành trình rèn luyện bật âm ngay thôi con nhé!";
+        const DEFAULT_TEXT_V3 = "Chào mừng ba mẹ và các bé yêu đã quay lại hành tinh trí tuệ EduKids Smart! Hệ thống đã nâng cấp toàn diện lên phiên bản v3.2.0 cực kỳ ổn định. Hãy chọn giọng nói và luyện hơi thở, làm quen phép nhân phép chia ngay thôi con nhé!";
 
         /* QUẢN LÝ TRẠNG THÁI TOÀN CỤC */
         let loggedInRole = null;
@@ -1206,6 +1428,23 @@
         let currentMathAnswer = 0;
         let currentMathOptions = [];
 
+        /* TRẠNG THÁI HỌC & LUYỆN TẬP BẢNG CỬU CHƯƠNG */
+        let activeMathSubTab = 'dino';
+        let selectedTimesTableNum = 2; // Active table for lookup (2-9)
+        let timesTablePracticeType = 'multi'; // 'multi', 'div', or 'both'
+        let selectedPracticeTables = [2, 3, 4, 5, 6, 7, 8, 9]; // Active selected tables for quiz
+        let timesTableQuizQuestions = []; // Active 10 questions
+        let currentTimesTableQIndex = 0; // 0 to 9
+        let timesTableQuizScore = 0;
+        let currentTimesTableAnswer = 0;
+        let currentTimesTableQuestionObj = null;
+
+        // AUTO-RECITE STATE VARIABLES
+        let isAutoReadingTable = false;
+        let autoReadMode = 'multi'; // 'multi' or 'div'
+        let autoReadIndex = 1;
+        let autoReadTimeoutId = null;
+
         let currentScreeningIndex = 0;
         let tempScreeningAnswers = [];
 
@@ -1215,7 +1454,9 @@
         let micSource = null;
         let micStream = null;
         let isWindmillGameActive = false;
-        let lastBlowingSpeed = 0;
+
+        // Trạng thái Form thêm từ vựng của admin
+        let adminWordPhotoBase64 = "";
 
         async function runAuthSetup() {
             window.addEventListener('online', updateNetworkStatus);
@@ -1244,10 +1485,10 @@
             if (!statusBadge) return;
             if (navigator.onLine) {
                 statusBadge.innerText = "Đang trực tuyến 🟢";
-                statusBadge.className = "text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-600 border border-emerald-300";
+                statusBadge.className = "text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-600 border border-emerald-300 font-vietnam";
             } else {
                 statusBadge.innerText = "Chế độ mất mạng 🔴";
-                statusBadge.className = "text-[10px] px-2 py-0.5 rounded-full font-bold bg-rose-100 text-rose-600 border border-rose-300 animate-pulse";
+                statusBadge.className = "text-[10px] px-2 py-0.5 rounded-full font-bold bg-rose-100 text-rose-600 border border-rose-300 animate-pulse font-vietnam";
                 showToast("Hệ thống tự động phát âm thanh lưu đệm từ IndexedDB!", "info");
             }
         }
@@ -1261,6 +1502,7 @@
                     if (data.words && Array.isArray(data.words)) {
                         currentWordDatabase = data.words;
                         renderWordGrid();
+                        if (loggedInRole === 'admin') renderAdminVocabularyList();
                     } else {
                         currentWordDatabase = defaultWordDatabase;
                         renderWordGrid();
@@ -1509,6 +1751,10 @@
             resetSpellingGame(); 
             renderNumbersGrid();
             showcaseLetter(0);
+            
+            // RENDER TRÌNH ĐOÁN HỌC CỬU CHƯƠNG MỚI
+            renderTimesTableSelector();
+            renderTimesTableRows();
 
             if (loggedInRole !== 'guest') loadExistingChildProgress();
         }
@@ -1532,6 +1778,7 @@
             document.getElementById('view-admin-app').classList.remove('hidden');
             updateAdminStats();
             renderAdminList();
+            renderAdminVocabularyList();
             initVoiceSelector();
         }
 
@@ -1729,6 +1976,7 @@
             document.getElementById('view-login').classList.remove('hidden');
             if (mathGameTimerInterval) clearInterval(mathGameTimerInterval);
             mathGameActive = false;
+            stopAutoReadTable();
         };
 
         window.switchChildTab = function(tabName) {
@@ -1742,6 +1990,10 @@
             const activeBtn = document.getElementById(`tab-btn-${tabName}`);
             if (activeTab) activeTab.classList.remove('hidden');
             if (activeBtn) activeBtn.className = `flex-1 shrink-0 py-3.5 px-4 rounded-xl font-black text-sm bg-babyPink text-white shadow-md font-vietnam`;
+            
+            if (tabName !== 'mathgame') {
+                stopAutoReadTable();
+            }
         };
 
         window.switchLearnSubTab = function(subName) {
@@ -1751,6 +2003,18 @@
             });
             const activeSec = document.getElementById(`learn-section-${subName}`);
             if (activeSec) activeSec.classList.remove('hidden');
+            
+            // Highlight subtab button
+            ['alphabet', 'compounds', 'spelling', 'numbers'].forEach(s => {
+                const btn = document.getElementById(`learn-subtab-btn-${s}`);
+                if (btn) {
+                    if (s === subName) {
+                        btn.className = "flex-1 shrink-0 py-3 text-center rounded-xl font-black text-sm bg-babyPink text-white px-3 font-vietnam";
+                    } else {
+                        btn.className = "flex-1 shrink-0 py-3 text-center rounded-xl font-black text-sm text-gray-500 px-3 font-vietnam";
+                    }
+                }
+            });
         };
 
         window.openOfflineGuideModal = function() {
@@ -1760,14 +2024,12 @@
             document.getElementById('offline-guide-modal').classList.add('hidden');
         };
 
-        /* LOGIC MINI GAME LUYỆN HƠI THỔI CHONG CHÓNG GIÓ */
         window.openWindmillGame = function() {
             isWindmillGameActive = true;
             document.getElementById('windmill-game-modal').classList.remove('hidden');
             document.getElementById('windmill-breath-bar').style.width = '0%';
             document.getElementById('windmill-mic-status').innerText = "Vui lòng cho phép quyền truy cập Micro để luyện hơi...";
             
-            // Khởi tạo cảm biến hơi thổi bằng mic
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                 navigator.mediaDevices.getUserMedia({ audio: true, video: false })
                     .then(function(stream) {
@@ -1789,10 +2051,8 @@
                 document.getElementById('windmill-mic-status').innerText = "Cảm biến hơi không hỗ trợ. Con hãy sử dụng nút bấm giữ nhé!";
             }
 
-            // Gắn sự kiện touch giả lập thổi hơi
             const touchBtn = document.getElementById('windmill-touch-trigger');
             
-            // Ghi nhận sự kiện dọn sạch
             touchBtn.onmousedown = touchBtn.ontouchstart = function(e) {
                 e.preventDefault();
                 simulateBlowingActive(true);
@@ -1816,7 +2076,6 @@
             }
             let averageVolume = sum / bufferLength;
             
-            // Ánh xạ âm lượng mic (0-150) thành tốc độ xoay chong chóng
             let progressPercentage = Math.min((averageVolume / 100) * 100, 100);
             document.getElementById('windmill-breath-bar').style.width = `${progressPercentage}%`;
 
@@ -1824,7 +2083,6 @@
                 let duration = Math.max(0.1, 2.5 - (averageVolume / 40)); 
                 document.getElementById('windmill-propeller').style.setProperty('--spin-duration', `${duration}s`);
                 
-                // Hiệu ứng phún bong bóng xà phòng nếu hơi thổi mạnh
                 if (averageVolume > 50 && Math.random() < 0.25) {
                     createPopBubble();
                     playSparkleSound();
@@ -1871,8 +2129,8 @@
             b.className = 'bubble-pop';
             
             let size = Math.random() * 25 + 15;
-            let startX = Math.random() * 80 + 10; // %
-            let startY = Math.random() * 50 + 40; // %
+            let startX = Math.random() * 80 + 10;
+            let startY = Math.random() * 50 + 40;
             let dx = (Math.random() * 200 - 100) + 'px';
             let dy = '-' + (Math.random() * 300 + 100) + 'px';
             
@@ -1885,7 +2143,6 @@
             
             container.appendChild(b);
             
-            // Xóa bong bóng sau khi nổi lên biến mất
             setTimeout(() => {
                 b.remove();
             }, 4000);
@@ -2054,25 +2311,860 @@
             showConfirmDialog("Thoát trò chơi", "Con muốn dừng chơi để lưu lại kỷ lục chứ?", "🏳️", endMathGame); 
         };
 
+        /* LƯU TRỒNG PHÂN HỆ HỌC BẢNG CỬU CHƯƠNG MỚI */
+        window.switchMathSubTab = function(sub) {
+            activeMathSubTab = sub;
+            ['dino', 'tables'].forEach(s => {
+                document.getElementById(`math-section-${s}`).classList.add('hidden');
+                document.getElementById(`math-subtab-btn-${s}`).className = "flex-1 shrink-0 py-3 text-center rounded-xl font-black text-sm text-gray-500 px-3 font-vietnam";
+            });
+            document.getElementById(`math-section-${sub}`).classList.remove('hidden');
+            document.getElementById(`math-subtab-btn-${sub}`).className = "flex-1 shrink-0 py-3 text-center rounded-xl font-black text-sm bg-babyPink text-white px-3 font-vietnam";
+            
+            if (sub !== 'tables') {
+                stopAutoReadTable();
+            } else {
+                switchTimesTableTab('learn');
+            }
+        };
+
+        window.switchTimesTableTab = function(tabName) {
+            stopAutoReadTable();
+            const btnLearn = document.getElementById('times-table-btn-learn');
+            const btnPractice = document.getElementById('times-table-btn-practice');
+            const areaLearn = document.getElementById('times-table-learn-area');
+            const areaPractice = document.getElementById('times-table-practice-area');
+
+            if (tabName === 'learn') {
+                if (areaLearn) areaLearn.classList.remove('hidden');
+                if (areaPractice) areaPractice.classList.add('hidden');
+                if (btnLearn) btnLearn.className = "px-4 py-1.5 rounded-lg text-xs font-black bg-white text-emerald-800 shadow transition-all";
+                if (btnPractice) btnPractice.className = "px-4 py-1.5 rounded-lg text-xs font-black text-white transition-all";
+                renderTimesTableSelector();
+                renderTimesTableRows();
+            } else {
+                if (areaLearn) areaLearn.classList.add('hidden');
+                if (areaPractice) areaPractice.classList.remove('hidden');
+                if (btnLearn) btnLearn.className = "px-4 py-1.5 rounded-lg text-xs font-black text-white transition-all";
+                if (btnPractice) btnPractice.className = "px-4 py-1.5 rounded-lg text-xs font-black bg-white text-emerald-800 shadow transition-all";
+                renderTimesTablePracticeSelection();
+                
+                document.getElementById('times-table-practice-settings').classList.remove('hidden');
+                document.getElementById('times-table-practice-arena').classList.add('hidden');
+                document.getElementById('times-table-practice-summary').classList.add('hidden');
+            }
+        };
+
+        window.renderTimesTableSelector = function() {
+            const box = document.getElementById('times-table-selector-box');
+            if (!box) return;
+            box.innerHTML = "";
+            for (let i = 2; i <= 9; i++) {
+                const btn = document.createElement('button');
+                btn.id = `btn-table-num-${i}`;
+                btn.onclick = () => selectTimesTableNum(i);
+                if (i === selectedTimesTableNum) {
+                    btn.className = "table-num-selector py-3 rounded-2xl font-black text-lg border-2 transition-all border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm";
+                } else {
+                    btn.className = "table-num-selector py-3 rounded-2xl font-black text-lg border-2 transition-all border-slate-100 bg-slate-50 hover:bg-slate-100 text-slate-600";
+                }
+                btn.innerText = `bảng ${i}`;
+                box.appendChild(btn);
+            }
+        };
+
+        window.selectTimesTableNum = function(num) {
+            stopAutoReadTable();
+            selectedTimesTableNum = num;
+            renderTimesTableSelector();
+            renderTimesTableRows();
+            speakWord(`Bảng cửu chương ${num}`, null);
+        };
+
+        window.renderTimesTableRows = function() {
+            const multiList = document.getElementById('times-table-multi-list');
+            const divList = document.getElementById('times-table-div-list');
+            const multiNumSpan = document.getElementById('times-table-multi-num');
+            const divNumSpan = document.getElementById('times-table-div-num');
+
+            if (multiNumSpan) multiNumSpan.innerText = selectedTimesTableNum;
+            if (divNumSpan) divNumSpan.innerText = selectedTimesTableNum;
+
+            if (multiList) {
+                multiList.innerHTML = "";
+                for (let i = 1; i <= 10; i++) {
+                    const row = document.createElement('div');
+                    row.id = `times-table-row-multi-${i}`;
+                    row.className = "times-table-card p-2.5 rounded-xl border border-emerald-50 hover:bg-emerald-50 hover:border-emerald-100 transition-all cursor-pointer flex justify-between items-center text-sm font-bold text-slate-700";
+                    row.onclick = () => speakTimesTableRow('multi', selectedTimesTableNum, i);
+                    row.innerHTML = `<span>${selectedTimesTableNum} × ${i} = ${selectedTimesTableNum * i}</span><span class="text-xs text-slate-400">🔊</span>`;
+                    multiList.appendChild(row);
+                }
+            }
+
+            if (divList) {
+                divList.innerHTML = "";
+                for (let i = 1; i <= 10; i++) {
+                    const row = document.createElement('div');
+                    row.id = `times-table-row-div-${i}`;
+                    row.className = "times-table-card p-2.5 rounded-xl border border-teal-50 hover:bg-teal-50 hover:border-teal-100 transition-all cursor-pointer flex justify-between items-center text-sm font-bold text-slate-700";
+                    row.onclick = () => speakTimesTableRow('div', selectedTimesTableNum, i);
+                    row.innerHTML = `<span>${selectedTimesTableNum * i} : ${selectedTimesTableNum} = ${i}</span><span class="text-xs text-slate-400">🔊</span>`;
+                    divList.appendChild(row);
+                }
+            }
+        };
+
+        window.toggleAutoReadTable = function(mode) {
+            if (isAutoReadingTable && autoReadMode === mode) {
+                stopAutoReadTable();
+                showToast("Đã dừng tự động đọc bảng.", "info");
+            } else {
+                stopAutoReadTable();
+                isAutoReadingTable = true;
+                autoReadMode = mode;
+                autoReadIndex = 1;
+                
+                const btnId = mode === 'multi' ? 'auto-read-multi-btn' : 'auto-read-div-btn';
+                const btn = document.getElementById(btnId);
+                if (btn) {
+                    btn.innerHTML = `<span>⏹️</span> Dừng Đọc`;
+                    btn.className = "bg-rose-600 hover:bg-rose-700 text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition-all shadow-sm";
+                }
+                showToast(`Bắt đầu đọc tự động Bảng ${mode === 'multi' ? 'Nhân' : 'Chia'} ${selectedTimesTableNum}! 📢`, "success");
+                reciteTableSequentially();
+            }
+        };
+
+        window.stopAutoReadTable = function() {
+            isAutoReadingTable = false;
+            if (autoReadTimeoutId) {
+                clearTimeout(autoReadTimeoutId);
+                autoReadTimeoutId = null;
+            }
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+            
+            const multiBtn = document.getElementById('auto-read-multi-btn');
+            if (multiBtn) {
+                multiBtn.innerHTML = `<span>📢</span> Đọc Bảng Nhân`;
+                multiBtn.className = "bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition-all shadow-sm flex items-center gap-1";
+            }
+            const divBtn = document.getElementById('auto-read-div-btn');
+            if (divBtn) {
+                divBtn.innerHTML = `<span>📢</span> Đọc Bảng Chia`;
+                divBtn.className = "bg-teal-600 hover:bg-teal-700 text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg transition-all shadow-sm flex items-center gap-1";
+            }
+
+            document.querySelectorAll('.times-table-card').forEach(el => {
+                el.classList.remove('math-highlight');
+            });
+        };
+
+        window.speakTimesTableRow = function(mode, num, i) {
+            let text = "";
+            if (mode === 'multi') {
+                text = `${num} nhân ${i} bằng ${num * i}`;
+            } else {
+                text = `${num * i} chia ${num} bằng ${i}`;
+            }
+            speakWord(text, document.getElementById(`times-table-row-${mode}-${i}`));
+        };
+
+        async function reciteTableSequentially() {
+            if (!isAutoReadingTable || autoReadIndex > 10) {
+                stopAutoReadTable();
+                if (autoReadIndex > 10) {
+                    confetti({ particleCount: 40 });
+                    showToast("Con đã nghe hết bảng cửu chương! Học giỏi lắm! 🌟", "success");
+                }
+                return;
+            }
+
+            document.querySelectorAll('.times-table-card').forEach(el => {
+                el.classList.remove('math-highlight');
+            });
+
+            const activeRowId = `times-table-row-${autoReadMode}-${autoReadIndex}`;
+            const activeRow = document.getElementById(activeRowId);
+            if (activeRow) {
+                activeRow.classList.add('math-highlight');
+                activeRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+
+            const num = selectedTimesTableNum;
+            let speakText = "";
+            if (autoReadMode === 'multi') {
+                speakText = `${num} nhân ${autoReadIndex} bằng ${num * autoReadIndex}`;
+            } else {
+                speakText = `${num * autoReadIndex} chia ${num} bằng ${autoReadIndex}`;
+            }
+
+            await speakWord(speakText, activeRow);
+
+            const delay = Math.max(3000, speakText.length * 150);
+            autoReadTimeoutId = setTimeout(() => {
+                autoReadIndex++;
+                reciteTableSequentially();
+            }, delay);
+        }
+
+        window.setTimesTablePracticeType = function(type) {
+            timesTablePracticeType = type;
+            ['multi', 'div', 'both'].forEach(t => {
+                const btn = document.getElementById(`btn-practice-type-${t}`);
+                if (btn) {
+                    if (t === type) {
+                        btn.className = "practice-type-btn py-3 rounded-xl border-2 font-black text-xs sm:text-sm border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm transition-all";
+                    } else {
+                        btn.className = "practice-type-btn py-3 rounded-xl border-2 font-black text-xs sm:text-sm border-slate-100 bg-slate-50 text-slate-600 transition-all";
+                    }
+                }
+            });
+        };
+
+        window.toggleTableSelection = function(num) {
+            const index = selectedPracticeTables.indexOf(num);
+            if (index > -1) {
+                if (selectedPracticeTables.length <= 1) {
+                    showToast("Con phải chọn ít nhất một bảng cửu chương để luyện tập nhé!", "error");
+                    return;
+                }
+                selectedPracticeTables.splice(index, 1);
+            } else {
+                selectedPracticeTables.push(num);
+            }
+            renderTimesTablePracticeSelection();
+        };
+
+        window.renderTimesTablePracticeSelection = function() {
+            const box = document.getElementById('times-table-practice-selection-box');
+            if (!box) return;
+            box.innerHTML = "";
+            for (let i = 2; i <= 9; i++) {
+                const btn = document.createElement('button');
+                btn.id = `btn-practice-select-${i}`;
+                btn.onclick = () => toggleTableSelection(i);
+                if (selectedPracticeTables.includes(i)) {
+                    btn.className = "practice-table-select py-2 rounded-xl font-black border-2 border-emerald-500 bg-emerald-50 text-emerald-700 text-sm transition-all";
+                } else {
+                    btn.className = "practice-table-select py-2 rounded-xl font-black border-2 border-slate-100 bg-slate-50 text-slate-400 text-sm transition-all";
+                }
+                btn.innerText = `Bảng ${i}`;
+                box.appendChild(btn);
+            }
+        };
+
+        window.generateTimesTableQuiz = function() {
+            if (selectedPracticeTables.length === 0) {
+                showToast("Vui lòng chọn ít nhất một bảng cửu chương để bắt đầu!", "error");
+                return;
+            }
+
+            timesTableQuizQuestions = [];
+            for (let q = 0; q < 10; q++) {
+                const tableNum = selectedPracticeTables[Math.floor(Math.random() * selectedPracticeTables.length)];
+                const factor2 = Math.floor(Math.random() * 10) + 1;
+                
+                let qType = timesTablePracticeType;
+                if (qType === 'both') {
+                    qType = Math.random() < 0.5 ? 'multi' : 'div';
+                }
+
+                let equationText = "";
+                let speakText = "";
+                let correctAnswer = 0;
+                let correctionExplain = "";
+
+                if (qType === 'multi') {
+                    correctAnswer = tableNum * factor2;
+                    equationText = `${tableNum} × ${factor2} = ?`;
+                    speakText = `${tableNum} nhân ${factor2} bằng mấy?`;
+                    correctionExplain = `${tableNum} nhân ${factor2} bằng ${correctAnswer} cơ con ạ. Hãy ghi nhớ bảng nhân ${tableNum} nhé!`;
+                } else {
+                    correctAnswer = factor2;
+                    const divNumerator = tableNum * factor2;
+                    equationText = `${divNumerator} : ${tableNum} = ?`;
+                    speakText = `${divNumerator} chia ${tableNum} bằng mấy?`;
+                    correctionExplain = `${divNumerator} chia ${tableNum} bằng ${correctAnswer} cơ con ạ. Phép nhân ngược lại là ${tableNum} nhân ${factor2} bằng ${divNumerator}.`;
+                }
+
+                let optionsSet = new Set([correctAnswer]);
+                while (optionsSet.size < 4) {
+                    let decoyOffset = Math.floor(Math.random() * 9) - 4;
+                    let decoy = correctAnswer + decoyOffset;
+                    if (decoy > 0 && decoy !== correctAnswer) {
+                        optionsSet.add(decoy);
+                    }
+                }
+                const choices = Array.from(optionsSet).sort(() => Math.random() - 0.5);
+
+                timesTableQuizQuestions.push({
+                    equationText,
+                    speakText,
+                    correctAnswer,
+                    choices,
+                    correctionExplain
+                });
+            }
+
+            currentTimesTableQIndex = 0;
+            timesTableQuizScore = 0;
+
+            document.getElementById('times-table-practice-settings').classList.add('hidden');
+            document.getElementById('times-table-practice-arena').classList.remove('hidden');
+            document.getElementById('times-table-practice-summary').classList.add('hidden');
+
+            displayTimesTableQuestion();
+        };
+
+        window.displayTimesTableQuestion = function() {
+            const qObj = timesTableQuizQuestions[currentTimesTableQIndex];
+            currentTimesTableQuestionObj = qObj;
+
+            const progText = document.getElementById('times-table-q-progress');
+            const progBar = document.getElementById('times-table-q-progress-bar');
+            if (progText) progText.innerText = `${currentTimesTableQIndex + 1} / 10`;
+            if (progBar) progBar.style.width = `${((currentTimesTableQIndex + 1) / 10) * 100}%`;
+
+            const qBox = document.getElementById('times-table-q-box');
+            if (qBox) {
+                qBox.innerHTML = `<span class="text-6xl font-black text-slate-800 tracking-wider inline-block">${qObj.equationText}</span>`;
+            }
+
+            const grid = document.getElementById('times-table-options-grid');
+            if (grid) {
+                grid.innerHTML = "";
+                qObj.choices.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = "py-4 bg-slate-50 hover:bg-emerald-50 text-slate-800 hover:text-emerald-950 border-2 border-slate-100 hover:border-emerald-300 font-black text-2xl rounded-2xl transition-all shadow-sm option-choice-btn font-vietnam";
+                    btn.innerText = opt;
+                    btn.onclick = () => answerTimesTable(opt, btn);
+                    grid.appendChild(btn);
+                });
+            }
+
+            speakWord(qObj.speakText, null);
+        };
+
+        window.answerTimesTable = function(selectedVal, btnEl) {
+            const qObj = currentTimesTableQuestionObj;
+            if (!qObj) return;
+
+            // Ngăn bé bấm nhiều lần
+            const optionButtons = document.querySelectorAll('.option-choice-btn');
+            optionButtons.forEach(btn => btn.disabled = true);
+
+            const corrBox = document.getElementById('times-table-corr-box');
+            const corrText = document.getElementById('times-table-corr-text');
+            const nextBtn = document.getElementById('times-table-btn-next');
+
+            if (selectedVal === qObj.correctAnswer) {
+                timesTableQuizScore++;
+                btnEl.className = btnEl.className.replace('bg-slate-50', 'bg-emerald-500 text-white border-emerald-500');
+                showToast("Chính xác! Con giỏi quá! 🌟", "success");
+                playCorrectSound();
+                confetti({ particleCount: 20 });
+            } else {
+                btnEl.className = btnEl.className.replace('bg-slate-50', 'bg-rose-500 text-white border-rose-500');
+                showToast("Chưa đúng rồi con ơi, cố lên nhé!", "error");
+                playIncorrectSound();
+                
+                // Highlight nút đúng
+                optionButtons.forEach(btn => {
+                    if (parseInt(btn.innerText) === qObj.correctAnswer) {
+                        btn.className = btn.className.replace('bg-slate-50', 'bg-emerald-500 text-white border-emerald-500');
+                    }
+                });
+
+                if (corrBox && corrText) {
+                    corrText.innerText = qObj.correctionExplain;
+                    corrBox.classList.remove('hidden');
+                }
+            }
+
+            if (nextBtn) nextBtn.classList.remove('hidden');
+        };
+
+        window.nextTimesTableQuestion = function() {
+            const corrBox = document.getElementById('times-table-corr-box');
+            const nextBtn = document.getElementById('times-table-btn-next');
+            if (corrBox) corrBox.classList.add('hidden');
+            if (nextBtn) nextBtn.classList.add('hidden');
+
+            currentTimesTableQIndex++;
+            if (currentTimesTableQIndex < 10) {
+                displayTimesTableQuestion();
+            } else {
+                showTimesTablePracticeSummary();
+            }
+        };
+
+        function showTimesTablePracticeSummary() {
+            document.getElementById('times-table-practice-settings').classList.add('hidden');
+            document.getElementById('times-table-practice-arena').classList.add('hidden');
+            document.getElementById('times-table-practice-summary').classList.remove('hidden');
+
+            const scoreDisplay = document.getElementById('times-table-summary-correct');
+            const starsDisplay = document.getElementById('times-table-summary-stars');
+            const medalDisplay = document.getElementById('times-table-summary-medal');
+            const msgDisplay = document.getElementById('times-table-summary-msg');
+
+            if (scoreDisplay) scoreDisplay.innerText = `${timesTableQuizScore} / 10`;
+            
+            let starsEarned = timesTableQuizScore; // Mỗi câu đúng được 1 sao
+            if (starsDisplay) starsDisplay.innerText = `+${starsEarned} ⭐`;
+
+            if (timesTableQuizScore === 10) {
+                if (medalDisplay) medalDisplay.innerText = "🏆👑";
+                if (msgDisplay) msgDisplay.innerText = "Tuyệt vời! Con đã trả lời đúng tất cả các câu hỏi! Quá xuất sắc!";
+                confetti({ particleCount: 150, spread: 80 });
+            } else if (timesTableQuizScore >= 7) {
+                if (medalDisplay) medalDisplay.innerText = "🥇🎉";
+                if (msgDisplay) msgDisplay.innerText = "Rất tốt! Con đã nắm rất vững bảng cửu chương này rồi.";
+                confetti({ particleCount: 80, spread: 50 });
+            } else if (timesTableQuizScore >= 5) {
+                if (medalDisplay) medalDisplay.innerText = "🥈✨";
+                if (msgDisplay) msgDisplay.innerText = "Khá tốt! Con hãy cố gắng luyện tập thêm để đạt điểm tuyệt đối nhé.";
+            } else {
+                if (medalDisplay) medalDisplay.innerText = "💪❤️";
+                if (msgDisplay) msgDisplay.innerText = "Đừng nản chí! Con hãy tra cứu lại bảng cửu chương và luyện tập lại nhé.";
+            }
+
+            // Cập nhật điểm kỷ lục nếu là tài khoản thường
+            updateStarsOnFirebase(starsEarned);
+        }
+
+        async function updateStarsOnFirebase(stars) {
+            if (loggedInRole === 'guest' || !loggedInChildCode) return;
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'sub_accounts', loggedInChildCode);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    let currentDays = data.completedDays || [];
+                    console.log(`Đã ghi nhận ${stars} sao cho bé!`);
+                }
+            } catch (e) {
+                console.error("Lỗi cập nhật sao:", e);
+            }
+        }
+
+        window.restartTimesTablePractice = function() {
+            document.getElementById('times-table-practice-settings').classList.remove('hidden');
+            document.getElementById('times-table-practice-arena').classList.add('hidden');
+            document.getElementById('times-table-practice-summary').classList.add('hidden');
+            stopAutoReadTable();
+        };
+
+        /* QUẢN TRỊ ADMIN */
+        window.toggleLoginTab = function(tab) {
+            ['parent', 'register', 'admin'].forEach(t => {
+                document.getElementById(`form-${t}`).classList.add('hidden');
+                document.getElementById(`btn-tab-${t}`).className = "flex-1 py-2.5 text-xs font-black rounded-xl text-gray-500 transition-all font-vietnam";
+            });
+            document.getElementById(`form-${tab}`).classList.remove('hidden');
+            document.getElementById(`btn-tab-${tab}`).className = "flex-1 py-2.5 text-xs font-black rounded-xl bg-white text-babyPink shadow-sm transition-all";
+        };
+
+        window.switchAdminTab = function(tabName) {
+            ['students', 'vocabulary', 'settings'].forEach(t => {
+                document.getElementById(`admin-tab-${t}`).classList.add('hidden');
+                document.getElementById(`admin-tab-btn-${t}`).className = "flex-1 py-3 px-4 rounded-xl font-bold text-sm text-gray-500 hover:text-slate-700 transition-all font-vietnam";
+            });
+            document.getElementById(`admin-tab-${tabName}`).classList.remove('hidden');
+            document.getElementById(`admin-tab-btn-${tabName}`).className = "flex-1 py-3 px-4 rounded-xl font-bold text-sm bg-white text-slate-800 shadow-sm transition-all font-vietnam";
+        };
+
+        window.renderAdminList = function() {
+            const tbody = document.getElementById('admin-accounts-list-body');
+            const searchVal = document.getElementById('admin-search-input').value.trim().toLowerCase();
+            if (!tbody) return;
+            tbody.innerHTML = "";
+
+            const filteredList = subAccountsList.filter(acc => 
+                acc.code.toLowerCase().includes(searchVal) || 
+                acc.name.toLowerCase().includes(searchVal)
+            );
+
+            filteredList.forEach(acc => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition-all";
+                tr.innerHTML = `
+                    <td class="py-4 px-6 font-black text-slate-800">${acc.code}</td>
+                    <td class="py-4 px-6 font-bold text-slate-600">${acc.name} <span class="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full ml-1">${acc.grade}</span></td>
+                    <td class="py-4 px-6">${acc.isVip ? '<span class="bg-amber-400 text-white text-xs font-bold px-2 py-1 rounded-full">⭐ VIP</span>' : '<span class="text-xs text-slate-400">Thường</span>'}</td>
+                    <td class="py-4 px-6 font-mono text-slate-500">${acc.password || '-'}</td>
+                    <td class="py-4 px-6 font-bold text-babyPink">${(acc.completedDays || []).length} / 30 ngày</td>
+                    <td class="py-4 px-6 text-right">
+                        <button onclick="deleteAccount('${acc.code}')" class="text-xs bg-rose-50 text-rose-600 font-bold px-3 py-1.5 rounded-xl hover:bg-rose-100 transition-all font-vietnam">Xóa tài khoản</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        };
+
+        window.updateAdminStats = function() {
+            document.getElementById('stat-total').innerText = subAccountsList.length;
+            document.getElementById('stat-normal').innerText = subAccountsList.filter(s => s.grade === 'Mầm Non').length;
+            document.getElementById('stat-delay').innerText = subAccountsList.filter(s => s.grade === 'Chậm Nói').length;
+            document.getElementById('stat-autism').innerText = subAccountsList.filter(s => s.grade === 'Nâng Cao').length;
+        };
+
+        window.createNewSubAccount = async function() {
+            let code = `ECO${Math.floor(100 + Math.random() * 900)}`;
+            while (subAccountsList.some(acc => acc.code === code)) {
+                code = `ECO${Math.floor(100 + Math.random() * 900)}`;
+            }
+            const name = prompt("Nhập biệt danh của bé thường:");
+            if (!name) return;
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'sub_accounts', code);
+            await setDoc(docRef, {
+                code, name, grade: "Mầm Non", isVip: false, completedDays: [],
+                createdAt: new Date().toISOString(), lastUpdated: new Date().toISOString()
+            });
+            showToast(`Đã tạo thành công tài khoản thường: ${code}`, "success");
+        };
+
+        window.createNewVipAccount = async function() {
+            let code = `VIP${Math.floor(100 + Math.random() * 900)}`;
+            while (subAccountsList.some(acc => acc.code === code)) {
+                code = `VIP${Math.floor(100 + Math.random() * 900)}`;
+            }
+            const name = prompt("Nhập biệt danh của bé VIP:");
+            if (!name) return;
+            const password = prompt("Thiết lập mật khẩu bảo mật VIP (tối thiểu 6 ký tự):", "123456");
+            if (!password) return;
+
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'sub_accounts', code);
+            await setDoc(docRef, {
+                code, name, grade: "Chậm Nói", isVip: true, password, completedDays: [],
+                createdAt: new Date().toISOString(), lastUpdated: new Date().toISOString()
+            });
+            showToast(`Đã tạo thành công tài khoản VIP bảo mật: ${code}`, "success");
+        };
+
+        window.deleteAccount = function(code) {
+            showConfirmDialog("Xóa tài khoản", `Bạn có chắc chắn muốn xóa vĩnh viễn tài khoản ${code} khỏi hệ thống?`, "⚠️", async () => {
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'sub_accounts', code));
+                showToast("Đã xóa tài khoản học tập thành công!", "success");
+            });
+        };
+
+        /* QUẢN LÝ KHO TỪ VỰNG */
+        window.renderAdminVocabularyList = function() {
+            const tbody = document.getElementById('admin-vocabulary-list-body');
+            if (!tbody) return;
+            tbody.innerHTML = "";
+            currentWordDatabase.forEach(word => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition-all font-vietnam";
+                tr.innerHTML = `
+                    <td class="py-4 px-6">
+                        <div class="w-12 h-12 rounded-xl overflow-hidden border">
+                            <img src="${word.imageUrl || 'https://placehold.co/100'}" class="w-full h-full object-cover">
+                        </div>
+                    </td>
+                    <td class="py-4 px-6 font-bold text-slate-800">${word.text}</td>
+                    <td class="py-4 px-6 text-xl">${word.icon}</td>
+                    <td class="py-4 px-6"><span class="text-xs bg-purple-50 text-purple-700 px-2.5 py-1 rounded-full font-bold">${word.category}</span></td>
+                    <td class="py-4 px-6 text-xs text-slate-500 max-w-xs truncate">${word.description || '-'}</td>
+                    <td class="py-4 px-6 text-right space-x-1">
+                        <button onclick="openEditWordModal(${word.id})" class="text-xs bg-indigo-50 text-indigo-600 font-bold px-2.5 py-1.5 rounded-xl hover:bg-indigo-100 transition-all font-vietnam">Sửa</button>
+                        <button onclick="deleteWord(${word.id})" class="text-xs bg-rose-50 text-rose-600 font-bold px-2.5 py-1.5 rounded-xl hover:bg-rose-100 transition-all font-vietnam">Xóa</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        };
+
+        window.openAddWordModal = function() {
+            document.getElementById('admin-word-modal-title').innerText = "Thêm Giáo Cụ Mới";
+            document.getElementById('edit-word-id').value = "";
+            document.getElementById('edit-word-text').value = "";
+            document.getElementById('edit-word-icon').value = "🍎";
+            document.getElementById('edit-word-category').value = "fruits";
+            document.getElementById('edit-word-desc').value = "";
+            document.getElementById('edit-word-url').value = "";
+            document.getElementById('edit-word-preview').src = "https://placehold.co/100";
+            adminWordPhotoBase64 = "";
+            document.getElementById('admin-word-modal').classList.remove('hidden');
+        };
+
+        window.openEditWordModal = function(id) {
+            const w = currentWordDatabase.find(x => x.id === id);
+            if (!w) return;
+            document.getElementById('admin-word-modal-title').innerText = "Chỉnh Sửa Giáo Cụ";
+            document.getElementById('edit-word-id').value = w.id;
+            document.getElementById('edit-word-text').value = w.text || "";
+            document.getElementById('edit-word-icon').value = w.icon || "";
+            document.getElementById('edit-word-category').value = w.category || "fruits";
+            document.getElementById('edit-word-desc').value = w.description || "";
+            document.getElementById('edit-word-url').value = w.imageUrl || "";
+            document.getElementById('edit-word-preview').src = w.imageUrl || "https://placehold.co/100";
+            adminWordPhotoBase64 = w.imageUrl && w.imageUrl.startsWith('data:image') ? w.imageUrl : "";
+            document.getElementById('admin-word-modal').classList.remove('hidden');
+        };
+
+        window.closeAdminWordModal = function() {
+            document.getElementById('admin-word-modal').classList.add('hidden');
+        };
+
+        window.deleteWord = function(id) {
+            showConfirmDialog("Xóa giáo cụ", "Bạn chắc chắn muốn xóa từ vựng giáo cụ này?", "⚠️", async () => {
+                const filtered = currentWordDatabase.filter(x => x.id !== id);
+                await updateGlobalWordsOnFirebase(filtered);
+                showToast("Đã xóa giáo cụ thành công!", "success");
+            });
+        };
+
+        window.saveAdminWord = async function() {
+            const idVal = document.getElementById('edit-word-id').value;
+            const text = document.getElementById('edit-word-text').value.trim();
+            const icon = document.getElementById('edit-word-icon').value.trim();
+            const category = document.getElementById('edit-word-category').value;
+            const desc = document.getElementById('edit-word-desc').value.trim();
+            const url = document.getElementById('edit-word-url').value.trim();
+
+            if (!text) {
+                showToast("Vui lòng điền từ vựng cần nói!", "error");
+                return;
+            }
+
+            let finalImg = url || adminWordPhotoBase64 || "https://placehold.co/100";
+
+            let updatedList = [...currentWordDatabase];
+            if (idVal) {
+                // Sửa
+                const idNum = parseInt(idVal);
+                updatedList = updatedList.map(w => w.id === idNum ? { ...w, text, icon, category, description: desc, imageUrl: finalImg } : w);
+            } else {
+                // Thêm mới
+                const newId = currentWordDatabase.length > 0 ? Math.max(...currentWordDatabase.map(x => x.id)) + 1 : 1;
+                updatedList.push({ id: newId, text, icon, category, description: desc, imageUrl: finalImg });
+            }
+
+            await updateGlobalWordsOnFirebase(updatedList);
+            showToast("Đã đồng bộ giáo cụ từ vựng thành công!", "success");
+            closeAdminWordModal();
+        };
+
+        async function updateGlobalWordsOnFirebase(list) {
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'global');
+            await updateDoc(docRef, { words: list });
+        }
+
+        window.handleWordPhotoUpload = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                adminWordPhotoBase64 = e.target.result;
+                document.getElementById('edit-word-preview').src = adminWordPhotoBase64;
+                document.getElementById('edit-word-url').value = ""; // Clear url if uploaded direct
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.handleDonateQrUpload = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                donateQrBase64 = e.target.result;
+                const prev = document.getElementById('admin-donate-qr-preview');
+                if (prev) {
+                    prev.src = donateQrBase64;
+                    prev.classList.remove('hidden');
+                }
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.saveGlobalVoiceConfig = async function() {
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'global');
+            const tok = document.getElementById('admin-viettel-token').value.trim();
+            const url = document.getElementById('admin-viettel-url').value.trim();
+            await updateDoc(docRef, { viettelToken: tok, viettelUrl: url });
+            showToast("Đã lưu khóa kết nối Viettel AI!", "success");
+        };
+
+        window.saveDonateConfig = async function() {
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'global');
+            const enabled = document.getElementById('admin-donate-enabled').checked;
+            const bankName = document.getElementById('admin-donate-bank').value.trim();
+            const accountNo = document.getElementById('admin-donate-no').value.trim();
+            const accountName = document.getElementById('admin-donate-holder').value.trim().toUpperCase();
+            const message = document.getElementById('admin-donate-msg').value.trim();
+
+            if (!bankName || !accountNo || !accountName) {
+                showToast("Vui lòng điền đủ thông tin Ngân hàng chuyển khoản!", "error");
+                return;
+            }
+
+            const donateData = {
+                enabled, bankName, accountNo, accountName, message, qrImage: donateQrBase64
+            };
+
+            await updateDoc(docRef, { donate: donateData });
+            showToast("Đã cập nhật hệ thống quyên góp toàn cục!", "success");
+        };
+
+        /* LỌC & HIỂN THỊ DANH SÁCH GIÁO CỤ */
+        window.filterWords = function(cat) {
+            activeWordsFilter = cat;
+            const btns = document.querySelectorAll('.word-filter-btn');
+            btns.forEach(b => {
+                b.className = "word-filter-btn px-5 py-2.5 rounded-full font-bold text-sm bg-white border text-gray-600 shrink-0 font-vietnam";
+            });
+            event.target.className = "word-filter-btn px-5 py-2.5 rounded-full font-bold text-sm bg-babyPink text-white shrink-0 font-vietnam";
+            renderWordGrid();
+        };
+
+        window.renderWordGrid = function() {
+            const container = document.getElementById('word-grid-container');
+            if (!container) return;
+            container.innerHTML = "";
+
+            const list = activeWordsFilter === 'all' 
+                ? currentWordDatabase 
+                : currentWordDatabase.filter(w => w.category === activeWordsFilter);
+
+            if (list.length === 0) {
+                container.innerHTML = `<div class="col-span-full py-12 text-center text-slate-400 font-bold font-vietnam">Chưa có giáo cụ chủ đề này, Admin hãy thêm nhé!</div>`;
+                return;
+            }
+
+            list.forEach(w => {
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-[2rem] border overflow-hidden custom-shadow hover:scale-[1.03] transition-all cursor-pointer flex flex-col justify-between group select-none";
+                card.onclick = () => {
+                    speakWord(w.text, card);
+                    // Kích hoạt Trợ lý luyện nói AI ngay lập tức
+                    openSpeechCoachModal(w.text, w.description);
+                };
+                card.innerHTML = `
+                    <div class="aspect-[1.3/1] bg-slate-100 overflow-hidden relative">
+                        <img src="${w.imageUrl || 'https://placehold.co/200'}" class="w-full h-full object-cover group-hover:scale-105 transition-all duration-500">
+                        <span class="absolute top-4 left-4 text-3xl bg-white/90 p-2 rounded-2xl shadow-sm">${w.icon}</span>
+                    </div>
+                    <div class="p-4 text-center space-y-1">
+                        <h4 class="font-black text-slate-800 text-lg tracking-wide">${w.text}</h4>
+                        <p class="text-[10px] text-gray-400 font-medium line-clamp-2 leading-relaxed">${w.description || 'Chạm để luyện phát âm chuẩn'}</p>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        };
+
+        /* LỘ TRÌNH 30 NGÀY BẬT ÂM */
+        window.render30DayGrid = function() {
+            const container = document.getElementById('journey-grid-container');
+            if (!container) return;
+            container.innerHTML = "";
+
+            thirtyDayCurriculum.forEach(cur => {
+                const isCompleted = completedDaysArray.includes(cur.day);
+                const btn = document.createElement('button');
+                btn.onclick = () => selectJourneyDay(cur.day);
+                
+                if (cur.day === activeJourneyDay) {
+                    btn.className = "py-3 rounded-2xl font-black text-lg border-2 border-babyPink bg-babyPink text-white shadow-md transform scale-105 transition-all flex flex-col items-center justify-center";
+                } else if (isCompleted) {
+                    btn.className = "py-3 rounded-2xl font-black text-lg border-2 border-babyBlue bg-babyBlue/10 text-babyBlue transition-all flex flex-col items-center justify-center";
+                } else {
+                    btn.className = "py-3 rounded-2xl font-black text-lg border-2 border-slate-100 bg-slate-50 text-slate-500 hover:bg-slate-100 transition-all flex flex-col items-center justify-center";
+                }
+                btn.innerHTML = `<span>${cur.day}</span>${isCompleted ? '<span class="text-xs">⭐</span>' : ''}`;
+                container.appendChild(btn);
+            });
+
+            // Cập nhật thanh tiến trình
+            const percent = (completedDaysArray.length / 30) * 100;
+            const bar = document.getElementById('journey-progress-bar');
+            const txt = document.getElementById('journey-progress-text');
+            if (bar) bar.style.width = `${percent}%`;
+            if (txt) txt.innerText = `${completedDaysArray.length} / 30 ngày`;
+        };
+
+        window.selectJourneyDay = function(day) {
+            activeJourneyDay = day;
+            render30DayGrid();
+
+            const cur = thirtyDayCurriculum.find(x => x.day === day);
+            if (!cur) return;
+
+            const box = document.getElementById('journey-detail-box');
+            box.classList.remove('hidden');
+
+            document.getElementById('selected-day-stage').innerText = cur.stage;
+            document.getElementById('selected-day-title').innerText = `Thử Thách Ngày ${cur.day}`;
+            document.getElementById('selected-day-word').innerText = cur.word;
+            document.getElementById('selected-day-guide').innerText = cur.guide;
+
+            const btnComp = document.getElementById('btn-complete-day');
+            if (completedDaysArray.includes(day)) {
+                btnComp.innerText = "⭐ Ngày học đã hoàn thành";
+                btnComp.className = "bg-amber-400 text-white font-extrabold px-6 py-3 rounded-2xl shadow-lg flex items-center justify-center gap-2 font-vietnam";
+            } else {
+                btnComp.innerText = "✅ Đánh dấu hoàn thành";
+                btnComp.className = "bg-babyBlue text-white font-extrabold px-6 py-3 rounded-2xl shadow-lg flex items-center justify-center gap-2 font-vietnam";
+            }
+        };
+
+        window.toggleDayCompleted = async function() {
+            if (loggedInRole === 'guest') {
+                showToast("Bạn đang trong chế độ học thử, hãy tạo mã học tập để lưu tiến trình vĩnh viễn!", "info");
+                return;
+            }
+            const index = completedDaysArray.indexOf(activeJourneyDay);
+            if (index > -1) {
+                completedDaysArray.splice(index, 1);
+            } else {
+                completedDaysArray.push(activeJourneyDay);
+                confetti({ particleCount: 50 });
+                playCorrectSound();
+                showToast(`Tuyệt vời! Con đã vượt qua thử thách ngày ${activeJourneyDay}!`, "success");
+            }
+
+            render30DayGrid();
+            selectJourneyDay(activeJourneyDay);
+
+            // Đồng bộ lên Firestore
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'sub_accounts', loggedInChildCode);
+            await updateDoc(docRef, { completedDays: completedDaysArray, lastUpdated: new Date().toISOString() });
+        };
+
+        window.speakSelectedDayWord = function() {
+            const cur = thirtyDayCurriculum.find(x => x.day === activeJourneyDay);
+            if (cur) speakWord(cur.word, null);
+        };
+
+        window.openSpeechCoachFromDay = function() {
+            const cur = thirtyDayCurriculum.find(x => x.day === activeJourneyDay);
+            if (cur) openSpeechCoachModal(cur.word, cur.guide);
+        };
+
+        /* TRỢ LÝ GIỌNG NÓI GẤU AI */
         window.openSpeechCoachModal = function(word, desc) {
-            currentSpeechTargetWord = word;
-            currentSpeechTargetDesc = desc;
-            document.getElementById('coach-target-word').innerText = word;
-            document.getElementById('coach-target-desc').innerText = desc || "Luyện dõng dạc, phát âm rõ ràng.";
+            currentSpeechTargetWord = word || "Mẹ";
+            currentSpeechTargetDesc = desc || "Luyện phát âm dứt khoát";
+
+            document.getElementById('coach-target-word').innerText = currentSpeechTargetWord;
+            document.getElementById('coach-target-desc').innerText = currentSpeechTargetDesc;
             document.getElementById('manual-speech-input').value = "";
+
+            document.getElementById('recording-status-idle').classList.remove('hidden');
+            document.getElementById('recording-status-active').classList.add('hidden');
             document.getElementById('speech-recognition-result-box').classList.add('hidden');
             document.getElementById('ai-evaluation-result').classList.add('hidden');
+
             document.getElementById('speech-coach-modal').classList.remove('hidden');
         };
 
         window.closeSpeechCoachModal = function() {
             document.getElementById('speech-coach-modal').classList.add('hidden');
-        };
-
-        window.openSpeechCoachFromDay = function() {
-            const word = document.getElementById('selected-day-word').innerText;
-            const desc = document.getElementById('selected-day-guide').innerText;
-            openSpeechCoachModal(word, desc);
         };
 
         window.speakSelectedWordFromCoach = function() {
@@ -2082,368 +3174,203 @@
         window.startSpeechRecognitionSimulated = function() {
             document.getElementById('recording-status-idle').classList.add('hidden');
             document.getElementById('recording-status-active').classList.remove('hidden');
-            document.getElementById('speech-recognition-result-box').classList.add('hidden');
-            
+            playSparkleSound();
+
             setTimeout(() => {
                 document.getElementById('recording-status-active').classList.add('hidden');
-                document.getElementById('recording-status-idle').classList.remove('hidden');
                 document.getElementById('speech-recognition-result-box').classList.remove('hidden');
                 document.getElementById('speech-recognized-text').innerText = currentSpeechTargetWord;
-                evaluateSpeechScore(currentSpeechTargetWord);
+
+                evaluateSpeechSimulated(currentSpeechTargetWord);
             }, 2500);
         };
 
         window.submitManualSpeech = function() {
-            const val = document.getElementById('manual-speech-input').value.trim();
-            if (!val) {
-                showToast("Vui lòng gõ nhận xét hoặc từ con nói trước!", "error");
+            const txt = document.getElementById('manual-speech-input').value.trim();
+            if (!txt) {
+                showToast("Ba mẹ vui lòng chấm từ bé nói hoặc gõ từ vựng nhé!", "error");
                 return;
             }
-            evaluateSpeechScore(val);
+            evaluateSpeechSimulated(txt);
         };
 
-        function evaluateSpeechScore(recognizedText) {
-            const resultBox = document.getElementById('ai-evaluation-result');
+        function evaluateSpeechSimulated(inputText) {
+            const isMatch = inputText.toLowerCase().replace(/[^a-z0-9àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/g, "") === 
+                            currentSpeechTargetWord.toLowerCase().replace(/[^a-z0-9àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/g, "");
+
             const starsEl = document.getElementById('ai-evaluation-stars');
             const feedbackEl = document.getElementById('ai-evaluation-feedback');
             const tipsEl = document.getElementById('ai-evaluation-tips');
 
-            resultBox.classList.remove('hidden');
-            
-            const normalizedTarget = currentSpeechTargetWord.toLowerCase().replace(/[^a-záàảãạăắằẳẵặâấầẩẫậéèẻẽẹêếềểễệíìỉĩịóòỏõọôốồổỗộơớờởỡợúùủũụưứừửữựýỳỷỹỵđ]/g, '');
-            const normalizedInput = recognizedText.toLowerCase().replace(/[^a-záàảãạăắằẳẵặâấầẩẫậéèẻẽẹêếềểễệíìỉĩịóòỏõọôốồổỗộơớờởỡợúùủũụưứừửữựýỳỷỹỵđ]/g, '');
-
-            if (normalizedInput === normalizedTarget) {
+            if (isMatch) {
                 starsEl.innerText = "⭐⭐⭐⭐⭐";
-                feedbackEl.innerText = "Bé phát âm cực kỳ chuẩn xác và tròn âm rõ chữ! Tuyệt vời lắm con ơi!";
-                tipsEl.innerText = "Ba mẹ hãy ôm thưởng con và tặng con một chiếc sticker vui vẻ nhé.";
+                feedbackEl.className = "text-xs text-emerald-800 leading-relaxed font-bold";
+                feedbackEl.innerHTML = `🌟 Bé nói cực kỳ xuất sắc! Phát âm tròn vành rõ tiếng, bắt kịp âm vang mẫu chuẩn chỉ 100%. Gấu AI tặng con trọn vẹn 5 sao vàng điểm mười!`;
+                tipsEl.innerText = `Cẩm nang: Khuyên ba mẹ động viên con mở rộng khẩu hình cằm dưới khi phát âm từ này. Tiếp tục duy trì luyện tập 3 lần mỗi ngày để củng cố phản xạ cơ lưỡi bền vững.`;
                 playCorrectSound();
-                confetti({ particleCount: 40 });
+                confetti({ particleCount: 30 });
             } else {
                 starsEl.innerText = "⭐⭐⭐";
-                feedbackEl.innerText = "Bé có nỗ lực phát âm rất đáng khen! Hãy giữ nhịp thở dứt khoát hơn.";
-                tipsEl.innerText = "Ba mẹ hãy chỉ môi và làm mẫu chậm hơn một chút để con bật hơi dõng dạc nhé.";
-                playCorrectSound();
+                feedbackEl.className = "text-xs text-amber-800 leading-relaxed font-bold";
+                feedbackEl.innerHTML = `🦊 Con đã rất cố gắng bật hơi bật tiếng! Tuy âm sắc còn chưa dứt khoát, Gấu AI ghi nhận tinh thần dũng cảm và tặng con 3 sao khích lệ.`;
+                tipsEl.innerText = `Cẩm nang: Hãy làm mẫu mím môi dứt khoát chậm rãi nhiều lần cho trẻ quan sát. Chơi trò thổi nến hoặc chong chóng trước để tạo cột hơi thở mạnh mẽ rồi bật tiếng sau nhé mẹ!`;
+                playIncorrectSound();
             }
+
+            document.getElementById('ai-evaluation-result').classList.remove('hidden');
         }
 
+        /* KHẢO SÁT SÀNG LỌC HÀNH VI M-CHAT-R/F */
         window.startScreeningTest = function() {
-            currentScreeningIndex = 0; tempScreeningAnswers = [];
+            currentScreeningIndex = 0;
+            tempScreeningAnswers = [];
             document.getElementById('screening-intro').classList.add('hidden');
             document.getElementById('screening-results').classList.add('hidden');
             document.getElementById('screening-workspace').classList.remove('hidden');
-            renderScreeningQuestion();
+            displayScreeningQuestion();
         };
-        
-        function renderScreeningQuestion() {
-            if (currentScreeningIndex >= screeningQuestions.length) { calculateScreeningResults(); return; }
+
+        function displayScreeningQuestion() {
             const q = screeningQuestions[currentScreeningIndex];
-            document.getElementById('screening-counter').innerText = `Khảo sát Câu ${currentScreeningIndex + 1} / ${screeningQuestions.length}`;
-            document.getElementById('screening-progress-bar').style.width = `${((currentScreeningIndex + 1) / screeningQuestions.length) * 100}%`;
+            document.getElementById('screening-counter').innerText = `Câu ${currentScreeningIndex + 1} / 20`;
+            document.getElementById('screening-progress-bar').style.width = `${((currentScreeningIndex + 1) / 20) * 100}%`;
             document.getElementById('screening-question-text').innerText = q.text;
-            document.getElementById('screening-significance-text').innerText = `${q.example}`;
-            const container = document.getElementById('screening-options-container'); container.innerHTML = "";
+            document.getElementById('screening-significance-text').innerText = q.example;
+
+            const optBox = document.getElementById('screening-options-container');
+            optBox.innerHTML = "";
             q.options.forEach((opt, idx) => {
-                const btn = document.createElement('button'); btn.className = "py-3 border rounded-xl hover:bg-purple-50 text-xs font-vietnam font-semibold"; btn.innerText = opt;
-                btn.onclick = () => { tempScreeningAnswers.push({ score: q.riskMapping[idx] }); currentScreeningIndex++; renderScreeningQuestion(); };
-                container.appendChild(btn);
+                const btn = document.createElement('button');
+                btn.className = "bg-slate-50 hover:bg-purple-50 hover:border-babyPurple border-2 border-slate-100 p-5 rounded-3xl font-bold text-sm text-left transition-all flex justify-between items-center group font-vietnam";
+                btn.onclick = () => selectScreeningAnswer(idx);
+                btn.innerHTML = `<span>${opt}</span><span class="opacity-0 group-hover:opacity-100 text-babyPurple font-black">Chọn ➔</span>`;
+                optBox.appendChild(btn);
             });
         }
-        
-        async function calculateScreeningResults() {
+
+        function selectScreeningAnswer(ansIdx) {
+            const q = screeningQuestions[currentScreeningIndex];
+            const riskPoint = q.riskMapping[ansIdx]; // 0: Bình thường, 1: Nguy cơ nhẹ, 2: Rủi ro cao
+            tempScreeningAnswers.push(riskPoint);
+
+            currentScreeningIndex++;
+            if (currentScreeningIndex < 20) {
+                displayScreeningQuestion();
+            } else {
+                showScreeningResult();
+            }
+        }
+
+        function showScreeningResult() {
             document.getElementById('screening-workspace').classList.add('hidden');
             document.getElementById('screening-results').classList.remove('hidden');
-            let totalScore = 0;
-            tempScreeningAnswers.forEach(a => { totalScore += a.score; });
+
+            const totalScore = tempScreeningAnswers.reduce((a, b) => a + b, 0);
             document.getElementById('asd-score-display').innerText = totalScore;
             document.getElementById('asd-progress').style.width = `${(totalScore / 40) * 100}%`;
 
-            let cl = "Mốc phát triển rực rỡ bình thường 🌱";
-            let desc = "Chúc mừng ba mẹ, các chỉ số phi ngôn ngữ của con nằm trong khoảng khỏe mạnh. Hãy duy trì cho bé rèn luyện Lộ trình 30 ngày nhé!";
-            if (totalScore >= 12) { 
-                cl = "Có biểu hiện rủi ro chậm phát triển - Cần can thiệp 🔴"; 
-                desc = "Hệ thống ghi nhận dấu hiệu bị chậm tương tác hoặc ngôn ngữ. Ba mẹ nên kiên trì rèn luyện Lộ trình 30 ngày bật âm, đồng thời tham vấn thêm bác sĩ chuyên khoa."; 
-            }
+            const banner = document.getElementById('screening-classification-banner');
+            const analysis = document.getElementById('screening-analysis-text');
 
-            document.getElementById('screening-classification-banner').innerText = cl;
-            document.getElementById('screening-analysis-text').innerText = desc;
-
-            if (loggedInRole !== 'guest') {
-                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'sub_accounts', loggedInChildCode), {
-                    screeningResult: { asdScore: totalScore, classification: cl, timestamp: new Date().toISOString() }
-                });
+            if (totalScore <= 10) {
+                banner.innerText = "NGUY CƠ CHẬM PHÁT TRIỂN / TỰ KỶ: THẤP (AN TOÀN) 💚";
+                banner.className = "mt-6 py-4 px-6 rounded-2xl font-black text-lg max-w-xl mx-auto bg-emerald-100 text-emerald-800 border-2 border-emerald-300 font-vietnam";
+                analysis.innerHTML = `
+                    <p>• <strong>Hiện trạng:</strong> Trẻ có các chỉ số tương tác phi ngôn ngữ, hành vi xã hội và bộc lộ cảm xúc hoàn toàn bình thường trong độ tuổi sàng lọc.</p>
+                    <p class="mt-2">• <strong>Định hướng:</strong> Ba mẹ tiếp tục tạo môi trường giao tiếp phong phú. Khuyến khích con nói biểu đạt nhu cầu cá nhân nhiều hơn và đồng hành cùng lộ trình 30 ngày rèn phản xạ tại EduKids.</p>
+                `;
+            } else if (totalScore <= 22) {
+                banner.innerText = "NGUY CƠ CHẬM PHÁT TRIỂN / TỰ KỶ: TRUNG BÌNH (CẦN THEO DÕI) 💛";
+                banner.className = "mt-6 py-4 px-6 rounded-2xl font-black text-lg max-w-xl mx-auto bg-amber-100 text-amber-800 border-2 border-amber-300 font-vietnam";
+                analysis.innerHTML = `
+                    <p>• <strong>Hiện trạng:</strong> Trẻ xuất hiện một vài biểu hiện thờ ơ hành vi, phản xạ chậm khi gọi tên, nghèo nàn về cử chỉ phi ngôn ngữ (ví dụ: không biết chỉ tay chia sẻ tò mò).</p>
+                    <p class="mt-2">• <strong>Định hướng:</strong> Ba mẹ cần tích cực can thiệp tương tác trực tiếp 1-1 tối thiểu 2 tiếng mỗi ngày. Hạn chế hoàn toàn tivi, máy tính, điện thoại. Thường xuyên áp dụng các bài tập lấy hơi và luyện phát âm dứt khoát tại tab Luyện Nói.</p>
+                `;
+            } else {
+                banner.innerText = "NGUY CƠ CHẬM PHÁT TRIỂN / TỰ KỶ: CAO (CẦN CHẨN ĐOÁN LÂM SÀNG) 🔴";
+                banner.className = "mt-6 py-4 px-6 rounded-2xl font-black text-lg max-w-xl mx-auto bg-rose-100 text-rose-800 border-2 border-rose-300 animate-pulse font-vietnam";
+                analysis.innerHTML = `
+                    <p>• <strong>Hiện trạng:</strong> Điểm số rủi ro hành vi cao cho thấy trẻ đang có khoảng cách lớn trong phản xạ tương tác xã hội, chậm ngôn ngữ bộc lộ và có dấu hiệu thu mình hờ hững.</p>
+                    <p class="mt-2">• <strong>Định hướng:</strong> Ba mẹ hãy chủ động đưa bé đến khoa tâm lý/phục hồi chức năng nhi khoa tại các bệnh viện uy tín để bác sĩ khám lâm sàng chuyên sâu. Đồng thời, kiên trì áp dụng các bài học bộc lộ âm đơn từ EduKids mỗi ngày dưới sự hướng dẫn tỉ mỉ của giáo viên.</p>
+                `;
             }
         }
 
-        window.render30DayGrid = function() {
-            const container = document.getElementById('journey-grid-container'); 
-            if (!container) return;
-            container.innerHTML = "";
-            for (let i = 1; i <= 30; i++) {
-                const btn = document.createElement('button'); 
-                const ok = completedDaysArray.includes(i);
-                
-                let phaseColor = "border-slate-200 bg-white text-slate-700";
-                if (ok) {
-                    phaseColor = "bg-emerald-100 text-emerald-800 border-emerald-300 font-extrabold";
-                } else if (i === activeJourneyDay) {
-                    phaseColor = "ring-4 ring-babyPink scale-105 bg-white text-slate-950 font-black border-babyPink";
-                } else {
-                    if (i <= 10) phaseColor += " hover:bg-emerald-50";
-                    else if (i <= 20) phaseColor += " hover:bg-amber-50";
-                    else phaseColor += " hover:bg-rose-50";
-                }
+        /* HỆ THỐNG THÔNG BÁO TOAST XINH XẮN */
+        window.showToast = function(msg, type = "success") {
+            const toast = document.getElementById('custom-toast');
+            if (!toast) return;
 
-                btn.className = `h-12 text-xs rounded-2xl border-2 flex flex-col items-center justify-center font-vietnam transition-all ${phaseColor}`;
-                btn.innerHTML = `<span class="font-bold">N${i}</span>`; 
-                btn.onclick = () => selectJourneyDay(i);
-                container.appendChild(btn);
+            toast.innerText = msg;
+            toast.className = "fixed top-5 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3.5 rounded-full text-white font-extrabold text-xs shadow-2xl transition-all duration-300 font-vietnam flex items-center gap-1.5";
+
+            if (type === "success") {
+                toast.classList.add('bg-emerald-500', 'shadow-emerald-500/20');
+            } else if (type === "error") {
+                toast.classList.add('bg-rose-500', 'shadow-rose-500/20');
+            } else {
+                toast.classList.add('bg-blue-500', 'shadow-blue-500/20');
             }
-            document.getElementById('journey-progress-text').innerText = `${completedDaysArray.length} / 30 ngày`;
-            document.getElementById('journey-progress-bar').style.width = `${(completedDaysArray.length / 30) * 100}%`;
+
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
         };
 
-        window.selectJourneyDay = function(day) {
-            activeJourneyDay = day; 
-            render30DayGrid();
-            const curr = thirtyDayCurriculum[(day - 1) % thirtyDayCurriculum.length];
-            document.getElementById('journey-detail-box').classList.remove('hidden');
-            document.getElementById('selected-day-stage').innerText = curr.stage;
-            document.getElementById('selected-day-title').innerText = `Học tập phản xạ Ngày ${day}`;
-            document.getElementById('selected-day-word').innerText = curr.word;
-            document.getElementById('selected-day-guide').innerText = curr.guide;
-            document.getElementById('btn-complete-day').innerText = completedDaysArray.includes(day) ? "⭐ Đã Hoàn Thành" : "✅ Đánh Dấu Hoàn Thành";
-        };
+        /* MODAL XÁC NHẬN TÙY BIẾN */
+        window.showConfirmDialog = function(title, msg, icon, callback) {
+            const modal = document.getElementById('custom-confirm-modal');
+            if (!modal) return;
 
-        window.toggleDayCompleted = async function() {
-            const idx = completedDaysArray.indexOf(activeJourneyDay);
-            if (idx > -1) completedDaysArray.splice(idx, 1); 
-            else { 
-                completedDaysArray.push(activeJourneyDay); 
-                confetti({ particleCount: 30 }); 
-            }
-            if (loggedInRole !== 'guest') {
-                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'sub_accounts', loggedInChildCode), { completedDays: completedDaysArray });
-            }
-            selectJourneyDay(activeJourneyDay);
-        };
+            document.getElementById('confirm-title').innerText = title;
+            document.getElementById('confirm-message').innerText = msg;
+            document.getElementById('confirm-icon').innerText = icon || "⚠️";
 
-        window.speakSelectedDayWord = function() { 
-            speakWord(document.getElementById('selected-day-word').innerText, null); 
-        };
+            modal.classList.remove('hidden');
 
-        window.filterWords = function(cat) { 
-            activeWordsFilter = cat; 
-            const btns = document.querySelectorAll('.word-filter-btn');
-            btns.forEach(b => {
-                b.className = "word-filter-btn px-5 py-2.5 rounded-full font-bold text-sm bg-white border text-gray-600 shrink-0 font-vietnam";
-            });
-            event.target.className = "word-filter-btn px-5 py-2.5 rounded-full font-bold text-sm bg-babyPink text-white shrink-0 font-vietnam";
-            renderWordGrid(); 
-        };
+            document.getElementById('confirm-btn-cancel').onclick = () => {
+                modal.classList.add('hidden');
+            };
 
-        function renderWordGrid() {
-            const container = document.getElementById('word-grid-container'); 
-            if (!container) return;
-            container.innerHTML = "";
-            const list = activeWordsFilter === 'all' ? currentWordDatabase : currentWordDatabase.filter(w => w.category === activeWordsFilter);
-            list.forEach(w => {
-                const card = document.createElement('div'); 
-                card.className = "bg-white border rounded-3xl overflow-hidden shadow-sm flex flex-col justify-between cursor-pointer hover:scale-105 transition-all";
-                card.onclick = (e) => { 
-                    if (!e.target.closest('.coach-trigger')) speakWord(w.text, card); 
-                };
-                card.innerHTML = `
-                    <div class="h-36 bg-slate-50 relative"><img src="${w.imageUrl}" class="w-full h-full object-cover"><span class="absolute top-2 left-2 bg-white/80 px-2 py-1 rounded-xl text-xl">${w.icon}</span></div>
-                    <div class="p-3 text-center flex-grow flex flex-col justify-between font-vietnam">
-                        <h4 class="font-black text-lg text-slate-800">${w.text}</h4>
-                        <p class="text-xs text-gray-400 mt-0.5 font-medium">${w.description}</p>
-                        <button onclick="openSpeechCoachModal('${w.text}', '${w.description}')" class="coach-trigger mt-2 w-full bg-purple-600 text-white font-bold py-1.5 rounded-xl text-xs font-vietnam">🎙️ Bé tập nói</button>
-                    </div>`;
-                container.appendChild(card);
-            });
-        }
-
-        window.switchAdminTab = function(tab) {
-            document.getElementById('admin-tab-students').classList.add('hidden');
-            document.getElementById('admin-tab-settings').classList.add('hidden');
-            document.getElementById(`admin-tab-${tab}`).classList.remove('hidden');
-        };
-
-        function updateAdminStats() {
-            document.getElementById('stat-total').innerText = subAccountsList.length;
-            document.getElementById('stat-normal').innerText = subAccountsList.filter(a => a.grade === 'Mầm Non').length;
-            document.getElementById('stat-delay').innerText = subAccountsList.filter(a => a.grade === 'Chậm Nói').length;
-            document.getElementById('stat-autism').innerText = subAccountsList.filter(a => a.grade === 'Nâng Cao').length;
-        }
-
-        function renderAdminList() {
-            const body = document.getElementById('admin-accounts-list-body'); 
-            if (!body) return;
-            body.innerHTML = "";
-            const search = document.getElementById('admin-search-input').value.toLowerCase();
-            const filtered = subAccountsList.filter(a => a.code.toLowerCase().includes(search) || (a.name && a.name.toLowerCase().includes(search)));
-
-            filtered.forEach(acc => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td class="py-4 px-6 font-mono font-black">${acc.code}</td>
-                    <td class="py-4 px-6 font-bold font-vietnam">${acc.name}<div class="text-xs text-gray-400 font-vietnam font-medium">${acc.grade}</div></td>
-                    <td class="py-4 px-6"><span class="${acc.isVip ? 'bg-yellow-400 text-slate-900' : 'bg-slate-100 text-slate-500'} font-black px-2.5 py-1 rounded text-xs font-vietnam">${acc.isVip ? 'VIP' : 'Thường'}</span></td>
-                    <td class="py-4 px-6 font-mono font-bold">${acc.password || '---'}</td>
-                    <td class="py-4 px-6 font-bold text-indigo-600 font-vietnam">${acc.completedDays ? acc.completedDays.length : 0} / 30 ngày</td>
-                    <td class="py-4 px-6 text-right whitespace-nowrap space-x-1 font-vietnam">
-                        <button onclick="deleteSubAccount('${acc.code}')" class="bg-rose-50 text-rose-600 px-2.5 py-1 rounded text-xs font-bold">Xóa</button>
-                    </td>`;
-                body.appendChild(tr);
-            });
-        }
-
-        window.deleteSubAccount = function(code) {
-            showConfirmDialog("Xóa tài khoản", `Bạn muốn xóa tài khoản ${code} chứ?`, "🗑️", async () => {
-                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'sub_accounts', code));
-                showToast("Đã xóa tài khoản bé.", "success");
-            });
-        };
-
-        window.createNewVipAccount = async function() {
-            let code = `VIP${Math.floor(100 + Math.random() * 900)}`;
-            while (subAccountsList.some(s => s.code === code)) {
-                code = `VIP${Math.floor(100 + Math.random() * 900)}`;
-            }
-            if (!auth.currentUser) return;
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'sub_accounts', code);
-            try {
-                await setDoc(docRef, {
-                    code, name: `Bé VIP ${code}`, grade: "Mầm Non", isVip: true, password: "123",
-                    createdAt: new Date().toISOString(), lastUpdated: new Date().toISOString(),
-                    completedDays: [], mathGameHighScore: 0, mathGamePlayCount: 0,
-                    preferredVoice: "viettel-hn-quynhanh", preferredRate: 1.0
-                });
-                showToast(`Đã tạo mã VIP: ${code} - Mật khẩu: 123`, "success");
-            } catch(e) { showToast("Gặp lỗi mạng.", "error"); }
-        };
-
-        window.createNewSubAccount = async function() {
-            let code = `ECO${Math.floor(100 + Math.random() * 900)}`;
-            while (subAccountsList.some(s => s.code === code)) {
-                code = `ECO${Math.floor(100 + Math.random() * 900)}`;
-            }
-            if (!auth.currentUser) return;
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'sub_accounts', code);
-            try {
-                await setDoc(docRef, {
-                    code, name: `Bé mới ${code}`, grade: "Mầm Non", isVip: false,
-                    createdAt: new Date().toISOString(), lastUpdated: new Date().toISOString(),
-                    completedDays: [], mathGameHighScore: 0, mathGamePlayCount: 0,
-                    preferredVoice: "viettel-hn-quynhanh", preferredRate: 1.0
-                });
-                showToast(`Đã tạo mã học sinh thường: ${code}`, "success");
-            } catch(e) { showToast("Gặp lỗi mạng.", "error"); }
-        };
-
-        window.saveGlobalVoiceConfig = async function() {
-            viettelToken = document.getElementById('admin-viettel-token').value.trim();
-            viettelUrl = document.getElementById('admin-viettel-url').value.trim();
-
-            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'global'), {
-                viettelToken, viettelUrl
-            });
-            showToast("Đã cấu hình API Viettel AI!", "success");
+            document.getElementById('confirm-btn-ok').onclick = () => {
+                modal.classList.add('hidden');
+                if (callback) callback();
+            };
         };
 
         window.speakDemoTextV3 = function() {
             speakWord(DEFAULT_TEXT_V3, null);
         };
 
-        window.toggleLoginTab = function(tabName) {
-            ['parent', 'register', 'admin'].forEach(tab => {
-                document.getElementById(`form-${tab}`).classList.add('hidden');
-                document.getElementById(`btn-tab-${tab}`).className = "flex-1 py-2.5 text-xs font-black rounded-xl text-gray-500 transition-all font-vietnam";
-            });
-            document.getElementById(`form-${tabName}`).classList.remove('hidden');
-            document.getElementById(`btn-tab-${tabName}`).className = "flex-1 py-2.5 text-xs font-black rounded-xl bg-white text-babyPink shadow-sm transition-all font-vietnam";
-        };
-
-        window.handleDonateQrUpload = function(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                donateQrBase64 = e.target.result;
-                const preview = document.getElementById('admin-donate-qr-preview');
-                if (preview) {
-                    preview.src = donateQrBase64;
-                    preview.classList.remove('hidden');
-                }
-                showToast("Đã tải ảnh QR thủ công thành công!", "success");
-            };
-            reader.readAsDataURL(file);
-        };
-
-        window.saveDonateConfig = async function() {
-            const enabled = document.getElementById('admin-donate-enabled').checked;
-            const bankName = document.getElementById('admin-donate-bank').value.trim();
-            const accountNo = document.getElementById('admin-donate-no').value.trim();
-            const accountName = document.getElementById('admin-donate-holder').value.trim();
-            const message = document.getElementById('admin-donate-msg').value.trim();
-
-            try {
-                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'global'), {
-                    donate: {
-                        enabled,
-                        bankName,
-                        accountNo,
-                        accountName,
-                        message,
-                        qrImage: donateQrBase64
-                    }
-                });
-                showToast("Đã đồng bộ Quyên góp lên đám mây!", "success");
-            } catch(e) {
-                console.error(e);
-                showToast("Gặp lỗi khi lưu lên Firestore.", "error");
-            }
-        };
-
         window.updateSpeechRateDisplay = function(val) {
-            const speedEl = document.getElementById('speed-value');
-            if (speedEl) speedEl.innerText = `${parseFloat(val).toFixed(1)}x`;
+            const speedVal = document.getElementById('speed-value');
+            if (speedVal) speedVal.innerText = `${parseFloat(val).toFixed(1)}x`;
         };
 
         window.saveChildVoicePreference = async function() {
-            if (loggedInRole === 'guest') return;
-            const voiceId = document.getElementById('voice-select')?.value || loggedInChildVoice;
-            const rateVal = parseFloat(document.getElementById('speech-rate')?.value) || loggedInChildRate;
-            try {
-                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'sub_accounts', loggedInChildCode), {
-                    preferredVoice: voiceId,
-                    preferredRate: rateVal
+            if (loggedInRole === 'guest' || !loggedInChildCode) return;
+            const selectEl = document.getElementById('voice-select');
+            const rateEl = document.getElementById('speech-rate');
+
+            if (selectEl && rateEl) {
+                loggedInChildVoice = selectEl.value;
+                loggedInChildRate = parseFloat(rateEl.value);
+
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'sub_accounts', loggedInChildCode);
+                await updateDoc(docRef, {
+                    preferredVoice: loggedInChildVoice,
+                    preferredRate: loggedInChildRate,
+                    lastUpdated: new Date().toISOString()
                 });
-            } catch(e) { console.error("Lỗi đồng bộ sở thích phát âm.", e); }
+                showToast("Đã lưu tùy chọn giọng nói yêu thích!", "success");
+            }
         };
 
-        /* TIỆN ÍCH TOAST & CONFIRM MODAL TỰ DỰNG */
-        function showToast(m, type = 'info') {
-            const el = document.getElementById('custom-toast'); 
-            if (!el) return;
-            el.innerText = m;
-            el.className = `fixed top-5 left-1/2 transform -translate-x-1/2 z-50 px-6 py-3 rounded-full text-white font-bold shadow-2xl transition-all duration-300 font-vietnam ${type === 'success' ? 'bg-emerald-500' : type === 'error' ? 'bg-rose-500' : 'bg-indigo-600'}`;
-            el.classList.remove('hidden'); 
-            setTimeout(() => el.classList.add('hidden'), 3000);
-        }
-
-        function showConfirmDialog(title, msg, icon, onOk) {
-            const m = document.getElementById('custom-confirm-modal');
-            document.getElementById('confirm-title').innerText = title; 
-            document.getElementById('confirm-message').innerText = msg; 
-            document.getElementById('confirm-icon').innerText = icon;
-            m.classList.remove('hidden');
-            document.getElementById('confirm-btn-cancel').onclick = () => m.classList.add('hidden');
-            document.getElementById('confirm-btn-ok').onclick = () => { m.classList.add('hidden'); onOk(); };
-        }
-
-        runAuthSetup();
+        // Kích hoạt nạp thiết lập khi DOM sẵn sàng
+        document.addEventListener('DOMContentLoaded', () => {
+            runAuthSetup();
+        });
     </script>
 </body>
 </html>
